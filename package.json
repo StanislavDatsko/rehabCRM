@@ -1,0 +1,43 @@
+{
+  "name": "rehabcrm",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "overrides": {
+      "deepmerge-ts": "8.0.0",
+      "multer": "2.3.0",
+      "postcss": "8.5.26"
+    }
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "auth:live": "node scripts/verify-oidc-live.mjs",
+    "anatomy:inspect": "tsx scripts/anatomy/inspect-glb.ts",
+    "anatomy:mappings": "tsx scripts/anatomy/generate-mapping-report.ts",
+    "anatomy:mappings:validate": "tsx scripts/anatomy/validate-mapping.ts",
+    "anatomy:import": "pnpm --filter @rehabcrm/api anatomy:import",
+    "db:backup": "scripts/operations/postgres-backup.sh",
+    "db:restore": "scripts/operations/postgres-restore.sh",
+    "object-storage:backup": "scripts/operations/object-storage-backup.sh",
+    "object-storage:restore": "scripts/operations/object-storage-restore.sh",
+    "e2e": "pnpm --filter @rehabcrm/web e2e",
+    "load:smoke": "k6 run tests/load/api-smoke.js",
+    "load:appointments": "k6 run tests/load/appointment-concurrency.js"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,2 @@
+'use client';
+export default function ProgressError({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <div role="alert" className="rounded-md border border-danger/30 bg-danger/5 p-5"><h1 className="font-serif text-2xl">Помилка динаміки</h1><p className="mt-2 text-sm">Не вдалося відобразити сторінку.</p><button onClick={reset} className="rc-btn rc-btn-secondary mt-4">Спробувати ще раз</button></div>; }

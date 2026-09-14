@@ -1,0 +1,1 @@
+export default function ReportsLoading() { return <div role="status" className="space-y-4"><div className="h-10 w-72 animate-pulse rounded bg-surface-muted" /><div className="h-80 animate-pulse rounded bg-surface-muted" /><span className="sr-only">Завантаження звітів…</span></div>; }

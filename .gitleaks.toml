@@ -1,0 +1,9 @@
+title = "RehabCRM secret scanning"
+
+[allowlist]
+description = "Explicit local-development fixtures; production secrets are never stored in the repository."
+paths = [
+  '''^\.env\.example$''',
+  '''^infra/docker/keycloak/realm-rehabcrm\.json$''',
+  '''^scripts/verify-oidc-live\.mjs$'''
+]

@@ -1,0 +1,35 @@
+# Dependencies and build
+node_modules
+.pnpm-store
+dist
+.next
+.turbo
+coverage
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS / IDE
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Prisma
+apps/api/src/generated
+
+# Playwright
+playwright-report
+test-results
+blob-report
+
+# Logs
+*.log
+
+# Developer-local anatomy source and generated model binaries
+/assets/anatomy/source/*.glb
+/assets/anatomy/processed/*.glb

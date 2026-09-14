@@ -1,0 +1,1124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum StaffSetupStatus {
+  PENDING_SETUP
+  ACTIVE
+  SETUP_ACTION_FAILED
+}
+
+enum PractitionerStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum StaffRole {
+  SYSTEM_ADMIN
+  ORGANIZATION_ADMIN
+  RECEPTIONIST
+  REHABILITATION_SPECIALIST
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum PatientSex {
+  FEMALE
+  MALE
+  OTHER
+  UNKNOWN
+}
+
+enum LocationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RoomStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AppointmentTypeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CHECKED_IN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum EncounterStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  COMPLETED
+  VOIDED
+}
+
+enum MeasurementValueType {
+  NUMBER
+  INTEGER
+  BOOLEAN
+  SCALE
+  TEXT
+  CODED
+}
+
+enum MeasurementCategory {
+  PAIN
+  RANGE_OF_MOTION
+  STRENGTH
+  MOBILITY
+  BALANCE
+  ENDURANCE
+  FUNCTIONAL_TEST
+  OTHER
+}
+
+enum AnatomicalApplicability {
+  REQUIRED
+  OPTIONAL
+  NOT_APPLICABLE
+}
+
+enum Laterality {
+  LEFT
+  RIGHT
+  BILATERAL
+  MIDLINE
+  NOT_APPLICABLE
+}
+
+enum RehabilitationPlanStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum RehabilitationPlanRevisionStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum RehabilitationGoalStatus {
+  PLANNED
+  IN_PROGRESS
+  ACHIEVED
+  NOT_ACHIEVED
+  CANCELLED
+}
+
+enum GoalTargetOperator {
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN_OR_EQUAL
+  EQUAL
+  BETWEEN
+}
+
+enum ExerciseCategory {
+  MOBILITY
+  STRENGTH
+  STABILITY
+  BALANCE
+  ENDURANCE
+  STRETCHING
+  MOTOR_CONTROL
+  FUNCTIONAL
+  BREATHING
+  OTHER
+}
+
+enum ExerciseDifficulty {
+  FOUNDATIONAL
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExerciseMediaType {
+  IMAGE
+  VIDEO
+  ANIMATION
+  DOCUMENT
+}
+
+enum ExerciseDosageKind {
+  SETS_REPETITIONS
+  TRIALS
+  DURATION
+  HOLD
+  DISTANCE
+  LOAD
+}
+
+enum ExerciseFrequencyType {
+  DAILY
+  WEEKLY
+  ALTERNATE_DAYS
+  SUPERVISED_ONLY
+}
+
+enum AnatomicalModelKind {
+  MUSCULAR
+  SKELETAL
+  JOINTS
+  COMBINED
+  OTHER
+}
+
+enum AnatomicalModelVersionStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum AnatomicalStructureCategory {
+  SYSTEM
+  REGION
+  BONE
+  JOINT
+  MUSCLE
+  TENDON
+  LIGAMENT
+  OTHER
+}
+
+enum AnatomicalMappingConfidence {
+  EXACT
+  HIGH_CONFIDENCE
+  MANUAL_REQUIRED
+}
+
+enum BodyAnnotationType {
+  PAIN
+  MOBILITY_LIMITATION
+  WEAKNESS
+  TENSION
+  INFLAMMATION
+  POST_SURGERY
+  INJURY
+  SENSITIVITY
+  OTHER
+}
+
+enum BodyAnnotationStatus {
+  ACTIVE
+  RESOLVED
+  VOIDED
+}
+
+enum ClinicalReportType {
+  PROGRESS
+}
+
+enum ClinicalReportStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+  VOIDED
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  timezone  String   @default("Europe/Kyiv")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  memberships                 OrganizationMembership[]
+  practitioners               Practitioner[]
+  patients                    Patient[]
+  auditEvents                 AuditEvent[]
+  locations                   Location[]
+  rooms                       Room[]
+  appointmentTypes            AppointmentType[]
+  appointments                Appointment[]
+  encounters                  Encounter[]
+  measurementDefinitions      MeasurementDefinition[]
+  assessmentTemplates         AssessmentTemplate[]
+  assessments                 Assessment[]
+  measurements                Measurement[]
+  rehabilitationPlans         RehabilitationPlan[]
+  rehabilitationPlanRevisions RehabilitationPlanRevision[]
+  rehabilitationGoals         RehabilitationGoal[]
+  rehabilitationPlanPhases    RehabilitationPlanPhase[]
+  exerciseDefinitions         ExerciseDefinition[]
+  exercisePrescriptions       ExercisePrescription[]
+  bodyAnnotations             BodyAnnotation[]
+  bodyAnnotationHistory       BodyAnnotationStatusHistory[]
+  clinicalReports             ClinicalReport[]
+
+  @@map("organizations")
+}
+
+/// Staff identity. Patients are never Users.
+model User {
+  id                      String     @id @default(uuid()) @db.Uuid
+  identityProvider        String
+  identityProviderSubject String
+  email                   String
+  firstName               String?    @db.VarChar(100)
+  lastName                String?    @db.VarChar(100)
+  displayName             String
+  status                  UserStatus @default(ACTIVE)
+  lastLoginAt             DateTime?  @db.Timestamptz(3)
+  createdAt               DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime   @updatedAt @db.Timestamptz(3)
+
+  memberships                        OrganizationMembership[]
+  practitioners                      Practitioner[]
+  createdPatients                    Patient[]                     @relation("PatientCreatedBy")
+  updatedPatients                    Patient[]                     @relation("PatientUpdatedBy")
+  auditEvents                        AuditEvent[]
+  createdAppointments                Appointment[]                 @relation("AppointmentCreatedBy")
+  updatedAppointments                Appointment[]                 @relation("AppointmentUpdatedBy")
+  createdEncounters                  Encounter[]                   @relation("EncounterCreatedBy")
+  updatedEncounters                  Encounter[]                   @relation("EncounterUpdatedBy")
+  createdAssessments                 Assessment[]                  @relation("AssessmentCreatedBy")
+  updatedAssessments                 Assessment[]                  @relation("AssessmentUpdatedBy")
+  voidedAssessments                  Assessment[]                  @relation("AssessmentVoidedBy")
+  createdMeasurements                Measurement[]                 @relation("MeasurementCreatedBy")
+  createdRehabilitationPlans         RehabilitationPlan[]          @relation("RehabilitationPlanCreatedBy")
+  updatedRehabilitationPlans         RehabilitationPlan[]          @relation("RehabilitationPlanUpdatedBy")
+  cancelledRehabilitationPlans       RehabilitationPlan[]          @relation("RehabilitationPlanCancelledBy")
+  createdRehabilitationPlanRevisions RehabilitationPlanRevision[]  @relation("RehabilitationPlanRevisionCreatedBy")
+  createdBodyAnnotations             BodyAnnotation[]              @relation("BodyAnnotationCreatedBy")
+  updatedBodyAnnotations             BodyAnnotation[]              @relation("BodyAnnotationUpdatedBy")
+  bodyAnnotationStatusChanges        BodyAnnotationStatusHistory[] @relation("BodyAnnotationStatusChangedBy")
+  generatedClinicalReports           ClinicalReport[]              @relation("ClinicalReportGeneratedBy")
+  voidedClinicalReports              ClinicalReport[]              @relation("ClinicalReportVoidedBy")
+
+  @@unique([identityProvider, identityProviderSubject])
+  @@unique([identityProvider, email])
+  @@index([email])
+  @@map("users")
+}
+
+model OrganizationMembership {
+  id                  String           @id @default(uuid()) @db.Uuid
+  organizationId      String           @db.Uuid
+  userId              String           @db.Uuid
+  role                StaffRole
+  status              MembershipStatus @default(ACTIVE)
+  setupStatus         StaffSetupStatus @default(ACTIVE)
+  identitySyncPending Boolean          @default(false)
+  version             Int              @default(1)
+  createdAt           DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime         @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@map("organization_memberships")
+}
+
+model Practitioner {
+  id                String             @id @default(uuid()) @db.Uuid
+  organizationId    String             @db.Uuid
+  userId            String             @db.Uuid
+  professionalTitle String?            @db.VarChar(150)
+  status            PractitionerStatus @default(ACTIVE)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+
+  organization             Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user                     User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  responsibleFor           Patient[]
+  appointments             Appointment[]
+  encounters               Encounter[]
+  assessments              Assessment[]
+  rehabilitationPlans      RehabilitationPlan[]
+  bodyAnnotationsCreated   BodyAnnotation[]
+  clinicalReportsGenerated ClinicalReport[]
+
+  @@unique([organizationId, userId])
+  @@map("practitioners")
+}
+
+/// Administrative patient record. Clinical information belongs to later modules.
+model Patient {
+  id                              String        @id @default(uuid()) @db.Uuid
+  organizationId                  String        @db.Uuid
+  firstName                       String        @db.VarChar(100)
+  lastName                        String        @db.VarChar(100)
+  middleName                      String?       @db.VarChar(100)
+  dateOfBirth                     DateTime?     @db.Date
+  sex                             PatientSex?
+  phoneDisplay                    String?       @db.VarChar(50)
+  phoneNormalized                 String?       @db.VarChar(20)
+  email                           String?       @db.VarChar(254)
+  addressLine1                    String?       @db.VarChar(200)
+  addressLine2                    String?       @db.VarChar(200)
+  city                            String?       @db.VarChar(100)
+  region                          String?       @db.VarChar(100)
+  postalCode                      String?       @db.VarChar(20)
+  countryCode                     String?       @db.VarChar(2)
+  emergencyContactName            String?       @db.VarChar(150)
+  emergencyContactPhoneDisplay    String?       @db.VarChar(50)
+  emergencyContactPhoneNormalized String?       @db.VarChar(20)
+  emergencyContactRelationship    String?       @db.VarChar(100)
+  responsiblePractitionerId       String?       @db.Uuid
+  status                          PatientStatus @default(ACTIVE)
+  internalReferenceNumber         String?       @db.VarChar(50)
+  version                         Int           @default(1)
+  createdByUserId                 String        @db.Uuid
+  updatedByUserId                 String        @db.Uuid
+  createdAt                       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt                       DateTime      @updatedAt @db.Timestamptz(3)
+
+  organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  responsiblePractitioner Practitioner?        @relation(fields: [responsiblePractitionerId], references: [id], onDelete: Restrict)
+  createdBy               User                 @relation("PatientCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy               User                 @relation("PatientUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  appointments            Appointment[]
+  encounters              Encounter[]
+  assessments             Assessment[]
+  measurements            Measurement[]
+  rehabilitationPlans     RehabilitationPlan[]
+  bodyAnnotations         BodyAnnotation[]
+  clinicalReports         ClinicalReport[]
+
+  @@unique([organizationId, internalReferenceNumber])
+  @@index([organizationId, status, lastName, firstName, id])
+  @@index([organizationId, responsiblePractitionerId])
+  @@index([organizationId, updatedAt, id])
+  @@index([organizationId, phoneNormalized])
+  @@index([organizationId, email])
+  @@map("patients")
+}
+
+/// Append-oriented security/business history. Metadata is deliberately minimized.
+model AuditEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  actorUserId    String   @db.Uuid
+  action         String   @db.VarChar(100)
+  entityType     String   @db.VarChar(100)
+  entityId       String   @db.Uuid
+  requestId      String   @db.VarChar(100)
+  metadata       Json
+  occurredAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actor        User         @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, entityType, entityId, occurredAt])
+  @@index([organizationId, actorUserId, occurredAt])
+  @@map("audit_events")
+}
+
+model Location {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  name           String         @db.VarChar(150)
+  status         LocationStatus @default(ACTIVE)
+  addressLine1   String?        @db.VarChar(200)
+  city           String?        @db.VarChar(100)
+  timezone       String         @default("Europe/Kyiv") @db.VarChar(64)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  rooms        Room[]
+  appointments Appointment[]
+
+  @@index([organizationId, status])
+  @@map("locations")
+}
+
+model Room {
+  id             String     @id @default(uuid()) @db.Uuid
+  organizationId String     @db.Uuid
+  locationId     String     @db.Uuid
+  name           String     @db.VarChar(100)
+  status         RoomStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime   @updatedAt @db.Timestamptz(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  location     Location      @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+
+  @@index([organizationId, locationId, status])
+  @@map("rooms")
+}
+
+model AppointmentType {
+  id                     String                @id @default(uuid()) @db.Uuid
+  organizationId         String                @db.Uuid
+  name                   String                @db.VarChar(150)
+  defaultDurationMinutes Int                   @default(60)
+  status                 AppointmentTypeStatus @default(ACTIVE)
+  createdAt              DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime              @updatedAt @db.Timestamptz(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+
+  @@index([organizationId, status])
+  @@map("appointment_types")
+}
+
+/// Scheduled/planned interaction. Distinct from Encounter (actual visit).
+model Appointment {
+  id                 String            @id @default(uuid()) @db.Uuid
+  organizationId     String            @db.Uuid
+  patientId          String            @db.Uuid
+  practitionerId     String            @db.Uuid
+  locationId         String?           @db.Uuid
+  roomId             String?           @db.Uuid
+  appointmentTypeId  String?           @db.Uuid
+  startsAt           DateTime          @db.Timestamptz(3)
+  endsAt             DateTime          @db.Timestamptz(3)
+  status             AppointmentStatus @default(SCHEDULED)
+  reason             String?           @db.VarChar(500)
+  administrativeNote String?           @db.VarChar(2000)
+  cancellationReason String?           @db.VarChar(500)
+  version            Int               @default(1)
+  createdByUserId    String            @db.Uuid
+  updatedByUserId    String            @db.Uuid
+  createdAt          DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @db.Timestamptz(3)
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient         Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  practitioner    Practitioner     @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  location        Location?        @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  room            Room?            @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  appointmentType AppointmentType? @relation(fields: [appointmentTypeId], references: [id], onDelete: Restrict)
+  createdBy       User             @relation("AppointmentCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User             @relation("AppointmentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  encounter       Encounter?
+
+  @@index([organizationId, startsAt])
+  @@index([organizationId, practitionerId, startsAt])
+  @@index([organizationId, patientId, startsAt])
+  @@index([organizationId, status, startsAt])
+  @@map("appointments")
+}
+
+/// Actual rehabilitation-center interaction. May originate from an Appointment.
+model Encounter {
+  id              String          @id @default(uuid()) @db.Uuid
+  organizationId  String          @db.Uuid
+  patientId       String          @db.Uuid
+  practitionerId  String          @db.Uuid
+  appointmentId   String?         @unique @db.Uuid
+  startedAt       DateTime        @db.Timestamptz(3)
+  endedAt         DateTime?       @db.Timestamptz(3)
+  status          EncounterStatus @default(IN_PROGRESS)
+  createdByUserId String          @db.Uuid
+  updatedByUserId String          @db.Uuid
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient         Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  practitioner    Practitioner     @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  appointment     Appointment?     @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  createdBy       User             @relation("EncounterCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User             @relation("EncounterUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  assessments     Assessment[]
+  bodyAnnotations BodyAnnotation[]
+
+  @@index([organizationId, patientId, startedAt])
+  @@index([organizationId, practitionerId, startedAt])
+  @@map("encounters")
+}
+
+/// Reusable structured observation semantics. Null organizationId means built-in/system.
+model MeasurementDefinition {
+  id                      String                  @id @default(uuid()) @db.Uuid
+  organizationId          String?                 @db.Uuid
+  code                    String                  @db.VarChar(100)
+  name                    String                  @db.VarChar(200)
+  description             String?                 @db.VarChar(1000)
+  valueType               MeasurementValueType
+  unitCode                String?                 @db.VarChar(32)
+  minimumValue            Float?
+  maximumValue            Float?
+  allowedCodedValues      Json?
+  category                MeasurementCategory
+  anatomicalApplicability AnatomicalApplicability @default(OPTIONAL)
+  active                  Boolean                 @default(true)
+  createdAt               DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime                @updatedAt @db.Timestamptz(3)
+
+  organization        Organization?            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  templateItems       AssessmentTemplateItem[]
+  measurements        Measurement[]
+  rehabilitationGoals RehabilitationGoal[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active, category, code])
+  @@map("measurement_definitions")
+}
+
+/// Immutable revision of a reusable assessment layout. Null organizationId means built-in/system.
+model AssessmentTemplate {
+  id                 String   @id @default(uuid()) @db.Uuid
+  organizationId     String?  @db.Uuid
+  code               String   @db.VarChar(100)
+  revision           Int      @default(1)
+  name               String   @db.VarChar(200)
+  description        String?  @db.VarChar(1000)
+  active             Boolean  @default(true)
+  configurableSample Boolean  @default(true)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(3)
+
+  organization Organization?            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  items        AssessmentTemplateItem[]
+  assessments  Assessment[]
+
+  @@unique([organizationId, code, revision])
+  @@index([organizationId, active, code, revision])
+  @@map("assessment_templates")
+}
+
+model AssessmentTemplateItem {
+  id                      String      @id @default(uuid()) @db.Uuid
+  templateId              String      @db.Uuid
+  measurementDefinitionId String      @db.Uuid
+  displayOrder            Int
+  required                Boolean     @default(false)
+  defaultRegionCode       String?     @db.VarChar(64)
+  defaultLaterality       Laterality?
+
+  template              AssessmentTemplate    @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  measurementDefinition MeasurementDefinition @relation(fields: [measurementDefinitionId], references: [id], onDelete: Restrict)
+  measurements          Measurement[]
+
+  @@unique([templateId, displayOrder])
+  @@index([templateId, measurementDefinitionId])
+  @@map("assessment_template_items")
+}
+
+/// Specialist evaluation aggregate; normal edits are allowed only while DRAFT.
+model Assessment {
+  id              String           @id @default(uuid()) @db.Uuid
+  organizationId  String           @db.Uuid
+  patientId       String           @db.Uuid
+  encounterId     String?          @db.Uuid
+  practitionerId  String           @db.Uuid
+  templateId      String?          @db.Uuid
+  title           String           @db.VarChar(200)
+  status          AssessmentStatus @default(DRAFT)
+  performedAt     DateTime         @db.Timestamptz(3)
+  completedAt     DateTime?        @db.Timestamptz(3)
+  summary         String?          @db.VarChar(5000)
+  voidedAt        DateTime?        @db.Timestamptz(3)
+  voidedByUserId  String?          @db.Uuid
+  voidReason      String?          @db.VarChar(1000)
+  version         Int              @default(1)
+  createdByUserId String           @db.Uuid
+  updatedByUserId String           @db.Uuid
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient      Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounter    Encounter?          @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  practitioner Practitioner        @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  template     AssessmentTemplate? @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  createdBy    User                @relation("AssessmentCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User                @relation("AssessmentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  voidedBy     User?               @relation("AssessmentVoidedBy", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+  measurements Measurement[]
+
+  @@index([organizationId, patientId, performedAt])
+  @@index([organizationId, encounterId])
+  @@index([organizationId, status, performedAt])
+  @@map("assessments")
+}
+
+/// One typed observation. Definition snapshot fields protect historical meaning.
+model Measurement {
+  id                   String               @id @default(uuid()) @db.Uuid
+  organizationId       String               @db.Uuid
+  assessmentId         String               @db.Uuid
+  patientId            String               @db.Uuid
+  encounterId          String?              @db.Uuid
+  definitionId         String               @db.Uuid
+  templateItemId       String?              @db.Uuid
+  definitionCode       String               @db.VarChar(100)
+  definitionName       String               @db.VarChar(200)
+  categorySnapshot     MeasurementCategory
+  valueTypeSnapshot    MeasurementValueType
+  unitCodeSnapshot     String?              @db.VarChar(32)
+  minimumValueSnapshot Float?
+  maximumValueSnapshot Float?
+  anatomicalRegionCode String?              @db.VarChar(64)
+  laterality           Laterality?
+  sequenceNumber       Int                  @default(1)
+  numericValue         Float?
+  textValue            String?              @db.VarChar(2000)
+  booleanValue         Boolean?
+  codedValue           String?              @db.VarChar(100)
+  performedAt          DateTime             @db.Timestamptz(3)
+  note                 String?              @db.VarChar(2000)
+  createdByUserId      String               @db.Uuid
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  assessment       Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  patient          Patient                 @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  definition       MeasurementDefinition   @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  templateItem     AssessmentTemplateItem? @relation(fields: [templateItemId], references: [id], onDelete: Restrict)
+  createdBy        User                    @relation("MeasurementCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  baselineForGoals RehabilitationGoal[]
+
+  @@index([assessmentId])
+  @@index([organizationId, patientId, definitionId, performedAt])
+  @@index([organizationId, patientId, definitionCode, performedAt])
+  @@map("measurements")
+}
+
+model RehabilitationPlan {
+  id                        String                   @id @default(uuid()) @db.Uuid
+  organizationId            String                   @db.Uuid
+  patientId                 String                   @db.Uuid
+  responsiblePractitionerId String                   @db.Uuid
+  status                    RehabilitationPlanStatus @default(DRAFT)
+  currentRevisionId         String?                  @unique @db.Uuid
+  cancellationReason        String?                  @db.VarChar(1000)
+  cancelledAt               DateTime?                @db.Timestamptz(3)
+  cancelledByUserId         String?                  @db.Uuid
+  version                   Int                      @default(1)
+  createdByUserId           String                   @db.Uuid
+  updatedByUserId           String                   @db.Uuid
+  createdAt                 DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime                 @updatedAt @db.Timestamptz(3)
+
+  organization            Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient                 Patient                      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  responsiblePractitioner Practitioner                 @relation(fields: [responsiblePractitionerId], references: [id], onDelete: Restrict)
+  currentRevision         RehabilitationPlanRevision?  @relation("CurrentPlanRevision", fields: [currentRevisionId], references: [id], onDelete: Restrict)
+  revisions               RehabilitationPlanRevision[] @relation("PlanRevisions")
+  createdBy               User                         @relation("RehabilitationPlanCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy               User                         @relation("RehabilitationPlanUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  cancelledBy             User?                        @relation("RehabilitationPlanCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, patientId, status])
+  @@index([organizationId, responsiblePractitionerId, status])
+  @@map("rehabilitation_plans")
+}
+
+model RehabilitationPlanRevision {
+  id                String                           @id @default(uuid()) @db.Uuid
+  organizationId    String                           @db.Uuid
+  planId            String                           @db.Uuid
+  basedOnRevisionId String?                          @db.Uuid
+  revisionNumber    Int
+  status            RehabilitationPlanRevisionStatus @default(DRAFT)
+  title             String                           @db.VarChar(200)
+  description       String?                          @db.VarChar(5000)
+  startDate         DateTime                         @db.Date
+  expectedEndDate   DateTime?                        @db.Date
+  effectiveFrom     DateTime?                        @db.Timestamptz(3)
+  changeSummary     String?                          @db.VarChar(1000)
+  createdByUserId   String                           @db.Uuid
+  createdAt         DateTime                         @default(now()) @db.Timestamptz(3)
+
+  organization     Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  plan             RehabilitationPlan           @relation("PlanRevisions", fields: [planId], references: [id], onDelete: Restrict)
+  currentForPlan   RehabilitationPlan?          @relation("CurrentPlanRevision")
+  basedOn          RehabilitationPlanRevision?  @relation("RevisionLineage", fields: [basedOnRevisionId], references: [id], onDelete: Restrict)
+  derivedRevisions RehabilitationPlanRevision[] @relation("RevisionLineage")
+  goals            RehabilitationGoal[]
+  phases           RehabilitationPlanPhase[]
+  prescriptions    ExercisePrescription[]
+  createdBy        User                         @relation("RehabilitationPlanRevisionCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([planId, revisionNumber])
+  @@index([organizationId, planId, status])
+  @@map("rehabilitation_plan_revisions")
+}
+
+model RehabilitationGoal {
+  id                           String                   @id @default(uuid()) @db.Uuid
+  organizationId               String                   @db.Uuid
+  planRevisionId               String                   @db.Uuid
+  title                        String                   @db.VarChar(200)
+  description                  String?                  @db.VarChar(3000)
+  category                     String?                  @db.VarChar(100)
+  anatomicalRegionCode         String?                  @db.VarChar(64)
+  laterality                   Laterality?
+  status                       RehabilitationGoalStatus @default(PLANNED)
+  targetDate                   DateTime?                @db.Date
+  measurementDefinitionId      String?                  @db.Uuid
+  targetOperator               GoalTargetOperator?
+  targetValue                  Float?
+  targetValueUpper             Float?
+  targetUnitCode               String?                  @db.VarChar(32)
+  baselineMeasurementId        String?                  @db.Uuid
+  baselineNumericValueSnapshot Float?
+  baselineUnitCodeSnapshot     String?                  @db.VarChar(32)
+  baselineDefinitionCode       String?                  @db.VarChar(100)
+  baselineDefinitionName       String?                  @db.VarChar(200)
+  baselinePerformedAt          DateTime?                @db.Timestamptz(3)
+  displayOrder                 Int
+  createdAt                    DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt                    DateTime                 @updatedAt @db.Timestamptz(3)
+
+  organization          Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  planRevision          RehabilitationPlanRevision @relation(fields: [planRevisionId], references: [id], onDelete: Restrict)
+  measurementDefinition MeasurementDefinition?     @relation(fields: [measurementDefinitionId], references: [id], onDelete: Restrict)
+  baselineMeasurement   Measurement?               @relation(fields: [baselineMeasurementId], references: [id], onDelete: Restrict)
+
+  @@index([planRevisionId, displayOrder])
+  @@index([organizationId, measurementDefinitionId, anatomicalRegionCode, laterality])
+  @@map("rehabilitation_goals")
+}
+
+model RehabilitationPlanPhase {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  planRevisionId String    @db.Uuid
+  name           String    @db.VarChar(200)
+  description    String?   @db.VarChar(3000)
+  displayOrder   Int
+  expectedStart  DateTime? @db.Date
+  expectedEnd    DateTime? @db.Date
+  criteria       String?   @db.VarChar(3000)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  organization  Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  planRevision  RehabilitationPlanRevision @relation(fields: [planRevisionId], references: [id], onDelete: Restrict)
+  prescriptions ExercisePrescription[]
+
+  @@unique([planRevisionId, displayOrder])
+  @@map("rehabilitation_plan_phases")
+}
+
+model ExerciseDefinition {
+  id                      String               @id @default(uuid()) @db.Uuid
+  organizationId          String?              @db.Uuid
+  code                    String               @db.VarChar(100)
+  name                    String               @db.VarChar(200)
+  description             String               @db.VarChar(1000)
+  instructions            String               @db.VarChar(5000)
+  category                ExerciseCategory
+  difficulty              ExerciseDifficulty?
+  anatomicalRegionCodes   String[]
+  lateralityApplicability Laterality[]
+  targetMuscleGroupCodes  String[]
+  equipment               String[]
+  supportedDosageKinds    ExerciseDosageKind[]
+  contraindicationNotes   String?              @db.VarChar(3000)
+  safetyNotes             String?              @db.VarChar(3000)
+  active                  Boolean              @default(true)
+  createdAt               DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime             @updatedAt @db.Timestamptz(3)
+
+  organization  Organization?          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  media         ExerciseMedia[]
+  prescriptions ExercisePrescription[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active, category, code])
+  @@map("exercise_definitions")
+}
+
+model ExerciseMedia {
+  id                   String            @id @default(uuid()) @db.Uuid
+  exerciseDefinitionId String            @db.Uuid
+  mediaType            ExerciseMediaType
+  storageKey           String?           @db.VarChar(500)
+  externalUrl          String?           @db.VarChar(2000)
+  caption              String?           @db.VarChar(500)
+  sortOrder            Int               @default(0)
+  source               String?           @db.VarChar(500)
+  sourceUrl            String?           @db.VarChar(2000)
+  author               String?           @db.VarChar(300)
+  license              String?           @db.VarChar(300)
+  attribution          String?           @db.VarChar(1000)
+  createdAt            DateTime          @default(now()) @db.Timestamptz(3)
+
+  exerciseDefinition ExerciseDefinition @relation(fields: [exerciseDefinitionId], references: [id], onDelete: Restrict)
+
+  @@index([exerciseDefinitionId, sortOrder])
+  @@map("exercise_media")
+}
+
+model ExercisePrescription {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  organizationId       String                 @db.Uuid
+  planRevisionId       String                 @db.Uuid
+  phaseId              String?                @db.Uuid
+  exerciseDefinitionId String                 @db.Uuid
+  exerciseCodeSnapshot String                 @db.VarChar(100)
+  exerciseNameSnapshot String                 @db.VarChar(200)
+  laterality           Laterality?
+  anatomicalRegionCode String?                @db.VarChar(64)
+  sets                 Int?
+  repetitions          Int?
+  trials               Int?
+  durationSeconds      Int?
+  holdSeconds          Int?
+  distanceMeters       Float?
+  loadKg               Float?
+  frequencyType        ExerciseFrequencyType?
+  sessionsPerDay       Int?
+  daysPerWeek          Int?
+  instructionsOverride String?                @db.VarChar(5000)
+  specialistNote       String?                @db.VarChar(3000)
+  precautions          String?                @db.VarChar(3000)
+  progressionCriteria  String?                @db.VarChar(3000)
+  regressionCriteria   String?                @db.VarChar(3000)
+  displayOrder         Int
+  createdAt            DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime               @updatedAt @db.Timestamptz(3)
+
+  organization       Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  planRevision       RehabilitationPlanRevision @relation(fields: [planRevisionId], references: [id], onDelete: Restrict)
+  phase              RehabilitationPlanPhase?   @relation(fields: [phaseId], references: [id], onDelete: Restrict)
+  exerciseDefinition ExerciseDefinition         @relation(fields: [exerciseDefinitionId], references: [id], onDelete: Restrict)
+
+  @@index([planRevisionId, displayOrder])
+  @@index([organizationId, exerciseDefinitionId])
+  @@map("exercise_prescriptions")
+}
+
+/// Canonical render asset family. Clinical records never reference a mutable file path directly.
+model AnatomicalModel {
+  id          String              @id @default(uuid()) @db.Uuid
+  code        String              @unique @db.VarChar(64)
+  name        String              @db.VarChar(200)
+  kind        AnatomicalModelKind
+  description String?             @db.VarChar(1000)
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @db.Timestamptz(3)
+
+  versions AnatomicalModelVersion[]
+
+  @@map("anatomical_models")
+}
+
+/// Immutable uploaded GLB plus an explicit alignment transform.
+model AnatomicalModelVersion {
+  id             String                       @id @default(uuid()) @db.Uuid
+  modelId        String                       @db.Uuid
+  version        Int
+  status         AnatomicalModelVersionStatus @default(DRAFT)
+  storageKey     String                       @db.VarChar(500)
+  checksumSha256 String                       @db.Char(64)
+  bytes          Int
+  format         String                       @default("GLB") @db.VarChar(16)
+  compression    String?                      @db.VarChar(64)
+  positionX      Float                        @default(0)
+  positionY      Float                        @default(0)
+  positionZ      Float                        @default(0)
+  rotationX      Float                        @default(0)
+  rotationY      Float                        @default(0)
+  rotationZ      Float                        @default(0)
+  scaleX         Float                        @default(1)
+  scaleY         Float                        @default(1)
+  scaleZ         Float                        @default(1)
+  sourceName     String                       @db.VarChar(200)
+  sourceUrl      String?                      @db.VarChar(2000)
+  author         String?                      @db.VarChar(300)
+  licenseName    String?                      @db.VarChar(300)
+  attribution    String?                      @db.VarChar(1000)
+  createdAt      DateTime                     @default(now()) @db.Timestamptz(3)
+  activatedAt    DateTime?                    @db.Timestamptz(3)
+
+  model       AnatomicalModel                   @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  mappings    AnatomicalModelStructureMapping[]
+  annotations BodyAnnotation[]
+
+  @@unique([modelId, version])
+  @@index([modelId, status])
+  @@map("anatomical_model_versions")
+}
+
+/// Stable clinical vocabulary independent of any GLB node hierarchy.
+model AnatomicalStructure {
+  id            String                      @id @default(uuid()) @db.Uuid
+  code          String                      @unique @db.VarChar(100)
+  canonicalName String                      @db.VarChar(200)
+  displayNameUk String?                     @db.VarChar(200)
+  displayNameEn String?                     @db.VarChar(200)
+  category      AnatomicalStructureCategory
+  laterality    Laterality                  @default(NOT_APPLICABLE)
+  regionCode    String?                     @db.VarChar(64)
+  parentId      String?                     @db.Uuid
+  active        Boolean                     @default(true)
+  createdAt     DateTime                    @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime                    @updatedAt @db.Timestamptz(3)
+
+  parent      AnatomicalStructure?              @relation("AnatomicalStructureTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    AnatomicalStructure[]             @relation("AnatomicalStructureTree")
+  mappings    AnatomicalModelStructureMapping[]
+  annotations BodyAnnotation[]
+
+  @@index([parentId, active, canonicalName])
+  @@index([regionCode, laterality])
+  @@map("anatomical_structures")
+}
+
+/// Reviewed bridge from one versioned render primitive to one canonical structure.
+model AnatomicalModelStructureMapping {
+  id             String                      @id @default(uuid()) @db.Uuid
+  modelVersionId String                      @db.Uuid
+  structureId    String                      @db.Uuid
+  nodeName       String                      @db.VarChar(500)
+  meshName       String                      @db.VarChar(500)
+  primitiveIndex Int                         @default(0)
+  stableMeshKey  String                      @db.VarChar(1000)
+  confidence     AnatomicalMappingConfidence
+  reviewerNote   String?                     @db.VarChar(1000)
+  createdAt      DateTime                    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime                    @updatedAt @db.Timestamptz(3)
+
+  modelVersion AnatomicalModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  structure    AnatomicalStructure    @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  annotations  BodyAnnotation[]
+
+  @@unique([modelVersionId, stableMeshKey, primitiveIndex])
+  @@index([modelVersionId, structureId])
+  @@map("anatomical_structure_mappings")
+}
+
+/// Organization-scoped clinical finding anchored to an immutable model version.
+model BodyAnnotation {
+  id                      String               @id @default(uuid()) @db.Uuid
+  organizationId          String               @db.Uuid
+  patientId               String               @db.Uuid
+  encounterId             String?              @db.Uuid
+  structureId             String               @db.Uuid
+  modelVersionId          String               @db.Uuid
+  mappingId               String               @db.Uuid
+  type                    BodyAnnotationType
+  severity                Int?
+  title                   String?              @db.VarChar(200)
+  note                    String?              @db.VarChar(3000)
+  status                  BodyAnnotationStatus @default(ACTIVE)
+  stableMeshKey           String               @db.VarChar(1000)
+  primitiveIndex          Int
+  triangleIndex           Int
+  barycentricU            Float
+  barycentricV            Float
+  barycentricW            Float
+  localPositionX          Float
+  localPositionY          Float
+  localPositionZ          Float
+  localNormalX            Float?
+  localNormalY            Float?
+  localNormalZ            Float?
+  version                 Int                  @default(1)
+  createdByPractitionerId String               @db.Uuid
+  createdByUserId         String               @db.Uuid
+  updatedByUserId         String               @db.Uuid
+  resolvedAt              DateTime?            @db.Timestamptz(3)
+  voidedAt                DateTime?            @db.Timestamptz(3)
+  voidReason              String?              @db.VarChar(1000)
+  createdAt               DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime             @updatedAt @db.Timestamptz(3)
+
+  organization          Organization                    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient               Patient                         @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounter             Encounter?                      @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  structure             AnatomicalStructure             @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  modelVersion          AnatomicalModelVersion          @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  mapping               AnatomicalModelStructureMapping @relation(fields: [mappingId], references: [id], onDelete: Restrict)
+  createdByPractitioner Practitioner                    @relation(fields: [createdByPractitionerId], references: [id], onDelete: Restrict)
+  createdBy             User                            @relation("BodyAnnotationCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy             User                            @relation("BodyAnnotationUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  history               BodyAnnotationStatusHistory[]
+
+  @@index([organizationId, patientId, status, createdAt])
+  @@index([organizationId, encounterId, createdAt])
+  @@index([organizationId, structureId, status])
+  @@map("body_annotations")
+}
+
+model BodyAnnotationStatusHistory {
+  id              String                @id @default(uuid()) @db.Uuid
+  organizationId  String                @db.Uuid
+  annotationId    String                @db.Uuid
+  fromStatus      BodyAnnotationStatus?
+  toStatus        BodyAnnotationStatus
+  changedByUserId String                @db.Uuid
+  reason          String?               @db.VarChar(1000)
+  changedAt       DateTime              @default(now()) @db.Timestamptz(3)
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  annotation   BodyAnnotation @relation(fields: [annotationId], references: [id], onDelete: Restrict)
+  changedBy    User           @relation("BodyAnnotationStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, annotationId, changedAt])
+  @@map("body_annotation_status_history")
+}
+
+/// Immutable clinical export after successful generation. Source metadata contains identifiers and versions, not raw audit payloads.
+model ClinicalReport {
+  id                        String               @id @default(uuid()) @db.Uuid
+  organizationId            String               @db.Uuid
+  patientId                 String               @db.Uuid
+  type                      ClinicalReportType   @default(PROGRESS)
+  status                    ClinicalReportStatus @default(DRAFT)
+  periodFrom                DateTime             @db.Timestamptz(3)
+  periodTo                  DateTime             @db.Timestamptz(3)
+  configuration             Json
+  sourceSnapshotMetadata    Json
+  generatedByPractitionerId String               @db.Uuid
+  generatedByUserId         String               @db.Uuid
+  storageKey                String?              @db.VarChar(500)
+  templateVersion           String               @db.VarChar(50)
+  failureCode               String?              @db.VarChar(100)
+  voidedAt                  DateTime?            @db.Timestamptz(3)
+  voidedByUserId            String?              @db.Uuid
+  voidReason                String?              @db.VarChar(1000)
+  createdAt                 DateTime             @default(now()) @db.Timestamptz(3)
+  generatedAt               DateTime?            @db.Timestamptz(3)
+  updatedAt                 DateTime             @updatedAt @db.Timestamptz(3)
+
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient                 Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  generatedByPractitioner Practitioner @relation(fields: [generatedByPractitionerId], references: [id], onDelete: Restrict)
+  generatedBy             User         @relation("ClinicalReportGeneratedBy", fields: [generatedByUserId], references: [id], onDelete: Restrict)
+  voidedBy                User?        @relation("ClinicalReportVoidedBy", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([organizationId, status, createdAt])
+  @@map("clinical_reports")
+}

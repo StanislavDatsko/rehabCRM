@@ -1,0 +1,101 @@
+@import '@repo/ui/styles.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.rc-btn {
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.rc-btn-primary {
+  background: var(--color-info);
+  color: #fff;
+}
+
+.rc-btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.rc-btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.field {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.rc-scheduling-calendar .rbc-calendar {
+  font-family: var(--font-ui), system-ui, sans-serif;
+  color: var(--color-text-primary);
+}
+
+.rc-scheduling-calendar .rbc-toolbar button {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.rc-scheduling-calendar .rbc-toolbar button.rbc-active,
+.rc-scheduling-calendar .rbc-toolbar button:hover {
+  background: var(--color-surface-muted);
+}
+
+.rc-scheduling-calendar .rbc-header,
+.rc-scheduling-calendar .rbc-time-header-content,
+.rc-scheduling-calendar .rbc-time-content,
+.rc-scheduling-calendar .rbc-day-bg,
+.rc-scheduling-calendar .rbc-timeslot-group {
+  border-color: var(--color-border);
+}
+
+.rc-scheduling-calendar .rbc-event {
+  background: color-mix(in srgb, var(--color-info) 18%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-info) 40%, transparent);
+  color: var(--color-text-primary);
+}
+
+.rc-scheduling-calendar .rbc-today {
+  background: color-mix(in srgb, var(--color-info) 6%, var(--color-surface));
+}

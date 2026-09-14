@@ -1,0 +1,63 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "DEPLOYMENT_ENV",
+    "APP_VERSION",
+    "APP_COMMIT_SHA",
+    "DATABASE_SCHEMA_VERSION",
+    "API_PORT",
+    "API_PUBLIC_URL",
+    "LOG_LEVEL",
+    "SWAGGER_ENABLED",
+    "WEB_PORT",
+    "WEB_PUBLIC_URL",
+    "API_INTERNAL_URL",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_S3_PUBLIC_URL",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "S3_ENDPOINT",
+    "S3_REGION",
+    "S3_ACCESS_KEY",
+    "S3_SECRET_KEY",
+    "S3_BUCKET_DOCUMENTS",
+    "S3_BUCKET_MODELS",
+    "S3_FORCE_PATH_STYLE",
+    "AUTH_SECRET",
+    "AUTH_URL",
+    "AUTH_TRUST_HOST",
+    "AUTH_KEYCLOAK_ID",
+    "AUTH_KEYCLOAK_SECRET",
+    "AUTH_KEYCLOAK_ISSUER",
+    "OIDC_ISSUER",
+    "OIDC_AUDIENCE",
+    "OIDC_ADMIN_BASE_URL",
+    "OIDC_ADMIN_REALM",
+    "OIDC_ADMIN_CLIENT_ID",
+    "OIDC_ADMIN_CLIENT_SECRET",
+    "OIDC_ADMIN_ACTION_LIFESPAN_SECONDS",
+    "METRICS_TOKEN",
+    "API_RATE_LIMIT_TTL_MS",
+    "API_RATE_LIMIT_MAX"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

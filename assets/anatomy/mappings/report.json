@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-09-04T07:15:38.982Z",
+  "totalMeshInstances": 3044,
+  "mappedMeshInstances": 36,
+  "mappedPrimitives": 60,
+  "mappedStructures": 36,
+  "manualReviewMeshInstances": 3008,
+  "ambiguousMappings": 0,
+  "unmappedCanonicalStructures": [
+    "body",
+    "shoulder.left",
+    "shoulder.right",
+    "elbow.left",
+    "elbow.right",
+    "wrist.left",
+    "wrist.right",
+    "hip.left",
+    "hip.right",
+    "knee.left",
+    "knee.right",
+    "ankle.left",
+    "ankle.right",
+    "ankle_joint.left",
+    "ankle_joint.right",
+    "cervical_spine",
+    "thoracic_spine",
+    "lumbar_spine"
+  ],
+  "policy": "Only explicit .l/.r node names whose world-space X side agrees are promoted. Everything else remains unmapped."
+}

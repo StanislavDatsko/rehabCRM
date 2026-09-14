@@ -1,0 +1,7 @@
+# Observability and alerting
+
+The API emits structured JSON logs outside development, propagates/generates W3C `traceparent`, returns `x-request-id`, and exposes bearer-protected Prometheus-format metrics at `/health/metrics`. `/health/info` reports safe release version, commit SHA, schema version, and deployment environment. `/health/ready` distinguishes a fatal database outage (`down`) from degraded Redis, OIDC, or object-storage dependencies.
+
+Telemetry must never contain patient names, emails, phone numbers, notes, measurements, report text, signed URLs, authorization headers, cookies, access/refresh tokens, passwords, or request bodies. Route labels must be templated; UUID-bearing paths may remain in security logs only under restricted retention. The `ErrorTrackerPort` is provider-neutral and defaults to no-op until an approved scrubbed adapter is configured.
+
+Required dashboards: request rate/error/duration, readiness dependencies, authentication denials by reason, report generation failure/duration, storage errors, database saturation/slow queries, staff identity synchronization backlog, container restarts, and backup freshness. Required alerts cover API down, database down, sustained 5xx, authentication spike, backup overdue/failure, object-storage failure, migration failure, identity synchronization backlog, and disk/certificate expiry. Every alert links to a runbook and named on-call owner.

@@ -1,0 +1,200 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://rehabcrm:rehabcrm@localhost:5432/rehabcrm
+      REDIS_URL: redis://localhost:6379
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: ci
+      S3_SECRET_KEY: ci-secret
+      S3_BUCKET_DOCUMENTS: rehabcrm-documents
+      S3_BUCKET_MODELS: rehabcrm-models
+      API_INTERNAL_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      OIDC_ISSUER: http://localhost:8080/realms/rehabcrm
+      OIDC_AUDIENCE: rehabcrm-api
+      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      AUTH_KEYCLOAK_ID: rehabcrm-web
+      AUTH_KEYCLOAK_SECRET: rehabcrm-web-dev-secret
+      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/rehabcrm
+      AUTH_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm audit --audit-level high
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: rehabcrm-sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rehabcrm-sbom
+          path: rehabcrm-sbom.cdx.json
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rehabcrm
+          POSTGRES_PASSWORD: rehabcrm
+          POSTGRES_DB: rehabcrm_migration_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U rehabcrm -d rehabcrm_migration_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      DEPLOYMENT_ENV: test
+      DATABASE_URL: postgresql://rehabcrm:rehabcrm@localhost:5432/rehabcrm_migration_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @rehabcrm/api exec prisma migrate deploy
+      - run: pnpm --filter @rehabcrm/api prisma:seed
+      - run: pnpm --filter @rehabcrm/api exec prisma validate
+
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.api
+          load: true
+          tags: rehabcrm-api:ci
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.web
+          load: true
+          tags: rehabcrm-web:ci
+          build-args: |
+            DEPLOYMENT_ENV=production
+            NEXT_PUBLIC_API_URL=https://api.example.test
+            AUTH_KEYCLOAK_ISSUER=https://identity.example.test/realms/rehabcrm
+            NEXT_PUBLIC_S3_PUBLIC_URL=https://objects.example.test
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: rehabcrm-api:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: rehabcrm-web:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      DEPLOYMENT_ENV: test
+      DATABASE_URL: postgresql://rehabcrm:change-me-local-only@localhost:5432/rehabcrm?schema=public
+      REDIS_URL: redis://localhost:6379
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: rehabcrm
+      S3_SECRET_KEY: rehabcrmsecret
+      S3_BUCKET_DOCUMENTS: rehabcrm-documents
+      S3_BUCKET_MODELS: rehabcrm-models
+      S3_FORCE_PATH_STYLE: true
+      API_PORT: 3001
+      API_INTERNAL_URL: http://localhost:3001
+      API_PUBLIC_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      WEB_PUBLIC_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000
+      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
+      AUTH_KEYCLOAK_ID: rehabcrm-web
+      AUTH_KEYCLOAK_SECRET: rehabcrm-web-dev-secret
+      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/rehabcrm
+      OIDC_ISSUER: http://localhost:8080/realms/rehabcrm
+      OIDC_AUDIENCE: rehabcrm-api
+      OIDC_ADMIN_BASE_URL: http://localhost:8080
+      OIDC_ADMIN_REALM: rehabcrm
+      OIDC_ADMIN_CLIENT_ID: rehabcrm-provisioner
+      OIDC_ADMIN_CLIENT_SECRET: rehabcrm-provisioner-dev-secret
+      METRICS_TOKEN: ci-only-metrics-token-not-for-production
+      E2E_BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @rehabcrm/web exec playwright install --with-deps chromium firefox webkit
+      - run: docker compose -f infra/docker/docker-compose.yml up -d
+      - name: Wait for infrastructure
+        run: |
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://localhost:8080/realms/rehabcrm/.well-known/openid-configuration >/dev/null &&
+            curl --fail --silent http://localhost:9000/minio/health/live >/dev/null && exit 0
+            sleep 2
+          done
+          docker compose -f infra/docker/docker-compose.yml logs
+          exit 1
+      - run: pnpm --filter @rehabcrm/api exec prisma migrate deploy
+      - run: pnpm --filter @rehabcrm/api prisma:seed
+      - run: pnpm --filter @rehabcrm/api anatomy:import -- --apply
+      - name: Create report bucket
+        run: |
+          docker run --rm --network host --entrypoint /bin/sh minio/mc -c \
+            "mc alias set local http://127.0.0.1:9000 rehabcrm rehabcrmsecret >/dev/null && mc mb --ignore-existing local/rehabcrm-documents"
+      - run: pnpm build
+      - name: Start application
+        run: |
+          pnpm --filter @rehabcrm/api start >/tmp/rehabcrm-api.log 2>&1 &
+          pnpm --filter @rehabcrm/web start >/tmp/rehabcrm-web.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://localhost:3001/health/live >/dev/null &&
+            curl --fail --silent http://localhost:3000/login >/dev/null && exit 0
+            sleep 2
+          done
+          cat /tmp/rehabcrm-api.log /tmp/rehabcrm-web.log
+          exit 1
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results

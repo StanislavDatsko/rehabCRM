@@ -1,0 +1,32 @@
+{
+  "name": "@repo/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./api-env": {
+      "types": "./dist/api-env.d.ts",
+      "default": "./dist/api-env.js"
+    },
+    "./web-env": {
+      "types": "./dist/web-env.d.ts",
+      "default": "./dist/web-env.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.14.0",
+    "eslint": "^9.24.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

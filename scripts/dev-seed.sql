@@ -1,0 +1,2 @@
+-- Prefer: pnpm --filter @rehabcrm/api prisma:seed
+-- Fictional data only. Kept as a pointer for operators who expected SQL.

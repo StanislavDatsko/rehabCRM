@@ -1,0 +1,845 @@
+{
+  "generatedAt": "2026-09-04T07:15:38.976Z",
+  "candidates": [
+    {
+      "layer": "skeleton",
+      "structureCode": "femur.left",
+      "nodeName": "Femur.l",
+      "meshName": "Femur.003",
+      "stableMeshKey": "Femur.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.0902346773702761,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "femur.left",
+      "nodeName": "Femur.l",
+      "meshName": "Femur.003",
+      "stableMeshKey": "Femur.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.0902346773702761,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "femur.right",
+      "nodeName": "Femur.r",
+      "meshName": "Femur.003",
+      "stableMeshKey": "Femur.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.09023457104778884,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "femur.right",
+      "nodeName": "Femur.r",
+      "meshName": "Femur.003",
+      "stableMeshKey": "Femur.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.09023457104778884,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "tibia.left",
+      "nodeName": "Tibia.l",
+      "meshName": "Tibia.003",
+      "stableMeshKey": "Tibia.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.07656566449932241,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "tibia.left",
+      "nodeName": "Tibia.l",
+      "meshName": "Tibia.003",
+      "stableMeshKey": "Tibia.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.07656566449932241,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "tibia.right",
+      "nodeName": "Tibia.r",
+      "meshName": "Tibia.003",
+      "stableMeshKey": "Tibia.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.07656556935270649,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "tibia.right",
+      "nodeName": "Tibia.r",
+      "meshName": "Tibia.003",
+      "stableMeshKey": "Tibia.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.07656556935270649,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "fibula.left",
+      "nodeName": "Fibula.l",
+      "meshName": "Fibula.003",
+      "stableMeshKey": "Fibula.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.10673547219142115,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "fibula.left",
+      "nodeName": "Fibula.l",
+      "meshName": "Fibula.003",
+      "stableMeshKey": "Fibula.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.10673547219142115,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "fibula.right",
+      "nodeName": "Fibula.r",
+      "meshName": "Fibula.003",
+      "stableMeshKey": "Fibula.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.10673537704480524,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "fibula.right",
+      "nodeName": "Fibula.r",
+      "meshName": "Fibula.003",
+      "stableMeshKey": "Fibula.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.10673537704480524,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "patella.left",
+      "nodeName": "Patella.l",
+      "meshName": "Patella.003",
+      "stableMeshKey": "Patella.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08442996337149508,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "patella.left",
+      "nodeName": "Patella.l",
+      "meshName": "Patella.003",
+      "stableMeshKey": "Patella.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08442996337149508,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "patella.right",
+      "nodeName": "Patella.r",
+      "meshName": "Patella.003",
+      "stableMeshKey": "Patella.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08442986822126329,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "patella.right",
+      "nodeName": "Patella.r",
+      "meshName": "Patella.003",
+      "stableMeshKey": "Patella.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08442986822126329,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "humerus.left",
+      "nodeName": "Humerus.l",
+      "meshName": "Humerus.003",
+      "stableMeshKey": "Humerus.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.1967196499893546,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "humerus.left",
+      "nodeName": "Humerus.l",
+      "meshName": "Humerus.003",
+      "stableMeshKey": "Humerus.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.1967196499893546,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "humerus.right",
+      "nodeName": "Humerus.r",
+      "meshName": "Humerus.003",
+      "stableMeshKey": "Humerus.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.1967197107396163,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "humerus.right",
+      "nodeName": "Humerus.r",
+      "meshName": "Humerus.003",
+      "stableMeshKey": "Humerus.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.1967197107396163,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "radius.left",
+      "nodeName": "Radius.l",
+      "meshName": "Radius.003",
+      "stableMeshKey": "Radius.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.2577719291070567,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "radius.left",
+      "nodeName": "Radius.l",
+      "meshName": "Radius.003",
+      "stableMeshKey": "Radius.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.2577719291070567,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "radius.right",
+      "nodeName": "Radius.r",
+      "meshName": "Radius.003",
+      "stableMeshKey": "Radius.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.2577719898573184,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "radius.right",
+      "nodeName": "Radius.r",
+      "meshName": "Radius.003",
+      "stableMeshKey": "Radius.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.2577719898573184,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "ulna.left",
+      "nodeName": "Ulna.l",
+      "meshName": "Ulna.003",
+      "stableMeshKey": "Ulna.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.22943374419987178,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "ulna.left",
+      "nodeName": "Ulna.l",
+      "meshName": "Ulna.003",
+      "stableMeshKey": "Ulna.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.22943374419987178,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "ulna.right",
+      "nodeName": "Ulna.r",
+      "meshName": "Ulna.003",
+      "stableMeshKey": "Ulna.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.22943373789490545,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "ulna.right",
+      "nodeName": "Ulna.r",
+      "meshName": "Ulna.003",
+      "stableMeshKey": "Ulna.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.22943373789490545,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "scapula.left",
+      "nodeName": "Scapula.l",
+      "meshName": "Scapula.003",
+      "stableMeshKey": "Scapula.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.11709328536369336,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "scapula.left",
+      "nodeName": "Scapula.l",
+      "meshName": "Scapula.003",
+      "stableMeshKey": "Scapula.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.11709328536369336,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "scapula.right",
+      "nodeName": "Scapula.r",
+      "meshName": "Scapula.003",
+      "stableMeshKey": "Scapula.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.11709328800858566,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "scapula.right",
+      "nodeName": "Scapula.r",
+      "meshName": "Scapula.003",
+      "stableMeshKey": "Scapula.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.11709328800858566,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "clavicle.left",
+      "nodeName": "Clavicle.l",
+      "meshName": "Clavicle.003",
+      "stableMeshKey": "Clavicle.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08277254367196303,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "clavicle.left",
+      "nodeName": "Clavicle.l",
+      "meshName": "Clavicle.003",
+      "stableMeshKey": "Clavicle.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08277254367196303,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "clavicle.right",
+      "nodeName": "Clavicle.r",
+      "meshName": "Clavicle.003",
+      "stableMeshKey": "Clavicle.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08277260219621203,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "skeleton",
+      "structureCode": "clavicle.right",
+      "nodeName": "Clavicle.r",
+      "meshName": "Clavicle.003",
+      "stableMeshKey": "Clavicle.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08277260219621203,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gluteus_maximus.left",
+      "nodeName": "Gluteus maximus muscle.l",
+      "meshName": "Gluteus maximus muscle.001",
+      "stableMeshKey": "Gluteus maximus muscle.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.07405910172300018,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gluteus_maximus.right",
+      "nodeName": "Gluteus maximus muscle.r",
+      "meshName": "Gluteus maximus muscle.001",
+      "stableMeshKey": "Gluteus maximus muscle.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.07405913094620734,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "biceps_femoris.left",
+      "nodeName": "Long head of biceps femoris.l",
+      "meshName": "Long head of biceps femoris.001",
+      "stableMeshKey": "Long head of biceps femoris.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08917472502400695,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "biceps_femoris.left",
+      "nodeName": "Long head of biceps femoris.l",
+      "meshName": "Long head of biceps femoris.001",
+      "stableMeshKey": "Long head of biceps femoris.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.08917472502400695,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "biceps_femoris.right",
+      "nodeName": "Long head of biceps femoris.r",
+      "meshName": "Long head of biceps femoris.001",
+      "stableMeshKey": "Long head of biceps femoris.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08917475893400265,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "biceps_femoris.right",
+      "nodeName": "Long head of biceps femoris.r",
+      "meshName": "Long head of biceps femoris.001",
+      "stableMeshKey": "Long head of biceps femoris.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.08917475893400265,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gastrocnemius.left",
+      "nodeName": "Medial head of gastrocnemius.l",
+      "meshName": "Medial head of gastrocnemius.001",
+      "stableMeshKey": "Medial head of gastrocnemius.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.06032610434224016,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gastrocnemius.left",
+      "nodeName": "Medial head of gastrocnemius.l",
+      "meshName": "Medial head of gastrocnemius.001",
+      "stableMeshKey": "Medial head of gastrocnemius.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.06032610434224016,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gastrocnemius.right",
+      "nodeName": "Medial head of gastrocnemius.r",
+      "meshName": "Medial head of gastrocnemius.001",
+      "stableMeshKey": "Medial head of gastrocnemius.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.0603261918898816,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "gastrocnemius.right",
+      "nodeName": "Medial head of gastrocnemius.r",
+      "meshName": "Medial head of gastrocnemius.001",
+      "stableMeshKey": "Medial head of gastrocnemius.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.0603261918898816,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "deltoid.left",
+      "nodeName": "Acromial part of deltoid muscle.l",
+      "meshName": "Acromial part of deltoid muscle.001",
+      "stableMeshKey": "Acromial part of deltoid muscle.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.19717866106785997,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "deltoid.left",
+      "nodeName": "Acromial part of deltoid muscle.l",
+      "meshName": "Acromial part of deltoid muscle.001",
+      "stableMeshKey": "Acromial part of deltoid muscle.l",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.19717866106785997,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "deltoid.right",
+      "nodeName": "Acromial part of deltoid muscle.r",
+      "meshName": "Acromial part of deltoid muscle.001",
+      "stableMeshKey": "Acromial part of deltoid muscle.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.1971787103800376,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "muscles",
+      "structureCode": "deltoid.right",
+      "nodeName": "Acromial part of deltoid muscle.r",
+      "meshName": "Acromial part of deltoid muscle.001",
+      "stableMeshKey": "Acromial part of deltoid muscle.r",
+      "primitiveIndex": 1,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.1971787103800376,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "hip_joint.left",
+      "nodeName": "Articular capsule of hip joint.l",
+      "meshName": "Articular capsule of hip joint.006",
+      "stableMeshKey": "Articular capsule of hip joint.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.0935345564495782,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "hip_joint.right",
+      "nodeName": "Articular capsule of hip joint.r",
+      "meshName": "Articular capsule of hip joint.005",
+      "stableMeshKey": "Articular capsule of hip joint.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.09353453830953858,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "knee_joint.left",
+      "nodeName": "Articular capsule of knee joint.l",
+      "meshName": "Articular capsule of knee joint.006",
+      "stableMeshKey": "Articular capsule of knee joint.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.07567686688944068,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "knee_joint.right",
+      "nodeName": "Articular capsule of knee joint.r",
+      "meshName": "Articular capsule of knee joint.005",
+      "stableMeshKey": "Articular capsule of knee joint.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.07567694750292524,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "elbow_joint.left",
+      "nodeName": "Articular capsule of elbow joint.l",
+      "meshName": "Articular capsule of elbow joint.006",
+      "stableMeshKey": "Articular capsule of elbow joint.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.2195066427931727,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "elbow_joint.right",
+      "nodeName": "Articular capsule of elbow joint.r",
+      "meshName": "Articular capsule of elbow joint.005",
+      "stableMeshKey": "Articular capsule of elbow joint.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.219506632510464,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "shoulder_joint.left",
+      "nodeName": "Articular capsule of glenohumeral joint.l",
+      "meshName": "Articular capsule of glenohumeral joint.006",
+      "stableMeshKey": "Articular capsule of glenohumeral joint.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.16291905102678944,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "shoulder_joint.right",
+      "nodeName": "Articular capsule of glenohumeral joint.r",
+      "meshName": "Articular capsule of glenohumeral joint.005",
+      "stableMeshKey": "Articular capsule of glenohumeral joint.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.16291905564524217,
+        "geometricSide": "r"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "wrist_joint.left",
+      "nodeName": "Articular capsule of radiocarpal joint.l",
+      "meshName": "Articular capsule of radiocarpal joint.006",
+      "stableMeshKey": "Articular capsule of radiocarpal joint.l",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "l",
+        "worldCenterX": 0.26583415143410505,
+        "geometricSide": "l"
+      }
+    },
+    {
+      "layer": "joints",
+      "structureCode": "wrist_joint.right",
+      "nodeName": "Articular capsule of radiocarpal joint.r",
+      "meshName": "Articular capsule of radiocarpal joint.005",
+      "stableMeshKey": "Articular capsule of radiocarpal joint.r",
+      "primitiveIndex": 0,
+      "confidence": "HIGH_CONFIDENCE",
+      "evidence": {
+        "explicitNodeLaterality": "r",
+        "worldCenterX": -0.2658341038984928,
+        "geometricSide": "r"
+      }
+    }
+  ]
+}
