@@ -23,6 +23,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const requestId = String(request.headers['x-request-id'] ?? 'unknown');
 
+    // Express body-parser errors are not Nest HttpExceptions. Keep rejected
+    // oversized bodies as a client error and never pass the raw body onward.
+    if (
+      typeof exception === 'object' &&
+      exception !== null &&
+      'type' in exception &&
+      (exception as { type?: unknown }).type === 'entity.too.large'
+    ) {
+      response.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
+        code: API_ERROR_CODES.VALIDATION_FAILED,
+        message: 'The request payload is too large.',
+        requestId,
+      } satisfies ApiErrorBody);
+      return;
+    }
+
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const raw = exception.getResponse();

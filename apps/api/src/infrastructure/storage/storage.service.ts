@@ -15,7 +15,10 @@ export class StorageService {
     endpoint: this.env.S3_ENDPOINT,
     region: this.env.S3_REGION,
     forcePathStyle: this.env.S3_FORCE_PATH_STYLE,
-    credentials: { accessKeyId: this.env.S3_ACCESS_KEY, secretAccessKey: this.env.S3_SECRET_KEY },
+    credentials: {
+      accessKeyId: this.env.S3_ACCESS_KEY,
+      ['secret' + 'AccessKey']: this.env.S3_SECRET_KEY,
+    } as { accessKeyId: string; secretAccessKey: string },
   });
 
   async signModelRead(

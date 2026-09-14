@@ -39,4 +39,19 @@ describe('HealthService', () => {
     expect((await service.ready()).status).toBe('down');
     globalThis.fetch = originalFetch;
   });
+
+  it('bounds a hung dependency probe', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 200 });
+    const service = new HealthService(
+      { isReachable: async () => true } as PrismaService,
+      { isReachable: () => new Promise<boolean>(() => {}) } as RedisService,
+      { isReachable: async () => true } as StorageService,
+    );
+    const startedAt = Date.now();
+    const ready = await service.ready();
+    expect(ready.checks.redis).toBe('down');
+    expect(Date.now() - startedAt).toBeLessThan(2_500);
+    globalThis.fetch = originalFetch;
+  });
 });

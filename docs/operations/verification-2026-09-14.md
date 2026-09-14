@@ -62,3 +62,38 @@ Environment: local macOS workspace, Docker Compose stack, synthetic verification
 - Dependency-failure drills, manual accessibility review, observability PHI inspection, CSP/CORS/CSRF/request-limit probes, and complete report/annotation persistence matrix remain incomplete.
 
 Verdict: **NOT YET PILOT READY**.
+
+## Supplemental verification — 2026-09-15
+
+The following results supersede the corresponding open items above. Environment: local
+macOS Apple Silicon, Docker Compose, synthetic verification data only.
+
+- Node 22 static gates: lint, typecheck, build, and tests passed. Current test totals are
+  API 173 and Web 54 (plus the workspace package tests).
+- MinIO was corrected to the official pinned ARM64-capable image
+  `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z`; Compose pull, startup, authenticated
+  private bucket upload/read, and readiness all passed.
+- Encrypted PostgreSQL backup and isolated restore passed using PostgreSQL 16 container
+  tools; restored schema contains 31 tables with representative users/patients present.
+- Repository-native object-storage backup and isolated restore passed for document and model
+  buckets.
+- Authenticated k6 smoke passed: 2 VUs, 30 seconds, 60 requests, 0 authentication failures,
+  0% request errors, p95 34.14 ms. Appointment concurrency passed with exactly one create
+  and one `APPOINTMENT_TIME_CONFLICT`.
+- Clinical report live flow passed: completed PDF generated, stored privately, downloaded via
+  authorized signed URL, and audited. A second report received a distinct ID and completed
+  VOID workflow.
+- Signed object probe passed: unsigned 403, signed 200, expired 403.
+- Dependency failure drills passed for PostgreSQL, Redis, Keycloak, and MinIO after adding a
+  bounded 2-second readiness-probe timeout. Oversized JSON now returns 413 without echoing
+  the body.
+- Fresh API and Web production-image Trivy scans returned no unresolved HIGH/CRITICAL
+  findings. Git-history and focused working-tree Gitleaks scans passed.
+- Chromium E2E passed 5/7. Accessibility, core workflows, staff lifecycle, and isolation
+  passed. The two remaining 3D canvas assertions fail in headless Chromium because WebGL is
+  unavailable; the textual clinical fallback is visibly rendered and requires separate
+  headed/display-backed verification.
+
+Remaining pilot gates: headed WebGL and manual browser logout/session-revocation checks,
+PHI/secret inspection across telemetry, report recovery after restore, and final evidence
+reconciliation. Decision remains **NOT YET PILOT READY**.

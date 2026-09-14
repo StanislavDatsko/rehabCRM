@@ -27,9 +27,9 @@ export class HealthService {
   async ready(): Promise<HealthReadyResponse> {
     const [databaseReachable, redisReachable, storageReachable, identityReachable] =
       await Promise.all([
-        this.prisma.isReachable(),
-        this.redis.isReachable(),
-        this.storage.isReachable(),
+        this.bounded(this.prisma.isReachable()),
+        this.bounded(this.redis.isReachable()),
+        this.bounded(this.storage.isReachable()),
         this.identityReachable(),
       ]);
     const database: HealthStatus = databaseReachable ? 'ok' : 'down';
@@ -57,6 +57,13 @@ export class HealthService {
       schemaVersion: this.env.DATABASE_SCHEMA_VERSION,
       deploymentEnvironment: this.env.DEPLOYMENT_ENV,
     };
+  }
+
+  private async bounded(check: Promise<boolean>): Promise<boolean> {
+    return Promise.race([
+      check.catch(() => false),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2_000)),
+    ]);
   }
 
   private async identityReachable(): Promise<boolean> {
