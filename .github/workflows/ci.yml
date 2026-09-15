@@ -177,6 +177,8 @@ jobs:
         run: pnpm --filter @rehabcrm/api prisma:generate
       - run: pnpm --filter @rehabcrm/api exec prisma migrate deploy
       - run: pnpm --filter @rehabcrm/api prisma:seed
+      - name: Build shared config
+        run: pnpm --filter @repo/config build
       - run: pnpm --filter @rehabcrm/api anatomy:import -- --apply
       - name: Create report bucket
         run: |
