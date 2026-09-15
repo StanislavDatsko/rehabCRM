@@ -103,7 +103,7 @@ export function BodyMapWorkspace({
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5">
+      <header className="flex flex-wrap items-end justify-between gap-4 rounded-2xl bg-surface p-6 shadow-sm">
         <div>
           <p className="text-xs uppercase tracking-wide text-text-secondary">Clinical body map</p>
           <h1 className="font-serif text-3xl text-text-primary">{data.patient.fullName}</h1>
@@ -116,7 +116,7 @@ export function BodyMapWorkspace({
         </a>
       </header>
       <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <aside className="space-y-4 rounded-md border border-border bg-surface p-4">
+        <aside className="rc-card space-y-4 p-5">
           <section>
             <h2 className="font-medium">Layers</h2>
             {data.models.map((model) => (
@@ -181,7 +181,7 @@ export function BodyMapWorkspace({
             </div>
           </section>
         </aside>
-        <main className="space-y-3">
+        <main className="rc-card space-y-3 p-4 lg:p-5">
           <div className="flex flex-wrap gap-2">
             {['anterior', 'posterior', 'left', 'right'].map((item) => (
               <button

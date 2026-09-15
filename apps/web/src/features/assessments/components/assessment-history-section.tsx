@@ -26,7 +26,7 @@ export function AssessmentHistorySection({
   };
 }) {
   return (
-    <section className="rounded-md border border-border bg-surface p-5">
+    <section className="rc-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl text-text-primary">Оцінювання</h2>

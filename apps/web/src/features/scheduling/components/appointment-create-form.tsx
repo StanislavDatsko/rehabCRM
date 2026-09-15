@@ -1,9 +1,6 @@
 'use client';
 
-import type {
-  ResponsiblePractitionerResponse,
-  SchedulingCatalogResponse,
-} from '@repo/contracts';
+import type { ResponsiblePractitionerResponse, SchedulingCatalogResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import { t } from '../../../i18n/messages';
@@ -69,7 +66,7 @@ export function AppointmentCreateForm({
       aria-labelledby="appointment-create-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
     >
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-md border border-border bg-surface p-6 shadow-sm">
+      <div className="rc-card rc-card-elevated max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
         <div className="flex items-start justify-between gap-4">
           <h2 id="appointment-create-title" className="font-serif text-2xl text-text-primary">
             {t('appointmentCreateTitle')}
@@ -84,7 +81,10 @@ export function AppointmentCreateForm({
           <input type="hidden" name="patientId" value={selectedPatientId} />
 
           <div>
-            <label htmlFor="patient-search" className="block text-xs font-medium text-text-secondary">
+            <label
+              htmlFor="patient-search"
+              className="block text-xs font-medium text-text-secondary"
+            >
               {t('appointmentFieldPatient')}
             </label>
             <input

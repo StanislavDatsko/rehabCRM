@@ -5,13 +5,7 @@ import { buildPatientCalendarHref } from '../calendar-query';
 import { formatSchedulingInstant } from '../timezone';
 import { AppointmentStatusBadge } from './appointment-status-badge';
 
-function AppointmentRow({
-  item,
-  timezone,
-}: {
-  item: AppointmentCalendarItem;
-  timezone: string;
-}) {
+function AppointmentRow({ item, timezone }: { item: AppointmentCalendarItem; timezone: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -46,7 +40,7 @@ export function PatientAppointmentsSection({
   canCreate: boolean;
 }) {
   return (
-    <section className="rounded-md border border-border bg-surface p-5">
+    <section className="rc-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAppointments')}</h2>
         <div className="flex flex-wrap gap-2">
@@ -76,7 +70,9 @@ export function PatientAppointmentsSection({
         </div>
 
         <div>
-          <h3 className="text-sm font-medium text-text-primary">{t('patientRecentAppointments')}</h3>
+          <h3 className="text-sm font-medium text-text-primary">
+            {t('patientRecentAppointments')}
+          </h3>
           {summary.recent.length > 0 ? (
             <div className="mt-2 space-y-2">
               {summary.recent.map((item) => (

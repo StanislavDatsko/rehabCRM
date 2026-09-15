@@ -21,7 +21,7 @@ export function RehabilitationPlansSection({
   const open = plans.filter((plan) => ['DRAFT', 'ACTIVE', 'PAUSED'].includes(plan.status));
   const previous = plans.filter((plan) => ['COMPLETED', 'CANCELLED'].includes(plan.status));
   return (
-    <section className="rounded-md border border-border bg-surface p-5">
+    <section className="rc-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl text-text-primary">Плани реабілітації</h2>
@@ -62,7 +62,7 @@ function PlanGroup({ title, items }: { title: string; items: RehabilitationPlanL
           <a
             key={plan.id}
             href={`/app/rehabilitation-plans/${plan.id}`}
-            className="rounded-md border border-border p-4 transition hover:border-info/50 hover:bg-surface-muted"
+            className="rc-card block p-4 transition hover:border-info/50 hover:bg-surface-muted"
           >
             <div className="flex items-start justify-between gap-3">
               <strong className="text-text-primary">{plan.title}</strong>

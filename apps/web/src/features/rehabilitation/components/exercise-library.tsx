@@ -18,10 +18,7 @@ export function ExerciseLibrary({
           визначає фахівець.
         </p>
       </header>
-      <form
-        method="get"
-        className="grid gap-3 rounded-md border border-border bg-surface p-4 md:grid-cols-4"
-      >
+      <form method="get" className="rc-card grid gap-3 p-4 md:grid-cols-4">
         <label className="text-xs text-text-secondary md:col-span-2">
           Пошук
           <input
@@ -79,7 +76,7 @@ export function ExerciseLibrary({
             <a
               href={`/app/exercises/${exercise.id}`}
               key={exercise.id}
-              className="rounded-md border border-border bg-surface p-5 transition hover:border-info/50"
+              className="rc-card rc-card-elevated p-5 transition hover:border-brand/40"
             >
               <div className="flex justify-between gap-3">
                 <strong>{exercise.name}</strong>

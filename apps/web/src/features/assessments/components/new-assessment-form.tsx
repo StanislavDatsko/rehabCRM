@@ -16,7 +16,7 @@ export function NewAssessmentForm({
   const error = assessmentErrorMessage(errorCode);
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <header className="border-b border-border pb-5">
+      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
         <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           {patient.fullName}
         </p>
@@ -33,10 +33,7 @@ export function NewAssessmentForm({
           {error}
         </div>
       ) : null}
-      <form
-        action={createAssessmentAction}
-        className="space-y-5 rounded-md border border-border bg-surface p-5"
-      >
+      <form action={createAssessmentAction} className="rc-card rc-card-elevated space-y-5 p-5">
         <input type="hidden" name="patientId" value={patient.id} />
         {encounterId ? <input type="hidden" name="encounterId" value={encounterId} /> : null}
         <label className="block text-sm font-medium">

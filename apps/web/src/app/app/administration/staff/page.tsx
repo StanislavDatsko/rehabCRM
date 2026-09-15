@@ -32,13 +32,14 @@ export default async function StaffPage({
     });
     return (
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="rc-gradient-brand flex flex-col gap-4 rounded-[1.25rem] p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="font-serif text-3xl">Персонал</h1>
-            <p className="mt-1 text-sm text-text-secondary">
+            <p className="rc-kicker text-white/75">Організація</p>
+            <h1 className="mt-1 font-serif text-3xl">Персонал</h1>
+            <p className="mt-1 text-sm text-white/80">
               Облікові записи, ролі й доступ працівників організації
             </p>
-            <p className="mt-2 text-sm text-text-secondary">Усього: {list.total}</p>
+            <p className="mt-2 text-sm text-white/70">Усього: {list.total}</p>
           </div>
           {canCreateStaff(me) ? (
             <a href="/app/administration/staff/new" className="rc-btn rc-btn-primary">
@@ -46,7 +47,7 @@ export default async function StaffPage({
             </a>
           ) : null}
         </div>
-        <form className="grid gap-3 rounded-md border border-border bg-surface p-4 md:grid-cols-4">
+        <form className="rc-card grid gap-3 p-4 md:grid-cols-4">
           <label className="text-xs text-text-secondary">
             Пошук
             <input
@@ -84,7 +85,9 @@ export default async function StaffPage({
             </select>
           </label>
           <div className="flex items-end">
-            <button type="submit" className="rc-btn rc-btn-primary">Застосувати</button>
+            <button type="submit" className="rc-btn rc-btn-primary">
+              Застосувати
+            </button>
           </div>
         </form>
         {list.items.length === 0 ? (
@@ -92,7 +95,7 @@ export default async function StaffPage({
             Працівників не знайдено.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-md border border-border bg-surface">
+          <div className="rc-card overflow-x-auto p-0">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-xs text-text-secondary">
                 <tr>

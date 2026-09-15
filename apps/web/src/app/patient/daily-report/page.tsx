@@ -1,2 +1,2 @@
 import { DailyReportForm } from '../../../features/patient-portal/daily-report-form';
-export default function DailyReportPage() { return <><h1 className="text-3xl font-semibold">Щоденний звіт</h1><p className="mt-2 text-text-secondary">0 — немає, 10 — максимум. Біль і втома: більше означає сильніше.</p><DailyReportForm /></>; }
+export default function DailyReportPage() { return <div className="space-y-6"><header><p className="rc-kicker">Щоденна турбота</p><h1 className="mt-2 font-serif text-4xl font-semibold">Щоденний звіт</h1><p className="mt-2 text-text-secondary">0 — немає, 10 — максимум. Біль і втома: більше означає сильніше.</p></header><div className="rc-card p-5"><DailyReportForm /></div></div>; }

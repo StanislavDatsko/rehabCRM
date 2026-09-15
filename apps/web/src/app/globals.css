@@ -9,6 +9,19 @@ body {
   min-height: 100%;
 }
 
+button, a, input, select, textarea {
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease,
+    box-shadow 160ms ease, transform 160ms ease;
+}
+
+.rc-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.rc-card-elevated { box-shadow: var(--shadow-md); }
+.rc-card:hover { border-color: color-mix(in srgb, var(--brand-plum) 22%, var(--color-border)); }
+.rc-gradient-brand { background: linear-gradient(135deg, var(--brand-plum), var(--brand-violet)); }
+.rc-kicker { color: var(--color-info); font-size: .6875rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.rc-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.rc-btn-primary { box-shadow: var(--shadow-brand); }
+
 body {
   background: var(--color-background);
   color: var(--color-text-primary);
@@ -54,6 +67,28 @@ body {
   color: var(--color-text-primary);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
+}
+
+.field:focus,
+input:not([type='checkbox']):not([type='radio']):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand-violet);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-violet) 16%, transparent);
+}
+
+table thead th {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+table tbody tr {
+  transition: background-color 160ms ease;
+}
+
+table tbody tr:hover {
+  background: color-mix(in srgb, var(--brand-plum) 4%, var(--color-surface));
 }
 
 @media (prefers-reduced-motion: reduce) {

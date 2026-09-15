@@ -221,8 +221,9 @@ function TrendSummary({ history }: { history: MeasurementHistoryPoint[] }) {
   const trends = [...groups.values()].filter((points) => points.length >= 2).slice(0, 3);
   if (trends.length === 0) return null;
   return (
-    <section className="rounded-md border border-border bg-surface p-5">
-      <h2 className="font-serif text-xl">Динаміка вимірювань</h2>
+    <section className="rc-card rc-card-elevated p-5">
+      <p className="rc-kicker">Тренд показників</p>
+      <h2 className="mt-1 font-serif text-xl">Динаміка вимірювань</h2>
       <p className="mt-1 text-sm text-text-secondary">
         Фактичні значення за датою виконання, без згладжування та автоматичної оцінки покращення.
       </p>
@@ -326,23 +327,23 @@ export function AssessmentWorkspace({
           {error}
         </div>
       ) : null}
-      <header className="border-b border-border pb-5">
+      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/75">
               {assessment.patient.displayName}
             </p>
             <h1 className="mt-1 font-serif text-3xl">{assessment.title}</h1>
-            <p className="mt-2 text-sm text-text-secondary">
+            <p className="mt-2 text-sm text-white/80">
               {formatClinicalDate(assessment.performedAt)} · {assessment.practitioner.displayName}
             </p>
           </div>
-          <span className="rounded-full bg-surface-muted px-3 py-1 text-sm">
+          <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-medium ring-1 ring-white/20">
             {assessmentStatusLabel(assessment.status)}
           </span>
         </div>
         {assessment.template ? (
-          <p className="mt-3 text-xs text-text-secondary">
+          <p className="mt-3 text-xs text-white/70">
             {assessment.template.name} · незмінна редакція {assessment.template.revision}
             {assessment.template.configurableSample
               ? ' · демонстраційний конфігурований шаблон'
@@ -354,7 +355,7 @@ export function AssessmentWorkspace({
       <form action={saveAssessmentAction} className="space-y-6">
         <input type="hidden" name="assessmentId" value={assessment.id} />
         <input type="hidden" name="version" value={assessment.version} />
-        <section className="grid gap-4 rounded-md border border-border bg-surface p-5 md:grid-cols-2">
+        <section className="rc-card grid gap-4 p-5 md:grid-cols-2">
           <label className="text-sm font-medium">
             Назва
             <input
@@ -380,7 +381,7 @@ export function AssessmentWorkspace({
           </label>
         </section>
         {categories.map((category) => (
-          <section key={category} className="rounded-md border border-border bg-surface p-5">
+          <section key={category} className="rc-card p-5">
             <h2 className="font-serif text-xl">{categoryLabels[category]}</h2>
             <div className="mt-4 space-y-6">
               {items
@@ -392,7 +393,7 @@ export function AssessmentWorkspace({
                   const selectedLaterality =
                     measurement?.laterality ?? item.defaultLaterality ?? '';
                   return (
-                    <div key={item.id} className="rounded-md border border-border/70 p-4">
+                    <div key={item.id} className="rounded-xl border border-border/70 bg-surface-muted/45 p-4 transition-colors hover:border-brand/35">
                       <input type="hidden" name={`definition.${item.id}`} value={definition.id} />
                       <input
                         type="hidden"
@@ -501,7 +502,7 @@ export function AssessmentWorkspace({
             </div>
           </section>
         ))}
-        <section className="rounded-md border border-border bg-surface p-5">
+        <section className="rc-card p-5">
           <label className="block font-serif text-xl">
             Професійний підсумок
             <textarea
@@ -529,7 +530,7 @@ export function AssessmentWorkspace({
       {assessment.status === 'DRAFT' && canComplete ? (
         <form
           action={completeAssessmentAction}
-          className="rounded-md border border-border bg-surface p-5"
+          className="rc-card border-brand/20 bg-brand/5 p-5"
         >
           <input type="hidden" name="assessmentId" value={assessment.id} />
           <input type="hidden" name="version" value={assessment.version} />
@@ -545,7 +546,7 @@ export function AssessmentWorkspace({
       {assessment.status !== 'VOIDED' && canVoid ? (
         <form
           action={voidAssessmentAction}
-          className="rounded-md border border-danger/20 bg-surface p-5"
+          className="rc-card border-danger/20 bg-surface p-5"
         >
           <input type="hidden" name="assessmentId" value={assessment.id} />
           <input type="hidden" name="version" value={assessment.version} />

@@ -31,7 +31,7 @@ export function StructureInspector({
     ? annotations.filter((item) => item.structure.id === structure.id && item.status !== 'VOIDED')
     : [];
   return (
-    <section className="rounded-md border border-border bg-surface p-4">
+    <section className="rc-card rc-card-elevated p-4">
       <h2 className="font-medium">Structure inspector</h2>
       {!structure ? (
         <p className="mt-2 text-sm text-text-secondary">Select a mapped surface or structure.</p>

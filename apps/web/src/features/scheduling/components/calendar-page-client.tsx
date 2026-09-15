@@ -60,13 +60,13 @@ export function CalendarPageClient({
       {flashMessage ? (
         <div
           role="status"
-          className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success"
+          className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success shadow-sm"
         >
           {flashMessage}
         </div>
       ) : null}
 
-      <header className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <header className="flex flex-col gap-4 rounded-2xl bg-surface p-6 shadow-sm lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="font-serif text-3xl text-text-primary">{t('calendarTitle')}</h1>
           <p className="mt-1 text-sm text-text-secondary">{t('calendarSubtitle')}</p>
@@ -78,7 +78,7 @@ export function CalendarPageClient({
         ) : null}
       </header>
 
-      <div className="flex flex-col gap-4 rounded-md border border-border bg-surface p-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="rc-card flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-wrap gap-2">
           <a href={buildCalendarHref(query, { date: query.date, view: 'day' })}>
             <Button type="button" variant={query.view === 'day' ? 'primary' : 'secondary'}>
@@ -100,7 +100,7 @@ export function CalendarPageClient({
             <select
               name="practitioner"
               defaultValue={query.practitionerId}
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 block bg-background py-2.5 text-sm focus:border-info focus:ring-2 focus:ring-info/20"
             >
               <option value="">{t('calendarFilterAll')}</option>
               {activePractitioners.map((practitioner) => (
@@ -115,7 +115,7 @@ export function CalendarPageClient({
             <select
               name="location"
               defaultValue={query.locationId}
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 block bg-background py-2.5 text-sm focus:border-info focus:ring-2 focus:ring-info/20"
             >
               <option value="">{t('calendarFilterAll')}</option>
               {catalog.locations.map((location) => (

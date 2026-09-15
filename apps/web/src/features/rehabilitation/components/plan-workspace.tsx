@@ -56,12 +56,12 @@ export function PlanWorkspace({
       {flash ? (
         <div
           role="status"
-          className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success"
+          className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success shadow-sm"
         >
           Зміни збережено.
         </div>
       ) : null}
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
+      <header className="rc-card flex flex-wrap items-start justify-between gap-4 p-6">
         <div>
           <p className="text-xs uppercase tracking-wide text-text-secondary">
             {plan.patient.displayName} · план реабілітації
@@ -139,7 +139,7 @@ function Lifecycle({
           ? 'resume'
           : null;
   return (
-    <section className="flex flex-wrap items-end gap-3 rounded-md border border-border bg-surface p-4">
+    <section className="rc-card flex flex-wrap items-end gap-3 p-5">
       {command ? (
         <form action={action}>
           <input type="hidden" name="planId" value={plan.id} />
@@ -215,7 +215,7 @@ function Lifecycle({
 
 function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionResponse }) {
   return (
-    <section className="space-y-5 rounded-md border border-border bg-surface p-5">
+    <section className="rc-card space-y-5 p-6">
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-text-secondary">

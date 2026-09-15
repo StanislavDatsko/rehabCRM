@@ -46,7 +46,7 @@ export function PatientListTable({
 }) {
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+      <div className="rc-card overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase tracking-wide text-text-secondary">
             <tr>
@@ -77,7 +77,7 @@ export function PatientListTable({
             {items.map((patient) => (
               <tr
                 key={patient.id}
-                className="border-b border-border last:border-b-0 hover:bg-surface-muted/40"
+                className="border-b border-border last:border-b-0 hover:bg-surface-muted/50"
               >
                 <td className="px-4 py-3">
                   <a

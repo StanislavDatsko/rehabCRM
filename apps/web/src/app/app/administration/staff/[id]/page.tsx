@@ -25,7 +25,7 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
             {staff.email} · {staffRoleLabel(staff.role)}
           </p>
         </div>
-        <dl className="grid gap-4 rounded-md border border-border bg-surface p-5 sm:grid-cols-4">
+        <dl className="rc-card grid gap-4 p-5 sm:grid-cols-4">
           <Info label="Статус" value={staff.status === 'ACTIVE' ? 'Активний' : 'Вимкнений'} />
           <Info
             label="Налаштування"
@@ -56,7 +56,7 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
           />
         </dl>
         <StaffProfileActions staff={staff} />
-        <section className="rounded-md border border-border bg-surface p-5">
+        <section className="rc-card p-5">
           <h2 className="font-serif text-lg">Історія доступу</h2>
           {history.length === 0 ? (
             <p className="mt-3 text-sm text-text-secondary">Подій ще немає.</p>

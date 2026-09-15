@@ -24,7 +24,7 @@ export function PatientListFilters({
   practitioners: ResponsiblePractitionerResponse[];
 }) {
   return (
-    <form method="get" action="/app/patients" className="rounded-md border border-border bg-surface p-4">
+    <form method="get" action="/app/patients" className="rc-card p-5">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <label htmlFor="patient-search" className="block text-xs font-medium text-text-secondary">
@@ -36,7 +36,7 @@ export function PatientListFilters({
             type="search"
             defaultValue={query.search}
             placeholder={t('patientsSearchPlaceholder')}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+            className="field mt-1 bg-background py-2.5 text-text-primary focus:border-info focus:ring-2 focus:ring-info/20"
           />
         </div>
         <div>
@@ -47,7 +47,7 @@ export function PatientListFilters({
             id="patient-status"
             name="status"
             defaultValue={query.status}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
           >
             <option value="">{t('patientsFilterAll')}</option>
             {PATIENT_STATUSES.map((status) => (
@@ -68,7 +68,7 @@ export function PatientListFilters({
             id="patient-practitioner"
             name="responsiblePractitionerId"
             defaultValue={query.responsiblePractitionerId}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
           >
             <option value="">{t('patientsFilterAll')}</option>
             {practitioners.map((p) => (
@@ -86,7 +86,7 @@ export function PatientListFilters({
             id="patient-sort"
             name="sort"
             defaultValue={query.sort}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
           >
             {PATIENT_SORT_FIELDS.map((field) => (
               <option key={field} value={field}>
@@ -103,7 +103,7 @@ export function PatientListFilters({
             id="patient-order"
             name="sortDir"
             defaultValue={query.sortDir}
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
           >
             <option value="asc">{t('patientsSortAsc')}</option>
             <option value="desc">{t('patientsSortDesc')}</option>

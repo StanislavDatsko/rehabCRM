@@ -47,7 +47,7 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? ''}
         autoComplete={autoComplete}
-        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+        className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
       />
     </div>
   );
@@ -102,7 +102,7 @@ export function PatientForm({
         </div>
       ) : null}
 
-      <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+        <section className="rc-card space-y-4 p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionBasics')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -167,7 +167,7 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+      <section className="rc-card space-y-4 p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionContacts')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -189,7 +189,7 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+      <section className="rc-card space-y-4 p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAddress')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -231,7 +231,7 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+      <section className="rc-card space-y-4 p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionEmergency')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -256,7 +256,7 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+      <section className="rc-card space-y-4 p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionCare')}</h2>
         <div>
           <label

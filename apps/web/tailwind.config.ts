@@ -5,6 +5,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: 'var(--brand-plum)',
+        violet: 'var(--brand-violet)',
+        'brand-lime': 'var(--brand-lime)',
         background: 'var(--color-background)',
         surface: 'var(--color-surface)',
         'surface-muted': 'var(--color-surface-muted)',

@@ -2,4 +2,53 @@
 import { useActionState } from 'react';
 import { submitDailyReport, type DailyReportFormState } from './actions';
 const initial: DailyReportFormState = { error: null };
-export function DailyReportForm() { const [state, action, pending] = useActionState(submitDailyReport, initial); return <form action={action} className="mt-8 max-w-xl space-y-6 rounded-lg border border-border bg-surface p-6">{[['painScore','Рівень болю'],['fatigueLevel','Рівень втоми'],['overallWellbeing','Загальне самопочуття']].map(([name,label]) => <label key={name} className="block"><span className="block text-sm font-medium">{label} <span className="text-text-secondary">(0–10)</span></span><input required name={name} type="range" min="0" max="10" defaultValue="5" className="mt-3 w-full" aria-label={label} /><output className="text-sm text-text-secondary">Оберіть значення на шкалі</output></label>)}<label className="block"><span className="block text-sm font-medium">Коментар</span><textarea name="comment" maxLength={2000} rows={4} className="mt-2 w-full rounded-md border border-border bg-background p-2" /></label>{state.error ? <p role="alert" className="text-sm text-red-700">{state.error}</p> : null}<button disabled={pending} type="submit" className="rounded-md bg-text-primary px-4 py-2 text-sm text-white disabled:opacity-50">{pending ? 'Збереження…' : 'Зберегти звіт'}</button></form>; }
+export function DailyReportForm() {
+  const [state, action, pending] = useActionState(submitDailyReport, initial);
+  return (
+    <form action={action} className="rc-card rc-card-elevated mt-8 max-w-xl space-y-6 p-6">
+      {[
+        ['painScore', 'Рівень болю'],
+        ['fatigueLevel', 'Рівень втоми'],
+        ['overallWellbeing', 'Загальне самопочуття'],
+      ].map(([name, label]) => (
+        <label key={name} className="block">
+          <span className="block text-sm font-medium">
+            {label} <span className="text-text-secondary">(0–10)</span>
+          </span>
+          <input
+            required
+            name={name}
+            type="range"
+            min="0"
+            max="10"
+            defaultValue="5"
+            className="mt-3 w-full"
+            aria-label={label}
+          />
+          <output className="text-sm text-text-secondary">Оберіть значення на шкалі</output>
+        </label>
+      ))}
+      <label className="block">
+        <span className="block text-sm font-medium">Коментар</span>
+        <textarea
+          name="comment"
+          maxLength={2000}
+          rows={4}
+          className="mt-2 w-full rounded-lg border border-border bg-background p-2 transition-shadow focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+        />
+      </label>
+      {state.error ? (
+        <p role="alert" className="text-sm text-red-700">
+          {state.error}
+        </p>
+      ) : null}
+      <button
+        disabled={pending}
+        type="submit"
+        className="rc-btn rc-btn-primary disabled:opacity-50"
+      >
+        {pending ? 'Збереження…' : 'Зберегти звіт'}
+      </button>
+    </form>
+  );
+}

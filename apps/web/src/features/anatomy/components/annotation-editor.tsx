@@ -30,7 +30,7 @@ export function AnnotationEditor({
     initial,
   );
   return (
-    <div className="space-y-4 rounded-md border border-border bg-surface p-4">
+    <div className="rc-card space-y-4 p-4">
       <div>
         <p className="text-xs uppercase tracking-wide text-text-secondary">Selected annotation</p>
         <h3 className="font-medium text-text-primary">

@@ -9,7 +9,7 @@ export function PatientsEmptyState({
   canCreate: boolean;
 }) {
   return (
-    <div className="rounded-md border border-dashed border-border bg-surface px-6 py-14 text-center">
+    <div className="rc-card border-dashed px-6 py-14 text-center">
       <h2 className="font-serif text-xl text-text-primary">
         {filtered ? t('patientsEmptyFilteredTitle') : t('patientsEmptyTitle')}
       </h2>
@@ -31,7 +31,7 @@ export function PatientsErrorState({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="rounded-md border border-danger/30 bg-danger/5 px-5 py-6 text-sm text-danger"
+      className="rounded-xl border border-danger/30 bg-danger/10 px-5 py-6 text-sm text-danger shadow-sm"
     >
       <p className="font-semibold">{t('patientsErrorTitle')}</p>
       <p className="mt-1">{message}</p>
@@ -41,7 +41,7 @@ export function PatientsErrorState({ message }: { message: string }) {
 
 export function PatientsForbiddenState() {
   return (
-    <div role="alert" className="rounded-md border border-border bg-surface px-5 py-8 text-sm">
+    <div role="alert" className="rc-card px-5 py-8 text-sm">
       <p className="text-text-primary">{t('patientsForbidden')}</p>
     </div>
   );

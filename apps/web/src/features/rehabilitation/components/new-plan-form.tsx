@@ -27,7 +27,7 @@ export function NewPlanForm({
           Спочатку створюється чернетка. Додайте цілі або вправи перед активацією.
         </p>
       </header>
-      <section className="grid gap-4 rounded-md border border-border bg-surface p-5 sm:grid-cols-2">
+      <section className="rc-card rc-card-elevated grid gap-4 p-5 sm:grid-cols-2">
         <label className="sm:col-span-2 text-sm">
           Назва
           <input

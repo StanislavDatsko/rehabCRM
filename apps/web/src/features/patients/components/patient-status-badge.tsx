@@ -12,7 +12,7 @@ export function PatientStatusBadge({ status }: { status: PatientStatus }) {
   const label = patientStatusLabel(status);
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${statusClass[status]}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass[status]}`}
     >
       {label}
     </span>

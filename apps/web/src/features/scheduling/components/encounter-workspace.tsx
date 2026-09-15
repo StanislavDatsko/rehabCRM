@@ -50,15 +50,15 @@ export function EncounterWorkspace({
         </div>
       ) : null}
 
-      <header className="border-b border-border pb-6">
+      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
         <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           {t('encounterWorkspaceLabel')}
         </p>
-        <h1 className="mt-1 font-serif text-3xl text-text-primary">{t('encounterTitle')}</h1>
+        <h1 className="mt-1 font-serif text-3xl text-white">{t('encounterTitle')}</h1>
         <p className="mt-2 max-w-2xl text-sm text-text-secondary">{t('encounterWorkspaceIntro')}</p>
       </header>
 
-      <section className="rounded-md border border-border bg-surface p-5">
+      <section className="rc-card p-5">
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-text-secondary">{t('encounterFieldPatient')}</dt>
@@ -113,7 +113,7 @@ export function EncounterWorkspace({
       />
 
       {canReadBodyMap(user) ? (
-        <section className="rounded-md border border-border bg-surface p-5">
+        <section className="rc-card p-5">
           <h2 className="font-serif text-lg text-text-primary">Body annotations</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Open the patient body map in this encounter context. New annotations will be linked to

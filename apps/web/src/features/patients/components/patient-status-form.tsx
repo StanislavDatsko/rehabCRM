@@ -4,10 +4,7 @@ import { PATIENT_STATUSES, type PatientAdministrativeResponse } from '@repo/cont
 import { Button } from '@repo/ui/button';
 import { useActionState, useMemo, useState } from 'react';
 import { t } from '../../../i18n/messages';
-import {
-  changePatientStatusAction,
-  type PatientFormState,
-} from '../actions/patient-actions';
+import { changePatientStatusAction, type PatientFormState } from '../actions/patient-actions';
 import { patientStatusLabel } from '../labels';
 
 const initialState: PatientFormState = { error: null };
@@ -17,20 +14,21 @@ export function PatientStatusForm({ patient }: { patient: PatientAdministrativeR
   const [selected, setSelected] = useState(patient.status);
 
   const needsConfirm = useMemo(
-    () =>
-      selected !== patient.status &&
-      (selected === 'COMPLETED' || selected === 'ARCHIVED'),
+    () => selected !== patient.status && (selected === 'COMPLETED' || selected === 'ARCHIVED'),
     [patient.status, selected],
   );
 
   return (
-    <form action={formAction} className="space-y-3 rounded-md border border-border bg-surface p-5">
+    <form action={formAction} className="rc-card rc-card-elevated space-y-3 p-5">
       <input type="hidden" name="patientId" value={patient.id} />
       <input type="hidden" name="version" value={patient.version} />
       <h2 className="font-serif text-lg text-text-primary">{t('patientSectionStatus')}</h2>
 
       {state.error ? (
-        <div role="alert" className="rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">
+        <div
+          role="alert"
+          className="rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger"
+        >
           {state.error}
         </div>
       ) : null}

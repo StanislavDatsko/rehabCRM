@@ -55,7 +55,7 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
     <div className="grid gap-6 xl:grid-cols-2">
       <form
         action={profileAction}
-        className="space-y-4 rounded-md border border-border bg-surface p-5"
+        className="rc-card rc-card-elevated space-y-4 p-5"
       >
         <IdentityFields staff={staff} />
         <h2 className="font-serif text-lg">Профіль</h2>
@@ -82,7 +82,7 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
       <div className="space-y-6">
         <form
           action={roleAction}
-          className="space-y-3 rounded-md border border-border bg-surface p-5"
+          className="rc-card space-y-3 p-5"
         >
           <IdentityFields staff={staff} />
           <h2 className="font-serif text-lg">Роль і клінічний профіль</h2>
@@ -107,7 +107,7 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
           </Button>
         </form>
 
-        <section className="space-y-4 rounded-md border border-border bg-surface p-5">
+        <section className="rc-card space-y-4 p-5">
           <h2 className="font-serif text-lg">Доступ і сеанси</h2>
           {staff.identitySyncPending ? (
             <p

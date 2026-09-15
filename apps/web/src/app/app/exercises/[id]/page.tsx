@@ -21,11 +21,11 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
         <h1 className="mt-1 font-serif text-3xl">{exercise.name}</h1>
         <p className="mt-3 text-text-secondary">{exercise.description}</p>
       </header>
-      <section className="rounded-md border border-border bg-surface p-5">
+      <section className="rc-card rc-card-elevated p-5">
         <h2 className="font-serif text-xl">Інструкція</h2>
         <p className="mt-3 whitespace-pre-line text-sm leading-6">{exercise.instructions}</p>
       </section>
-      <dl className="grid gap-4 rounded-md border border-border bg-surface p-5 text-sm sm:grid-cols-2">
+      <dl className="rc-card grid gap-4 p-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-text-secondary">Ділянки</dt>
           <dd>{exercise.anatomicalRegions.join(', ') || '—'}</dd>

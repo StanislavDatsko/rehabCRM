@@ -31,7 +31,7 @@ export function PatientProfileHeader({
   const age = ageFromDateOfBirth(patient.dateOfBirth);
 
   return (
-    <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-start sm:justify-between">
+    <header className="rc-card flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
           {t('patientOverviewTab')}
@@ -98,7 +98,7 @@ export function PatientProfileDetails({ patient }: { patient: PatientAdministrat
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-md border border-border bg-surface p-5">
+      <section className="rc-card p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionBasics')}</h2>
         <dl className="mt-4 space-y-3 text-sm">
           <div>
@@ -112,14 +112,14 @@ export function PatientProfileDetails({ patient }: { patient: PatientAdministrat
         </dl>
       </section>
 
-      <section className="rounded-md border border-border bg-surface p-5">
+      <section className="rc-card p-6">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAddress')}</h2>
         <p className="mt-4 text-sm text-text-primary">
           {addressParts.length > 0 ? addressParts.join(', ') : t('patientNoValue')}
         </p>
       </section>
 
-      <section className="rounded-md border border-border bg-surface p-5 lg:col-span-2">
+      <section className="rc-card p-6 lg:col-span-2">
         <h2 className="font-serif text-lg text-text-primary">{t('patientSectionEmergency')}</h2>
         {patient.emergencyContact ? (
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">

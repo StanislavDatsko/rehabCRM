@@ -11,7 +11,7 @@ const initial: StaffActionState = { error: null, success: null };
 export function StaffForm() {
   const [state, action, pending] = useActionState(createStaffAction, initial);
   return (
-    <form action={action} className="space-y-6 rounded-md border border-border bg-surface p-6">
+    <form action={action} className="rc-card rc-card-elevated space-y-6 p-6">
       {state.error ? (
         <p
           role="alert"
@@ -43,7 +43,7 @@ export function StaffForm() {
           </select>
         </div>
       </div>
-      <div className="rounded-md border border-info/30 bg-info/5 p-4 text-sm text-text-secondary">
+      <div className="rounded-xl border border-info/30 bg-info/5 p-4 text-sm text-text-secondary">
         Пароль не створюється й не зберігається в RehabMIS. Працівник отримає захищені інструкції
         від системи ідентифікації для підтвердження email і встановлення пароля.
       </div>
