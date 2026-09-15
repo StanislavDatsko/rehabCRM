@@ -34,6 +34,13 @@ export type SurfaceSelection = {
   mapping: AnatomicalMappingResponse;
   modelVersionId: string;
 };
+export type UnmappedSurfaceSelection = {
+  modelVersionId: string;
+  meshName: string;
+  meshKey: string;
+  primitiveIndex: number;
+  mappingStatus: 'UNMAPPED';
+};
 type LayerState = Record<string, { visible: boolean; opacity: number }>;
 
 function meshesUnder(node: Object3D): Mesh[] {
@@ -140,6 +147,7 @@ function ModelLayer({
   annotations,
   selectedStructureId,
   selectedAnnotationId,
+  selectedMeshKey,
   isolate,
   hiddenStructureIds,
   heatmap,
@@ -155,6 +163,7 @@ function ModelLayer({
   annotations: BodyAnnotationResponse[];
   selectedStructureId: string | null;
   selectedAnnotationId: string | null;
+  selectedMeshKey: string | null;
   isolate: boolean;
   hiddenStructureIds: Set<string>;
   heatmap: boolean;
@@ -162,7 +171,7 @@ function ModelLayer({
   onSelect: (selection: SurfaceSelection) => void;
   onAnnotationSelect: (annotationId: string) => void;
   onHover: (structureId: string | null) => void;
-  onUnmapped: () => void;
+  onUnmapped: (selection: UnmappedSurfaceSelection) => void;
 }) {
   const version = model.activeVersion!;
   const gltf = useGLTF(version.assetUrl);
@@ -210,10 +219,16 @@ function ModelLayer({
         if (material instanceof MeshStandardMaterial) {
           material.color.setHex(Number(material.userData.baseColor));
           const highlighted =
-            structureId === selectedStructureId || structureId === hoveredStructureId;
+            structureId === selectedStructureId ||
+            structureId === hoveredStructureId ||
+            gltfSourceNodeName(mesh) === selectedMeshKey;
           material.emissive.set(highlighted ? '#0ea5e9' : '#000000');
           material.emissiveIntensity =
-            structureId === selectedStructureId ? 0.7 : highlighted ? 0.3 : 0;
+            structureId === selectedStructureId || gltfSourceNodeName(mesh) === selectedMeshKey
+              ? 0.7
+              : highlighted
+                ? 0.3
+                : 0;
           if (heatmap && structureId && severity.has(structureId)) {
             const score = severity.get(structureId)!;
             material.color.set(score >= 7 ? '#dc2626' : score >= 4 ? '#f59e0b' : '#22c55e');
@@ -230,6 +245,7 @@ function ModelLayer({
     isolate,
     scene,
     selectedStructureId,
+    selectedMeshKey,
     severity,
     state.opacity,
   ]);
@@ -239,7 +255,15 @@ function ModelLayer({
     if (event.faceIndex == null || !(event.object instanceof Mesh)) return;
     const found = mappedNode(event.object, byNode);
     if (!found) {
-      onUnmapped();
+      const primitiveIndex = primitiveIndexForFace(event.object.geometry, event.faceIndex);
+      const meshKey = gltfSourceNodeName(event.object);
+      onUnmapped({
+        modelVersionId: version.id,
+        meshName: event.object.name || meshKey,
+        meshKey,
+        primitiveIndex,
+        mappingStatus: 'UNMAPPED',
+      });
       return;
     }
     const nodeMeshes = meshesUnder(found.node);
@@ -310,6 +334,7 @@ export function AnatomyViewer({
   layers,
   selectedStructureId,
   selectedAnnotationId,
+  selectedMeshKey,
   isolate,
   hiddenStructureIds,
   heatmap,
@@ -324,13 +349,14 @@ export function AnatomyViewer({
   layers: LayerState;
   selectedStructureId: string | null;
   selectedAnnotationId: string | null;
+  selectedMeshKey: string | null;
   isolate: boolean;
   hiddenStructureIds: Set<string>;
   heatmap: boolean;
   preset: string;
   onSelect: (selection: SurfaceSelection) => void;
   onAnnotationSelect: (annotationId: string) => void;
-  onUnmapped: () => void;
+  onUnmapped: (selection: UnmappedSurfaceSelection) => void;
 }) {
   const available = models.filter((model) => model.activeVersion);
   const [hoveredStructureId, setHoveredStructureId] = useState<string | null>(null);
@@ -365,6 +391,7 @@ export function AnatomyViewer({
               annotations={annotations}
               selectedStructureId={selectedStructureId}
               selectedAnnotationId={selectedAnnotationId}
+              selectedMeshKey={selectedMeshKey}
               isolate={isolate}
               hiddenStructureIds={hiddenStructureIds}
               heatmap={heatmap}

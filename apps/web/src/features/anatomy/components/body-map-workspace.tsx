@@ -19,7 +19,7 @@ import {
 } from '../body-map-view-model';
 import { AnnotationEditor } from './annotation-editor';
 import { AnatomyViewerBoundary } from './anatomy-viewer-loader';
-import type { SurfaceSelection } from './anatomy-viewer';
+import type { SurfaceSelection, UnmappedSurfaceSelection } from './anatomy-viewer';
 import { StructureInspector } from './structure-inspector';
 
 const initial: AnatomyActionState = { error: null, ok: false };
@@ -46,6 +46,7 @@ export function BodyMapWorkspace({
   );
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   const [selection, setSelection] = useState<SurfaceSelection | null>(null);
+  const [unmappedSelection, setUnmappedSelection] = useState<UnmappedSurfaceSelection | null>(null);
   const [isolate, setIsolate] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [heatmap, setHeatmap] = useState(false);
@@ -77,9 +78,17 @@ export function BodyMapWorkspace({
   const context = data.clinicalContext.find((item) => item.structureId === selectedStructureId);
   const chooseSurface = (next: SurfaceSelection) => {
     setSelection(next);
+    setUnmappedSelection(null);
     setSelectedStructureId(next.mapping.structureId);
     setSelectedAnnotationId(null);
     setViewerMessage(null);
+  };
+  const chooseUnmapped = (next: UnmappedSurfaceSelection) => {
+    setSelection(null);
+    setUnmappedSelection(next);
+    setSelectedStructureId(null);
+    setSelectedAnnotationId(null);
+    setViewerMessage('Вибрано геометрію без підтвердженого анатомічного зіставлення.');
   };
   const chooseStructure = (structureId: string) => {
     setSelectedStructureId(structureId);
@@ -245,15 +254,14 @@ export function BodyMapWorkspace({
             layers={layers}
             selectedStructureId={selectedStructureId}
             selectedAnnotationId={selectedAnnotationId}
+            selectedMeshKey={unmappedSelection?.meshKey ?? null}
             isolate={isolate}
             hiddenStructureIds={hidden}
             heatmap={heatmap}
             preset={preset}
             onSelect={chooseSurface}
             onAnnotationSelect={chooseAnnotation}
-            onUnmapped={() =>
-              setViewerMessage('Ця структура ще не має семантичного анатомічного зіставлення.')
-            }
+            onUnmapped={chooseUnmapped}
           />
           {viewerMessage ? (
             <p
@@ -279,6 +287,7 @@ export function BodyMapWorkspace({
             structure={selectedStructure}
             context={context}
             annotations={data.annotations}
+            unmappedSelection={unmappedSelection}
           />
           {permissions.create && selection ? (
             <form

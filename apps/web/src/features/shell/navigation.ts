@@ -40,10 +40,10 @@ export const staffNav: NavItem[] = [
   },
   {
     id: 'rehab',
-    href: '/app',
+    href: '/app/rehabilitation-plans',
     labelKey: 'navRehabilitation',
     permission: PERMISSIONS.REHABILITATION_PLAN_READ,
-    enabled: false,
+    enabled: true,
   },
   {
     id: 'exercises',
@@ -54,12 +54,18 @@ export const staffNav: NavItem[] = [
   },
   {
     id: 'anatomy',
-    href: '/app',
+    href: '/app/anatomy',
     labelKey: 'navAnatomy',
     permission: PERMISSIONS.ANATOMY_READ,
-    enabled: false,
+    enabled: true,
   },
-  { id: 'reports', href: '/app', labelKey: 'navReports', enabled: false },
+  {
+    id: 'reports',
+    href: '/app/reports',
+    labelKey: 'navReports',
+    permission: PERMISSIONS.CLINICAL_REPORT_READ,
+    enabled: true,
+  },
   {
     id: 'admin',
     href: '/app/administration/staff',

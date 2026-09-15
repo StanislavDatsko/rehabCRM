@@ -7,6 +7,7 @@ import type {
 } from '@repo/contracts';
 import React, { useState } from 'react';
 import { BODY_ANNOTATION_TYPE_LABELS } from '../anatomy-ui';
+import type { UnmappedSurfaceSelection } from './anatomy-viewer';
 
 type Tab = 'overview' | 'annotations' | 'measurements' | 'goals' | 'exercises';
 const tabs: Array<{ id: Tab; label: string }> = [
@@ -21,10 +22,12 @@ export function StructureInspector({
   structure,
   context,
   annotations,
+  unmappedSelection,
 }: {
   structure: AnatomicalStructureResponse | null;
   context?: BodyMapClinicalContext;
   annotations: readonly BodyAnnotationResponse[];
+  unmappedSelection?: UnmappedSurfaceSelection | null;
 }) {
   const [tab, setTab] = useState<Tab>('overview');
   const related = structure
@@ -34,7 +37,29 @@ export function StructureInspector({
     <section className="rc-card rc-card-elevated p-4">
       <h2 className="font-medium">Structure inspector</h2>
       {!structure ? (
-        <p className="mt-2 text-sm text-text-secondary">Select a mapped surface or structure.</p>
+        unmappedSelection ? (
+          <div className="mt-3 space-y-3 text-sm">
+            <span className="inline-flex rounded-full bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning">
+              Не зіставлено
+            </span>
+            <p className="text-text-secondary">
+              Цю геометрію можна переглядати та виділяти, але вона ще не має підтвердженого
+              анатомічного зіставлення. Створення клінічної анотації недоступне.
+            </p>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              <dt className="text-text-secondary">Mesh</dt>
+              <dd className="break-all">{unmappedSelection.meshName}</dd>
+              <dt className="text-text-secondary">Stable key</dt>
+              <dd className="break-all font-mono text-xs">{unmappedSelection.meshKey}</dd>
+              <dt className="text-text-secondary">Primitive</dt>
+              <dd>{unmappedSelection.primitiveIndex}</dd>
+              <dt className="text-text-secondary">Model version</dt>
+              <dd className="break-all font-mono text-xs">{unmappedSelection.modelVersionId}</dd>
+            </dl>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-text-secondary">Select a mapped surface or structure.</p>
+        )
       ) : (
         <>
           <div
