@@ -5,6 +5,7 @@ const passwordByUser: Record<string, string | undefined> = {
   receptionist: process.env.E2E_RECEPTIONIST_PASSWORD ?? 'DevOnly!Receptionist1',
   specialist: process.env.E2E_SPECIALIST_PASSWORD ?? 'DevOnly!Specialist1',
   'other-specialist': process.env.E2E_OTHER_SPECIALIST_PASSWORD ?? 'DevOnly!OtherSpec1',
+  patient: process.env.E2E_PATIENT_PASSWORD ?? 'DevOnly!Patient1',
 };
 
 export async function signIn(page: Page, username: keyof typeof passwordByUser): Promise<void> {
@@ -32,5 +33,5 @@ export async function signIn(page: Page, username: keyof typeof passwordByUser):
   await usernameField.fill(username);
   await page.locator('#password').fill(passwordByUser[username] ?? '');
   await page.locator('#kc-login').click();
-  await expect(page).toHaveURL(/\/app/);
+  await expect(page).toHaveURL(username === 'patient' ? /\/patient/ : /\/app/);
 }

@@ -173,6 +173,16 @@
           "temporary": false
         }
       ]
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777778",
+      "username": "patient",
+      "email": "patient@rehabcrm.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Demo",
+      "lastName": "Patient",
+      "credentials": [{ "type": "password", "value": "DevOnly!Patient1", "temporary": false }]
     }
   ]
 }

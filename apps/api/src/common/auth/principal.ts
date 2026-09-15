@@ -8,4 +8,6 @@ export type AuthenticatedPrincipal = {
   email: string;
   displayName: string;
   organizationName: string;
+  patientId?: string;
+  portalAccountId?: string;
 };

@@ -143,6 +143,26 @@ Phase 5 splits assessment capabilities into `assessment.read`, `.create`, `.upda
 - Report authorship is resolved from the authenticated active practitioner; forms cannot nominate another author or storage key.
 - Completed download URLs expire after five minutes. Create, generate, download, and void actions are audited without report prose.
 
+**Patient monitoring**
+
+- Patient self-service monitoring permissions are separate from clinical measurement and plan permissions. The server resolves `patientId`, `organizationId`, portal account, and active membership from the authenticated context; ownership fields are rejected by strict DTOs.
+- Daily reports and exercise completions are bounded, versioned, audited, and marked `PATIENT_REPORTED`. Exercise completions reference the active plan revision and never mutate prescriptions.
+- Clinician review requires `patient_monitoring.read`. Receptionists, organization administrators, system administrators, and patients do not receive this permission. Staff projections are organization-scoped and conceal foreign patients as `404`.
+
+**Notifications and clinician alerts**
+
+- In-app notifications are recipient-owned: every list, count, read, and dismiss query binds both `organizationId` and authenticated `recipientUserId`; foreign IDs return `404`.
+- Patient notification routes expose only the patient’s own notifications. Clinician alert routes require `clinical_alert.read` and additionally bind alerts to the responsible practitioner; patients and non-clinical staff cannot access them.
+- Alert acknowledge/resolve commands require the matching lifecycle permission and a current `version`; stale writes return `409` and state changes are audited without storing notification or symptom prose in audit metadata.
+- Alert generation is deterministic and deduplicated by patient, rule type, and source record. Messages are neutral attention signals, not diagnoses or emergency instructions. Email, SMS, push, Web Push, ML triage, and emergency escalation are not implemented.
+
+**Patient media**
+
+- `patient_media.read/create/void/download` are explicit clinical permissions granted only to rehabilitation specialists. Patients, receptionists, organization administrators, and system administrators do not receive them by default.
+- Every media operation binds organization and patient IDs server-side. Optional encounter, assessment, and rehabilitation-plan associations must belong to the same patient and organization; foreign records are concealed as `404`.
+- Uploads use a pending metadata record and a short-lived presigned PUT to private MinIO/S3. The API never buffers large video bodies. Finalization checks object size and MIME metadata before making a record ready; downloads require a fresh authorization check and a short-lived signed GET URL.
+- Original filenames are sanitized display metadata only. Opaque object keys prevent path traversal and authorization by filename. Clinical media is voided in metadata rather than deleted through the normal UI, and upload/finalize/void actions are audited without descriptions or media content.
+
 ## 5. Field-level projection
 
 Do not return Prisma records. Explicit DTOs ([ADR-009](../adr/ADR-009-clinical-vs-administrative-projections.md)):

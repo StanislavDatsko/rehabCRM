@@ -3,6 +3,7 @@ export const STAFF_ROLES = [
   'ORGANIZATION_ADMIN',
   'RECEPTIONIST',
   'REHABILITATION_SPECIALIST',
+  'PATIENT',
 ] as const;
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
@@ -76,6 +77,27 @@ export const PERMISSIONS = {
   DOCUMENT_READ_CLINICAL: 'document.read.clinical',
   DOCUMENT_WRITE: 'document.write',
   AUDIT_READ: 'audit.read',
+  PATIENT_PORTAL_SELF_READ: 'patient_portal.self.read',
+  REHABILITATION_PLAN_SELF_READ: 'rehabilitation_plan.self.read',
+  PROGRESS_SELF_READ: 'progress.self.read',
+  DAILY_REPORT_SELF_READ: 'daily_report.self.read',
+  DAILY_REPORT_SELF_CREATE: 'daily_report.self.create',
+  DAILY_REPORT_SELF_UPDATE: 'daily_report.self.update',
+  PATIENT_SYMPTOM_SELF_READ: 'patient_symptom.self.read',
+  PATIENT_SYMPTOM_SELF_CREATE: 'patient_symptom.self.create',
+  EXERCISE_COMPLETION_SELF_READ: 'exercise_completion.self.read',
+  EXERCISE_COMPLETION_SELF_CREATE: 'exercise_completion.self.create',
+  EXERCISE_COMPLETION_SELF_UPDATE: 'exercise_completion.self.update',
+  PATIENT_MONITORING_READ: 'patient_monitoring.read',
+  NOTIFICATION_SELF_READ: 'notification.self.read',
+  NOTIFICATION_SELF_UPDATE: 'notification.self.update',
+  CLINICAL_ALERT_READ: 'clinical_alert.read',
+  CLINICAL_ALERT_ACKNOWLEDGE: 'clinical_alert.acknowledge',
+  CLINICAL_ALERT_RESOLVE: 'clinical_alert.resolve',
+  PATIENT_MEDIA_READ: 'patient_media.read',
+  PATIENT_MEDIA_CREATE: 'patient_media.create',
+  PATIENT_MEDIA_VOID: 'patient_media.void',
+  PATIENT_MEDIA_DOWNLOAD: 'patient_media.download',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

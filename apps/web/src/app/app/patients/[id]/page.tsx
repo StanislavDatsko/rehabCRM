@@ -42,6 +42,7 @@ import { RehabilitationPlansSection } from '../../../../features/rehabilitation/
 import { canCreatePlan, canReadPlans } from '../../../../features/rehabilitation/permissions';
 import { getPatientBodyMap } from '../../../../features/anatomy/api/anatomy-api';
 import { canReadBodyMap } from '../../../../features/anatomy/permissions';
+import { PatientMediaGallery } from '../../../../features/patient-media/patient-media-gallery';
 import {
   canReadClinicalReports,
   canReadProgress,
@@ -104,6 +105,7 @@ export default async function PatientProfilePage({
   let rehabilitationPlans: Awaited<ReturnType<typeof listPatientPlans>> | null = null;
   let bodyMap: Awaited<ReturnType<typeof getPatientBodyMap>> | null = null;
   let schedulingTimezone = DEFAULT_TIMEZONE;
+  let patientMedia: { items: Array<{ id: string; kind: 'IMAGE' | 'VIDEO'; mimeType: string; originalFileName: string; title: string | null; description: string | null; capturedAt: string | null; createdAt: string; uploadedBy: string; sizeBytes: string }>; total: number } | null = null;
   if (canReadAppointments(me)) {
     try {
       appointmentSummary = await getPatientAppointments(id);
@@ -152,6 +154,9 @@ export default async function PatientProfilePage({
       bodyMap = null;
     }
   }
+  if (me.permissions.includes('patient_media.read')) {
+    try { patientMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=25`); } catch { patientMedia = { items: [], total: 0 }; }
+  }
 
   const flashMessage = flash.created
     ? t('patientCreatedFlash')
@@ -174,6 +179,8 @@ export default async function PatientProfilePage({
 
       <PatientProfileHeader patient={patient} canEdit={canUpdatePatient(me)} />
       <PatientProfileDetails patient={patient} />
+
+      {patientMedia ? <PatientMediaGallery patientId={id} initialItems={patientMedia.items} initialTotal={patientMedia.total} /> : null}
 
       {appointmentSummary ? (
         <PatientAppointmentsSection
@@ -252,6 +259,7 @@ export default async function PatientProfilePage({
                 Клінічні звіти
               </a>
             ) : null}
+            {me.permissions.includes('patient_monitoring.read') ? <a href={`/app/patients/${id}/monitoring`} className="rc-btn rc-btn-secondary">Моніторинг пацієнта</a> : null}
           </div>
         </section>
       ) : null}

@@ -76,6 +76,24 @@ Implemented: organization-admin staff list/profile/provisioning/role/access/sess
 
 **NOT YET PILOT READY.** The Docker daemon was unavailable, so real-stack migrations, production OIDC, browser E2E, container scans, backup recovery, alerts, accessibility, performance, concurrency, rollback, and disaster-recovery evidence remain blocked. See [production readiness](./operations/production-readiness.md) and [verification evidence](./operations/verification-2026-09-04.md). No real patient data may be used until every mandatory gate passes.
 
-## Explicitly not on the roadmap
+## Phase 10 — Patient Monitoring — implementation complete, final audit pending
+
+Daily patient reports, bounded symptom projections, exercise completion records, provenance-preserving clinician review, patient progress integration, deterministic seed data, and self-only authorization are implemented. Notifications, reminders, alerts, email, push, and SMS remain explicitly out of scope.
+
+Docs: [patient-monitoring.md](./architecture/patient-monitoring.md).
+
+## Phase 11 — Notifications + Clinician Alerts — implementation complete, final audit pending
+
+Recipient-scoped in-app notifications, deterministic clinician attention alerts, deduplication, acknowledge/resolve lifecycle, optimistic concurrency, audit traceability, and neutral non-diagnostic wording are implemented. Email, SMS, push, Web Push, ML triage, diagnosis, and emergency escalation remain out of scope.
+
+Docs: [notifications-alerts.md](./architecture/notifications-alerts.md).
 
 Patient portal, patient auth, patient mobile app, FHIR server, Elasticsearch, microservices split, SaaS billing.
+
+## Explicitly not on the roadmap
+
+## Phase 12 — Secure patient media — implementation complete, final audit pending
+
+Private organization- and patient-scoped rehabilitation photos/videos are stored as metadata in PostgreSQL and originals in MinIO/S3. Specialist-only permissions, direct presigned uploads, configurable per-file limits, bounded gallery pagination, signed inline access, voiding, and audit traceability are implemented. No patient media portal, transcoding, or thumbnails are included.
+
+After this phase, RehabMIS functional scope is frozen. Further work is limited to bug fixes, thesis artifacts, diagrams, screenshots, demo preparation, final verification, and production-readiness cleanup.

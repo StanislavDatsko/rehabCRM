@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  HeadObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
@@ -59,6 +60,20 @@ export class StorageService {
     );
   }
 
+  async signPrivateUpload(storageKey: string, contentType: string, expiresInSeconds = 300): Promise<{ url: string; expiresAt: Date }> {
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+    const url = await getSignedUrl(this.client, new PutObjectCommand({
+      Bucket: this.env.S3_BUCKET_DOCUMENTS, Key: storageKey, ContentType: contentType,
+      CacheControl: 'private, no-store',
+    }), { expiresIn: expiresInSeconds });
+    return { url, expiresAt };
+  }
+
+  async headPrivateObject(storageKey: string): Promise<{ contentLength: number; contentType?: string }> {
+    const result = await this.client.send(new HeadObjectCommand({ Bucket: this.env.S3_BUCKET_DOCUMENTS, Key: storageKey }));
+    return { contentLength: result.ContentLength ?? 0, contentType: result.ContentType };
+  }
+
   async signDocumentRead(
     storageKey: string,
     fileName: string,
@@ -75,6 +90,15 @@ export class StorageService {
       }),
       { expiresIn: expiresInSeconds },
     );
+    return { url, expiresAt };
+  }
+
+  async signPrivateMediaRead(storageKey: string, contentType: string, expiresInSeconds = 300): Promise<{ url: string; expiresAt: Date }> {
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+    const url = await getSignedUrl(this.client, new GetObjectCommand({
+      Bucket: this.env.S3_BUCKET_DOCUMENTS, Key: storageKey,
+      ResponseContentType: contentType, ResponseContentDisposition: 'inline',
+    }), { expiresIn: expiresInSeconds });
     return { url, expiresAt };
   }
 }

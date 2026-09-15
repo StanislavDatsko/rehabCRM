@@ -108,13 +108,13 @@ jobs:
             NEXT_PUBLIC_API_URL=https://api.example.test
             AUTH_KEYCLOAK_ISSUER=https://identity.example.test/realms/rehabcrm
             NEXT_PUBLIC_S3_PUBLIC_URL=https://objects.example.test
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: rehabcrm-api:ci
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: rehabcrm-web:ci
           severity: CRITICAL,HIGH

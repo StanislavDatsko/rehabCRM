@@ -17,7 +17,7 @@ describe('development seed identifiers', () => {
       ...Object.values(DEV_SEED.encounters),
     ];
 
-    expect(identifiers).toHaveLength(33);
+    expect(identifiers).toHaveLength(35);
     expect(identifiers.every((identifier) => UUID_PATTERN.test(identifier))).toBe(true);
   });
 

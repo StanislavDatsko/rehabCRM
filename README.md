@@ -1,8 +1,8 @@
-# RehabCRM
+# RehabMIS
 
-Staff-only CRM and rehabilitation management platform for physical rehabilitation centers. Patients are **domain records**, not users. The product does not diagnose or prescribe treatment.
+Медична інформаційна система моніторингу та планування реабілітаційного процесу: електронні картки пацієнтів, персоналізовані плани реабілітації та відстеження динаміки відновлення. Система не ставить діагнозів і не призначає лікування.
 
-Documentation: [`docs/architecture/overview.md`](docs/architecture/overview.md) · [`docs/operations/production-readiness.md`](docs/operations/production-readiness.md) · [`docs/operations/deployment.md`](docs/operations/deployment.md) · [`docs/ROADMAP.md`](docs/ROADMAP.md)
+Documentation: [`docs/academic/topic-requirements-traceability.md`](docs/academic/topic-requirements-traceability.md) · [`docs/academic/demo-scenario.md`](docs/academic/demo-scenario.md) · [`docs/architecture/overview.md`](docs/architecture/overview.md) · [`docs/operations/production-readiness.md`](docs/operations/production-readiness.md) · [`docs/operations/deployment.md`](docs/operations/deployment.md) · [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
 ## Prerequisites
 

@@ -3,10 +3,10 @@ export type Locale = 'uk' | 'en';
 export const defaultLocale: Locale = 'uk';
 
 const uk = {
-  productName: 'RehabCRM',
-  tagline: 'Внутрішня система реабілітаційного центру',
+  productName: 'RehabMIS',
+  tagline: 'Медична інформаційна система моніторингу та планування реабілітаційного процесу',
   staffOnly:
-    'Цей продукт призначений лише для персоналу. Пацієнти не мають облікових записів і не входять у систему.',
+    'Єдина система для ведення електронних карток пацієнтів, планування реабілітації та моніторингу відновлення.',
   healthTitle: 'Стан API',
   healthLive: 'Живучість',
   healthUnavailable: 'API зараз недоступний (очікувано, якщо інфраструктура не запущена).',
@@ -14,8 +14,8 @@ const uk = {
   navHome: 'Огляд',
   notDiagnostic: 'Система не ставить діагнозів і не призначає лікування.',
   loginAction: 'Увійти в систему',
-  loginHint: 'Вхід відбувається через систему ідентифікації центру. Пароль у RehabCRM не вводиться.',
-  loginDenied: 'Цей обліковий запис не має доступу до RehabCRM. Зверніться до адміністратора.',
+  loginHint: 'Вхід відбувається через захищену систему ідентифікації. Пароль у RehabMIS не вводиться.',
+  loginDenied: 'Цей обліковий запис не має доступу до RehabMIS. Зверніться до адміністратора.',
   sessionExpired: 'Сеанс завершено. Увійдіть знову.',
   logout: 'Вийти',
   appWelcome: 'Робоче місце фахівця',
@@ -36,6 +36,7 @@ const uk = {
   navAnatomy: '3D анатомія',
   navReports: 'Звіти',
   navAdmin: 'Адміністрування',
+  navAlerts: 'Потребує уваги',
   comingSoon: 'скоро',
   mainNav: 'Основна навігація',
 
@@ -259,9 +260,9 @@ const uk = {
 };
 
 const en = {
-  productName: 'RehabCRM',
+  productName: 'RehabMIS',
   tagline: 'Internal rehabilitation center system',
-  staffOnly: 'This product is for staff only. Patients are not users and cannot sign in.',
+  staffOnly: 'A single system for electronic patient records, rehabilitation planning, and recovery monitoring.',
   healthTitle: 'API status',
   healthLive: 'Liveness',
   healthUnavailable: 'API is unreachable (expected if local infrastructure is not running).',
@@ -269,8 +270,8 @@ const en = {
   navHome: 'Overview',
   notDiagnostic: 'The system does not diagnose patients or prescribe treatment.',
   loginAction: 'Sign in',
-  loginHint: 'Sign-in is handled by the identity provider. RehabCRM never collects staff passwords.',
-  loginDenied: 'This account does not have access to RehabCRM. Contact an administrator.',
+  loginHint: 'Sign-in is handled by the identity provider. RehabMIS never collects passwords.',
+  loginDenied: 'This account does not have access to RehabMIS. Contact an administrator.',
   sessionExpired: 'Your session ended. Sign in again.',
   logout: 'Sign out',
   appWelcome: 'Staff workspace',
@@ -291,6 +292,7 @@ const en = {
   navAnatomy: '3D anatomy',
   navReports: 'Reports',
   navAdmin: 'Administration',
+  navAlerts: 'Clinician attention',
   comingSoon: 'soon',
   mainNav: 'Main navigation',
 

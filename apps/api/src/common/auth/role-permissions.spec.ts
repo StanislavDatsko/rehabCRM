@@ -3,6 +3,41 @@ import { describe, expect, it } from 'vitest';
 import { permissionsForRole, roleHasPermission } from './role-permissions';
 
 describe('role permission mapping', () => {
+  it('keeps patients read-only and outside staff/clinical administration', () => {
+    const patient = permissionsForRole('PATIENT');
+    expect(patient).toEqual(expect.arrayContaining([
+      PERMISSIONS.PATIENT_PORTAL_SELF_READ,
+      PERMISSIONS.REHABILITATION_PLAN_SELF_READ,
+      PERMISSIONS.PROGRESS_SELF_READ,
+    ]));
+    for (const permission of [
+      PERMISSIONS.PATIENT_READ_ADMIN, PERMISSIONS.PATIENT_UPDATE_ADMIN,
+      PERMISSIONS.ASSESSMENT_CREATE, PERMISSIONS.ASSESSMENT_UPDATE,
+      PERMISSIONS.REHABILITATION_PLAN_CREATE, PERMISSIONS.REHABILITATION_PLAN_UPDATE,
+      PERMISSIONS.REHABILITATION_PLAN_ACTIVATE, PERMISSIONS.REHABILITATION_PLAN_PAUSE,
+      PERMISSIONS.REHABILITATION_PLAN_COMPLETE, PERMISSIONS.REHABILITATION_PLAN_CANCEL,
+      PERMISSIONS.REHABILITATION_GOAL_WRITE,
+      PERMISSIONS.EXERCISE_PRESCRIPTION_WRITE, PERMISSIONS.CLINICAL_REPORT_READ,
+      PERMISSIONS.STAFF_READ, PERMISSIONS.ORGANIZATION_READ,
+      PERMISSIONS.PATIENT_MONITORING_READ,
+    ]) expect(patient).not.toContain(permission);
+  });
+
+  it('limits patient monitoring review to rehabilitation specialists', () => {
+    expect(roleHasPermission('REHABILITATION_SPECIALIST', PERMISSIONS.PATIENT_MONITORING_READ)).toBe(true);
+    for (const role of ['PATIENT', 'RECEPTIONIST', 'ORGANIZATION_ADMIN', 'SYSTEM_ADMIN'] as const) {
+      expect(roleHasPermission(role, PERMISSIONS.PATIENT_MONITORING_READ)).toBe(false);
+    }
+  });
+  it('limits patient media to rehabilitation specialists', () => {
+    expect(permissionsForRole('REHABILITATION_SPECIALIST')).toEqual(expect.arrayContaining([
+      PERMISSIONS.PATIENT_MEDIA_READ, PERMISSIONS.PATIENT_MEDIA_CREATE,
+      PERMISSIONS.PATIENT_MEDIA_VOID, PERMISSIONS.PATIENT_MEDIA_DOWNLOAD,
+    ]));
+    for (const role of ['PATIENT', 'RECEPTIONIST', 'ORGANIZATION_ADMIN', 'SYSTEM_ADMIN'] as const) {
+      for (const permission of [PERMISSIONS.PATIENT_MEDIA_READ, PERMISSIONS.PATIENT_MEDIA_CREATE, PERMISSIONS.PATIENT_MEDIA_VOID, PERMISSIONS.PATIENT_MEDIA_DOWNLOAD]) expect(permissionsForRole(role)).not.toContain(permission);
+    }
+  });
   it('does not grant clinical note read to receptionists', () => {
     expect(roleHasPermission('RECEPTIONIST', PERMISSIONS.CLINICAL_NOTE_READ)).toBe(false);
     expect(permissionsForRole('RECEPTIONIST')).not.toContain(PERMISSIONS.CLINICAL_NOTE_READ);

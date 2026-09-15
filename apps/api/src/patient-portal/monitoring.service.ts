@@ -1,0 +1,74 @@
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import type { AuthenticatedPrincipal } from '../common/auth/principal';
+import { PrismaService } from '../infrastructure/prisma/prisma.service';
+import type { CompletionBody, CompletionUpdateBody, DailyReportBody, DailyReportUpdateBody, MonitoringQuery } from './monitoring.schemas';
+import { painAttention } from '../notifications/alert-rules';
+
+const dateOnly = (value: Date) => value.toISOString().slice(0, 10);
+const localDate = (timeZone: string, date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+
+@Injectable()
+export class MonitoringService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private async context(principal: AuthenticatedPrincipal) {
+    if (principal.role !== 'PATIENT' || !principal.patientId || !principal.portalAccountId) throw new NotFoundException('Patient portal context was not found.');
+    const account = await this.prisma.patientPortalAccount.findFirst({ where: { id: principal.portalAccountId, patientId: principal.patientId, organizationId: principal.organizationId, status: 'ACTIVE', patient: { organizationId: principal.organizationId }, organization: { memberships: { some: { userId: principal.userId, status: 'ACTIVE', role: 'PATIENT' } } } }, select: { patientId: true, organizationId: true, organization: { select: { timezone: true } } } });
+    if (!account) throw new NotFoundException('Patient portal context was not found.');
+    return account;
+  }
+
+  private permittedDate(input: string | undefined, timezone: string) {
+    const value = input ?? localDate(timezone);
+    const today = localDate(timezone);
+    const yesterday = localDate(timezone, new Date(Date.now() - 86_400_000));
+    if (value !== today && value !== yesterday) throw new ConflictException({ code: 'MONITORING_DATE_OUT_OF_RANGE', message: 'Можна заповнювати звіт лише за сьогодні або попередній день.' });
+    return new Date(`${value}T00:00:00.000Z`);
+  }
+
+  async listReports(principal: AuthenticatedPrincipal) { const c = await this.context(principal); const rows = await this.prisma.dailyReport.findMany({ where: { organizationId: c.organizationId, patientId: c.patientId }, orderBy: [{ reportDate: 'desc' }, { id: 'desc' }], take: 30 }); return rows.map(({ id, organizationId: _o, patientId: _p, source, reportDate, ...r }) => ({ id, ...r, reportDate: dateOnly(reportDate), source })); }
+  async symptoms(principal: AuthenticatedPrincipal, query: MonitoringQuery) { const reports = (await this.listReports(principal)).slice(0, query.days); return reports.flatMap((report) => [{ date: report.reportDate, type: 'pain.nrs', value: report.painScore, source: report.source }, { date: report.reportDate, type: 'fatigue', value: report.fatigueLevel, source: report.source }, { date: report.reportDate, type: 'overall-wellbeing', value: report.overallWellbeing, source: report.source }]); }
+  async todayReport(principal: AuthenticatedPrincipal) { const c = await this.context(principal); return (await this.prisma.dailyReport.findUnique({ where: { organizationId_patientId_reportDate: { organizationId: c.organizationId, patientId: c.patientId, reportDate: this.permittedDate(undefined, c.organization.timezone) } }, select: { id: true, reportDate: true, overallWellbeing: true, fatigueLevel: true, painScore: true, comment: true, source: true, version: true } })) ?? null; }
+  async createReport(principal: AuthenticatedPrincipal, body: DailyReportBody) { const c = await this.context(principal); const reportDate = this.permittedDate(body.reportDate, c.organization.timezone); try { const row = await this.prisma.dailyReport.create({ data: { id: randomUUID(), organizationId: c.organizationId, patientId: c.patientId, reportDate, overallWellbeing: body.overallWellbeing, fatigueLevel: body.fatigueLevel, painScore: body.painScore, comment: body.comment ?? null }, select: { id: true, reportDate: true, overallWellbeing: true, fatigueLevel: true, painScore: true, comment: true, source: true, version: true } }); await this.generateReportAttention(principal, c.patientId, row); await this.audit(principal, row.id, 'PATIENT_DAILY_REPORT_CREATED'); return { ...row, reportDate: dateOnly(row.reportDate) }; } catch (e) { if ((e as { code?: string }).code === 'P2002') throw new ConflictException({ code: 'DAILY_REPORT_ALREADY_EXISTS', message: 'Звіт за цей день уже існує.' }); throw e; } }
+  async updateReport(principal: AuthenticatedPrincipal, id: string, body: DailyReportUpdateBody) { const c = await this.context(principal); const existing = await this.prisma.dailyReport.findFirst({ where: { id, organizationId: c.organizationId, patientId: c.patientId } }); if (!existing) throw new NotFoundException('Щоденний звіт не знайдено.'); if (existing.version !== body.version) throw new ConflictException({ code: 'DAILY_REPORT_UPDATE_CONFLICT', message: 'Звіт уже змінено. Оновіть сторінку.' }); const reportDate = this.permittedDate(dateOnly(existing.reportDate), c.organization.timezone); const row = await this.prisma.dailyReport.update({ where: { id }, data: { reportDate, overallWellbeing: body.overallWellbeing, fatigueLevel: body.fatigueLevel, painScore: body.painScore, comment: body.comment ?? null, version: { increment: 1 } }, select: { id: true, reportDate: true, overallWellbeing: true, fatigueLevel: true, painScore: true, comment: true, source: true, version: true } }); await this.audit(principal, row.id, 'PATIENT_DAILY_REPORT_UPDATED'); return { ...row, reportDate: dateOnly(row.reportDate) }; }
+
+  async exercisesToday(principal: AuthenticatedPrincipal) { const c = await this.context(principal); const plans = await this.prisma.exercisePrescription.findMany({ where: { organizationId: c.organizationId, planRevision: { plan: { patientId: c.patientId, organizationId: c.organizationId, status: { in: ['ACTIVE', 'PAUSED'] } } } }, orderBy: [{ displayOrder: 'asc' }, { id: 'asc' }], select: { id: true, exerciseNameSnapshot: true, exerciseCodeSnapshot: true, laterality: true, sets: true, repetitions: true, frequencyType: true, sessionsPerDay: true, daysPerWeek: true, instructionsOverride: true, precautions: true, planRevisionId: true, planRevision: { select: { planId: true } } } }); return plans.map((p) => ({ ...p, planId: p.planRevision.planId, planRevision: undefined })); }
+  async completions(principal: AuthenticatedPrincipal, query: MonitoringQuery) { const c = await this.context(principal); const from = new Date(Date.now() - query.days * 86_400_000); return this.prisma.exerciseCompletion.findMany({ where: { organizationId: c.organizationId, patientId: c.patientId, executionDate: { gte: from } }, orderBy: [{ executionDate: 'desc' }, { id: 'desc' }], take: 200, select: { id: true, exercisePrescriptionId: true, executionDate: true, status: true, completedSets: true, completedRepetitions: true, durationMinutes: true, patientDifficulty: true, comment: true, source: true, version: true } }).then((rows) => rows.map((r) => ({ ...r, executionDate: dateOnly(r.executionDate) })));
+  }
+  async createCompletion(principal: AuthenticatedPrincipal, body: CompletionBody) { const c = await this.context(principal); const executionDate = this.permittedDate(body.executionDate, c.organization.timezone); const prescription = await this.prisma.exercisePrescription.findFirst({ where: { id: body.exercisePrescriptionId, organizationId: c.organizationId, planRevision: { plan: { patientId: c.patientId, organizationId: c.organizationId, status: { in: ['ACTIVE', 'PAUSED'] } } } }, select: { planRevisionId: true, planRevision: { select: { planId: true } } } }); if (!prescription) throw new NotFoundException('Призначену вправу не знайдено.'); try { const row = await this.prisma.exerciseCompletion.create({ data: { id: randomUUID(), organizationId: c.organizationId, patientId: c.patientId, rehabilitationPlanId: prescription.planRevision.planId, planRevisionId: prescription.planRevisionId, exercisePrescriptionId: body.exercisePrescriptionId, executionDate, status: body.status, completedSets: body.completedSets ?? null, completedRepetitions: body.completedRepetitions ?? null, durationMinutes: body.durationMinutes ?? null, patientDifficulty: body.patientDifficulty ?? null, comment: body.comment ?? null }, select: { id: true, exercisePrescriptionId: true, executionDate: true, status: true, completedSets: true, completedRepetitions: true, durationMinutes: true, patientDifficulty: true, comment: true, source: true, version: true } }); await this.audit(principal, row.id, 'PATIENT_EXERCISE_COMPLETION_CREATED'); return { ...row, executionDate: dateOnly(row.executionDate) }; } catch (e) { if ((e as { code?: string }).code === 'P2002') throw new ConflictException({ code: 'EXERCISE_COMPLETION_ALREADY_EXISTS', message: 'Виконання цієї вправи за цей день уже записано.' }); throw e; } }
+  async updateCompletion(principal: AuthenticatedPrincipal, id: string, body: CompletionUpdateBody) { const c = await this.context(principal); const existing = await this.prisma.exerciseCompletion.findFirst({ where: { id, organizationId: c.organizationId, patientId: c.patientId } }); if (!existing) throw new NotFoundException('Виконання вправи не знайдено.'); if (existing.version !== body.version) throw new ConflictException({ code: 'EXERCISE_COMPLETION_UPDATE_CONFLICT', message: 'Запис уже змінено. Оновіть сторінку.' }); const row = await this.prisma.exerciseCompletion.update({ where: { id }, data: { status: body.status, completedSets: body.completedSets ?? null, completedRepetitions: body.completedRepetitions ?? null, durationMinutes: body.durationMinutes ?? null, patientDifficulty: body.patientDifficulty ?? null, comment: body.comment ?? null, version: { increment: 1 } }, select: { id: true, exercisePrescriptionId: true, executionDate: true, status: true, completedSets: true, completedRepetitions: true, durationMinutes: true, patientDifficulty: true, comment: true, source: true, version: true } }); await this.audit(principal, row.id, 'PATIENT_EXERCISE_COMPLETION_UPDATED'); return { ...row, executionDate: dateOnly(row.executionDate) }; }
+  async monitoring(principal: AuthenticatedPrincipal, query: MonitoringQuery) {
+    const [reports, completions] = await Promise.all([this.listReports(principal), this.completions(principal, query)]);
+    return { days: query.days, source: 'PATIENT_REPORTED', dailyReports: reports.slice(0, query.days), exerciseCompletions: completions };
+  }
+  async staffMonitoring(principal: AuthenticatedPrincipal, patientId: string, query: MonitoringQuery) {
+    const patient = await this.prisma.patient.findFirst({ where: { id: patientId, organizationId: principal.organizationId }, select: { id: true } });
+    if (!patient) throw new NotFoundException({ code: 'PATIENT_MONITORING_NOT_FOUND', message: 'Дані моніторингу не знайдено.' });
+    const from = new Date(Date.now() - query.days * 86_400_000);
+    const [dailyReports, exerciseCompletions] = await Promise.all([
+      this.prisma.dailyReport.findMany({ where: { organizationId: principal.organizationId, patientId, reportDate: { gte: from } }, orderBy: { reportDate: 'desc' }, take: 30, select: { id: true, reportDate: true, overallWellbeing: true, fatigueLevel: true, painScore: true, comment: true, source: true, version: true } }),
+      this.prisma.exerciseCompletion.findMany({ where: { organizationId: principal.organizationId, patientId, executionDate: { gte: from } }, orderBy: { executionDate: 'desc' }, take: 200, select: { id: true, exercisePrescriptionId: true, executionDate: true, status: true, completedSets: true, completedRepetitions: true, durationMinutes: true, patientDifficulty: true, comment: true, source: true, version: true } }),
+    ]);
+    const reportDates = new Set(dailyReports.map((row) => dateOnly(row.reportDate)));
+    const missingReportDays = Array.from({ length: query.days }, (_, index) => dateOnly(new Date(Date.now() - index * 86_400_000))).filter((date) => !reportDates.has(date));
+    const completedExerciseCount = exerciseCompletions.filter((row) => row.status === 'COMPLETED').length;
+    return { patientId, days: query.days, missingReportDays, exerciseSummary: { completedExerciseCount, recordedExerciseCount: exerciseCompletions.length }, dailyReports: dailyReports.map((row) => ({ ...row, reportDate: dateOnly(row.reportDate) })), exerciseCompletions: exerciseCompletions.map((row) => ({ ...row, executionDate: dateOnly(row.executionDate) })) };
+  }
+  private audit(principal: AuthenticatedPrincipal, entityId: string, action: string) { return this.prisma.auditEvent.create({ data: { id: randomUUID(), organizationId: principal.organizationId, actorUserId: principal.userId, action, entityType: 'PatientMonitoring', entityId, requestId: 'patient-portal', metadata: { source: 'PATIENT_REPORTED' } } }); }
+  private async generateReportAttention(principal: AuthenticatedPrincipal, patientId: string, report: { id: string; painScore: number; reportDate?: Date }) {
+    const responsible = await this.prisma.patient.findFirst({ where: { id: patientId, organizationId: principal.organizationId }, select: { responsiblePractitioner: { select: { userId: true } } } });
+    const recipientUserId = responsible?.responsiblePractitioner?.userId;
+    if (!recipientUserId) return;
+    try { await this.prisma.notification.create({ data: { id: randomUUID(), organizationId: principal.organizationId, recipientUserId, type: 'NEW_PATIENT_REPORT', category: 'CLINICAL', title: 'Новий звіт пацієнта', message: 'Новий звіт пацієнта потребує перегляду.', relatedPatientId: patientId, relatedDailyReportId: report.id } }); } catch (error) { if ((error as { code?: string }).code !== 'P2002') throw error; }
+    let reason: string | null = null;
+    if (!reason && report.reportDate) {
+      const previous = await this.prisma.dailyReport.findFirst({ where: { organizationId: principal.organizationId, patientId, reportDate: { lt: report.reportDate } }, orderBy: { reportDate: 'desc' }, select: { painScore: true } });
+      const attention = painAttention(report.painScore, previous?.painScore);
+      if (attention) reason = attention.summary;
+    }
+    if (!reason) { const attention = painAttention(report.painScore); if (attention) reason = attention.summary; }
+    if (!reason) return;
+    try { await this.prisma.clinicalAlert.create({ data: { id: randomUUID(), organizationId: principal.organizationId, patientId, type: 'SYMPTOM_CHANGE', severity: report.painScore >= 9 ? 'HIGH' : 'ATTENTION', title: 'Потребує уваги', summary: reason, sourceDailyReportId: report.id, createdByUserId: principal.userId } }); } catch (error) { if ((error as { code?: string }).code !== 'P2002') throw error; }
+  }
+}

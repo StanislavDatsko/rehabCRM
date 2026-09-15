@@ -50,6 +50,9 @@ export const apiEnvSchema = z
     DATABASE_SCHEMA_VERSION: z.string().min(1).default('unknown'),
     API_RATE_LIMIT_TTL_MS: z.coerce.number().int().positive().default(60_000),
     API_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
+    PATIENT_MEDIA_MAX_IMAGE_BYTES: z.coerce.number().int().positive().default(50_000_000),
+    PATIENT_MEDIA_MAX_VIDEO_BYTES: z.coerce.number().int().positive().default(2_000_000_000),
+    PATIENT_MEDIA_UPLOAD_URL_TTL_SECONDS: z.coerce.number().int().min(60).max(900).default(300),
   })
   .superRefine((env, context) => {
     const hardened = env.DEPLOYMENT_ENV === 'staging' || env.DEPLOYMENT_ENV === 'production';

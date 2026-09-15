@@ -398,6 +398,12 @@ export class RehabilitationService {
         basedOnRevisionId: source.id,
       });
     });
+    const portalDelegate = (this.prisma as unknown as { patientPortalAccount?: { findFirst: (args: unknown) => Promise<{ userId: string } | null> } }).patientPortalAccount;
+    const portal = portalDelegate ? await portalDelegate.findFirst({ where: { organizationId: principal.organizationId, patientId: plan.patientId, status: 'ACTIVE' }, select: { userId: true } }) : null;
+    if (portal) {
+      const notificationDelegate = (this.prisma as unknown as { notification?: { create: (args: unknown) => Promise<unknown> } }).notification;
+      if (notificationDelegate) await notificationDelegate.create({ data: { id: randomUUID(), organizationId: principal.organizationId, recipientUserId: portal.userId, type: 'PLAN_UPDATED', category: 'PATIENT', title: 'Ваш план оновлено', message: 'Ваш план реабілітації оновлено клініцистом.', relatedPatientId: plan.patientId, relatedRehabilitationPlanId: id } }).catch((error: unknown) => { if ((error as { code?: string }).code !== 'P2002') throw error; });
+    }
     return this.getPlan(principal, id);
   }
 

@@ -30,6 +30,7 @@ export class IdentityService {
           include: { organization: true },
           orderBy: { createdAt: 'asc' },
         },
+        patientPortalAccount: { include: { patient: { select: { organizationId: true } } } },
       },
     });
 
@@ -49,6 +50,19 @@ export class IdentityService {
         throw new IdentityResolutionError('membership_disabled');
       }
       throw new IdentityResolutionError('no_active_membership');
+    }
+
+    if (membership.role === 'PATIENT') {
+      const account = user.patientPortalAccount;
+      if (!account || account.status !== 'ACTIVE' || account.organizationId !== membership.organizationId || account.patient.organizationId !== membership.organizationId) {
+        throw new IdentityResolutionError('no_active_membership');
+      }
+      return {
+        subject, userId: user.id, organizationId: membership.organizationId, membershipId: membership.id,
+        role: 'PATIENT', permissions: permissionsForRole('PATIENT'), email: user.email,
+        displayName: user.displayName, organizationName: membership.organization.name,
+        patientId: account.patientId, portalAccountId: account.id,
+      };
     }
 
     return {

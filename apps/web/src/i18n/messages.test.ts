@@ -3,9 +3,9 @@ import { t } from './messages';
 
 describe('i18n', () => {
   it('keeps copy out of domain logic and defaults to Ukrainian', () => {
-    expect(t('productName')).toBe('RehabCRM');
-    expect(t('staffOnly').toLowerCase()).toContain('персоналу');
-    expect(t('staffOnly', 'en').toLowerCase()).toContain('staff');
+    expect(t('productName')).toBe('RehabMIS');
+    expect(t('tagline').toLowerCase()).toContain('медична інформаційна система');
+    expect(t('staffOnly', 'en').toLowerCase()).toContain('system');
   });
 
   it('provides Ukrainian patient CRM strings', () => {

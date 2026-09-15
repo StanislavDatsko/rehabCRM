@@ -33,6 +33,43 @@ enum StaffRole {
   ORGANIZATION_ADMIN
   RECEPTIONIST
   REHABILITATION_SPECIALIST
+  PATIENT
+}
+
+enum PatientPortalAccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ExerciseCompletionStatus {
+  COMPLETED
+  PARTIAL
+  SKIPPED
+}
+enum NotificationStatus {
+  UNREAD
+  READ
+  DISMISSED
+}
+enum NotificationType {
+  DAILY_REPORT_REMINDER
+  PLAN_UPDATED
+  APPOINTMENT_REMINDER
+  EXERCISE_REMINDER
+  NEW_PATIENT_REPORT
+  SYMPTOM_CHANGE
+  MISSED_DAILY_REPORT
+  LOW_EXERCISE_ADHERENCE
+}
+enum ClinicalAlertSeverity {
+  INFO
+  ATTENTION
+  HIGH
+}
+enum ClinicalAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
 }
 
 enum PatientStatus {
@@ -281,11 +318,17 @@ model Organization {
   bodyAnnotations             BodyAnnotation[]
   bodyAnnotationHistory       BodyAnnotationStatusHistory[]
   clinicalReports             ClinicalReport[]
+  patientPortalAccounts       PatientPortalAccount[]
+  dailyReports                DailyReport[]
+  exerciseCompletions         ExerciseCompletion[]
+  notifications               Notification[]
+  clinicalAlerts              ClinicalAlert[]
+  patientMedia                PatientMedia[]
 
   @@map("organizations")
 }
 
-/// Staff identity. Patients are never Users.
+/// Authenticated identity. Clinical patients remain separate domain records.
 model User {
   id                      String     @id @default(uuid()) @db.Uuid
   identityProvider        String
@@ -321,6 +364,14 @@ model User {
   bodyAnnotationStatusChanges        BodyAnnotationStatusHistory[] @relation("BodyAnnotationStatusChangedBy")
   generatedClinicalReports           ClinicalReport[]              @relation("ClinicalReportGeneratedBy")
   voidedClinicalReports              ClinicalReport[]              @relation("ClinicalReportVoidedBy")
+  patientPortalAccount               PatientPortalAccount?          @relation("PatientPortalUser")
+  createdPortalAccounts              PatientPortalAccount[]         @relation("PatientPortalAccountCreatedBy")
+  updatedPortalAccounts              PatientPortalAccount[]         @relation("PatientPortalAccountUpdatedBy")
+  notifications                       Notification[]
+  clinicalAlertsCreated               ClinicalAlert[]               @relation("ClinicalAlertCreatedBy")
+  clinicalAlertsResolved              ClinicalAlert[]               @relation("ClinicalAlertResolvedBy")
+  patientMediaUploaded                PatientMedia[]                 @relation("PatientMediaUploadedBy")
+  patientMediaVoided                  PatientMedia[]                 @relation("PatientMediaVoidedBy")
 
   @@unique([identityProvider, identityProviderSubject])
   @@unique([identityProvider, email])
@@ -413,6 +464,12 @@ model Patient {
   rehabilitationPlans     RehabilitationPlan[]
   bodyAnnotations         BodyAnnotation[]
   clinicalReports         ClinicalReport[]
+  portalAccount            PatientPortalAccount?
+  dailyReports             DailyReport[]
+  exerciseCompletions      ExerciseCompletion[]
+  notifications             Notification[]
+  clinicalAlerts            ClinicalAlert[]
+  media                     PatientMedia[]
 
   @@unique([organizationId, internalReferenceNumber])
   @@index([organizationId, status, lastName, firstName, id])
@@ -423,7 +480,183 @@ model Patient {
   @@map("patients")
 }
 
+/// Optional, explicit binding between an authenticated identity and a clinical patient.
+/// Credentials and provider identifiers remain on User/Keycloak, never on Patient.
+model PatientPortalAccount {
+  id              String                      @id @default(uuid()) @db.Uuid
+  organizationId  String                      @db.Uuid
+  userId          String                      @unique @db.Uuid
+  patientId       String                      @unique @db.Uuid
+  status          PatientPortalAccountStatus  @default(ACTIVE)
+  version         Int                         @default(1)
+  createdByUserId String                      @db.Uuid
+  updatedByUserId String                      @db.Uuid
+  createdAt       DateTime                    @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime                    @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation("PatientPortalUser", fields: [userId], references: [id], onDelete: Restrict)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  createdBy    User         @relation("PatientPortalAccountCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy    User         @relation("PatientPortalAccountUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status])
+  @@map("patient_portal_accounts")
+}
+
+/// Patient-generated monitoring, deliberately separate from clinician measurements.
+model DailyReport {
+  id               String   @id @default(uuid()) @db.Uuid
+  organizationId   String   @db.Uuid
+  patientId        String   @db.Uuid
+  reportDate       DateTime @db.Date
+  overallWellbeing Int
+  fatigueLevel     Int
+  painScore        Int
+  comment          String?  @db.VarChar(2000)
+  source           String   @default("PATIENT_REPORTED") @db.VarChar(32)
+  version          Int      @default(1)
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, patientId, reportDate])
+  @@index([organizationId, patientId, reportDate])
+  @@map("daily_reports")
+}
+
+/// Patient-reported execution; it never mutates ExercisePrescription.
+model ExerciseCompletion {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  organizationId        String                  @db.Uuid
+  patientId             String                  @db.Uuid
+  rehabilitationPlanId  String                  @db.Uuid
+  planRevisionId        String                  @db.Uuid
+  exercisePrescriptionId String                  @db.Uuid
+  executionDate         DateTime                @db.Date
+  status                ExerciseCompletionStatus
+  completedSets         Int?
+  completedRepetitions  Int?
+  durationMinutes       Int?
+  patientDifficulty     Int?
+  comment               String?                 @db.VarChar(1000)
+  source                String                  @default("PATIENT_REPORTED") @db.VarChar(32)
+  version               Int                     @default(1)
+  createdAt             DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime                @updatedAt @db.Timestamptz(3)
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient      Patient               @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  plan         RehabilitationPlan    @relation(fields: [rehabilitationPlanId], references: [id], onDelete: Restrict)
+  revision     RehabilitationPlanRevision @relation(fields: [planRevisionId], references: [id], onDelete: Restrict)
+  prescription ExercisePrescription @relation(fields: [exercisePrescriptionId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, patientId, exercisePrescriptionId, executionDate])
+  @@index([organizationId, patientId, executionDate])
+  @@map("exercise_completions")
+}
+
 /// Append-oriented security/business history. Metadata is deliberately minimized.
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  recipientUserId String @db.Uuid
+  type NotificationType
+  category String @db.VarChar(32)
+  title String @db.VarChar(200)
+  message String @db.VarChar(1000)
+  status NotificationStatus @default(UNREAD)
+  relatedPatientId String? @db.Uuid
+  relatedRehabilitationPlanId String? @db.Uuid
+  relatedDailyReportId String? @db.Uuid
+  relatedExerciseCompletionId String? @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  readAt DateTime? @db.Timestamptz(3)
+  dismissedAt DateTime? @db.Timestamptz(3)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  recipient User @relation(fields: [recipientUserId], references: [id], onDelete: Restrict)
+  patient Patient? @relation(fields: [relatedPatientId], references: [id], onDelete: Restrict)
+  @@index([organizationId, recipientUserId, status, createdAt])
+  @@unique([recipientUserId, type, relatedDailyReportId])
+  @@map("notifications")
+}
+
+model ClinicalAlert {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  patientId String @db.Uuid
+  type NotificationType
+  severity ClinicalAlertSeverity
+  status ClinicalAlertStatus @default(OPEN)
+  title String @db.VarChar(200)
+  summary String @db.VarChar(1000)
+  sourceDailyReportId String? @db.Uuid
+  sourceExerciseCompletionId String? @db.Uuid
+  createdByUserId String @db.Uuid
+  resolvedByUserId String? @db.Uuid
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  acknowledgedAt DateTime? @db.Timestamptz(3)
+  resolvedAt DateTime? @db.Timestamptz(3)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  createdBy User @relation("ClinicalAlertCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  resolvedBy User? @relation("ClinicalAlertResolvedBy", fields: [resolvedByUserId], references: [id], onDelete: Restrict)
+  @@index([organizationId, patientId, status, createdAt])
+  @@unique([patientId, type, sourceDailyReportId, sourceExerciseCompletionId])
+  @@map("clinical_alerts")
+}
+
+enum PatientMediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum PatientMediaStatus {
+  PENDING_UPLOAD
+  READY
+  VOIDED
+}
+
+model PatientMedia {
+  id String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  patientId String @db.Uuid
+  encounterId String? @db.Uuid
+  assessmentId String? @db.Uuid
+  rehabilitationPlanId String? @db.Uuid
+  kind PatientMediaKind
+  status PatientMediaStatus @default(PENDING_UPLOAD)
+  originalFileName String @db.VarChar(255)
+  mimeType String @db.VarChar(100)
+  sizeBytes BigInt
+  objectKey String @db.VarChar(500)
+  bucket String @db.VarChar(200)
+  checksumSha256 String? @db.VarChar(64)
+  title String? @db.VarChar(200)
+  description String? @db.VarChar(2000)
+  capturedAt DateTime? @db.Timestamptz(3)
+  uploadedByUserId String @db.Uuid
+  voidedAt DateTime? @db.Timestamptz(3)
+  voidedByUserId String? @db.Uuid
+  voidReason String? @db.VarChar(1000)
+  version Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  rehabilitationPlan RehabilitationPlan? @relation(fields: [rehabilitationPlanId], references: [id], onDelete: Restrict)
+  uploadedBy User @relation("PatientMediaUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  voidedBy User? @relation("PatientMediaVoidedBy", fields: [voidedByUserId], references: [id], onDelete: Restrict)
+  @@index([organizationId, patientId, status, createdAt, id])
+  @@index([organizationId, patientId, kind, createdAt, id])
+  @@map("patient_media")
+}
+
 model AuditEvent {
   id             String   @id @default(uuid()) @db.Uuid
   organizationId String   @db.Uuid
@@ -556,6 +789,7 @@ model Encounter {
   updatedBy       User             @relation("EncounterUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
   assessments     Assessment[]
   bodyAnnotations BodyAnnotation[]
+  media           PatientMedia[]
 
   @@index([organizationId, patientId, startedAt])
   @@index([organizationId, practitionerId, startedAt])
@@ -661,6 +895,7 @@ model Assessment {
   updatedBy    User                @relation("AssessmentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
   voidedBy     User?               @relation("AssessmentVoidedBy", fields: [voidedByUserId], references: [id], onDelete: Restrict)
   measurements Measurement[]
+  media        PatientMedia[]
 
   @@index([organizationId, patientId, performedAt])
   @@index([organizationId, encounterId])
@@ -734,6 +969,8 @@ model RehabilitationPlan {
   createdBy               User                         @relation("RehabilitationPlanCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
   updatedBy               User                         @relation("RehabilitationPlanUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
   cancelledBy             User?                        @relation("RehabilitationPlanCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: Restrict)
+  exerciseCompletions     ExerciseCompletion[]
+  media                   PatientMedia[]
 
   @@index([organizationId, patientId, status])
   @@index([organizationId, responsiblePractitionerId, status])
@@ -764,6 +1001,7 @@ model RehabilitationPlanRevision {
   goals            RehabilitationGoal[]
   phases           RehabilitationPlanPhase[]
   prescriptions    ExercisePrescription[]
+  exerciseCompletions ExerciseCompletion[]
   createdBy        User                         @relation("RehabilitationPlanRevisionCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
 
   @@unique([planId, revisionNumber])
@@ -911,6 +1149,7 @@ model ExercisePrescription {
   planRevision       RehabilitationPlanRevision @relation(fields: [planRevisionId], references: [id], onDelete: Restrict)
   phase              RehabilitationPlanPhase?   @relation(fields: [phaseId], references: [id], onDelete: Restrict)
   exerciseDefinition ExerciseDefinition         @relation(fields: [exerciseDefinitionId], references: [id], onDelete: Restrict)
+  completions        ExerciseCompletion[]
 
   @@index([planRevisionId, displayOrder])
   @@index([organizationId, exerciseDefinitionId])

@@ -13,6 +13,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (me === 'denied') {
     redirect('/login?reason=denied');
   }
+  if (me.role === 'PATIENT') {
+    redirect('/patient');
+  }
 
   return <StaffShell user={me}>{children}</StaffShell>;
 }

@@ -44,7 +44,7 @@ export function StaffForm() {
         </div>
       </div>
       <div className="rounded-md border border-info/30 bg-info/5 p-4 text-sm text-text-secondary">
-        Пароль не створюється й не зберігається в RehabCRM. Працівник отримає захищені інструкції
+        Пароль не створюється й не зберігається в RehabMIS. Працівник отримає захищені інструкції
         від системи ідентифікації для підтвердження email і встановлення пароля.
       </div>
       <div className="flex gap-3">

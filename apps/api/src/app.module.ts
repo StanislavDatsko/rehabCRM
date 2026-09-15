@@ -17,6 +17,9 @@ import { AnatomyModule } from './anatomy/anatomy.module';
 import { ProgressModule } from './progress/progress.module';
 import { StaffModule } from './staff/staff.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { PatientPortalModule } from './patient-portal/patient-portal.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PatientMediaModule } from './patient-media/media.module';
 
 const env = parseApiEnv();
 
@@ -83,6 +86,9 @@ const env = parseApiEnv();
     }),
     PrismaModule,
     ObservabilityModule,
+    PatientPortalModule,
+    NotificationsModule,
+    PatientMediaModule,
     RedisModule,
     IdentityModule,
     StaffModule,

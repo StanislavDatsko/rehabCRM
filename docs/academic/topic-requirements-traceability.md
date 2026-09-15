@@ -1,0 +1,24 @@
+# Official topic requirements traceability
+
+Official topic: **Розробка медичної інформаційної системи моніторингу та планування реабілітаційного процесу**.
+
+This matrix maps the supplied academic description to the implemented RehabMIS system. The Prisma schema, route guards, automated tests, and browser suite are the authoritative sources; this document is a thesis-oriented index, not a second domain model.
+
+| Official requirement | Implementation | Backend/domain | Frontend | Security | Tests | Status | Evidence |
+|---|---|---|---|---|---|---|---|
+| Electronic patient records | Patient record with administrative and clinical context | `Patient`, appointments, encounters, assessments, measurements, plans, monitoring, annotations, timeline, reports | `/app/patients/[id]` and linked clinical sections | Clinical projections and organization scoping | Patient, clinical, isolation, and E2E tests | SATISFIED | `apps/api/prisma/schema.prisma`, `docs/architecture/patient-crm.md` |
+| Personalized rehabilitation planning | Patient-specific versioned plans with goals and prescriptions | `RehabilitationPlan`, revisions, goals, phases, `ExercisePrescription` | Plan creation, revision, patient plan view | Specialist ownership and lifecycle permissions | Plan schema/service/transition tests | SATISFIED | `docs/architecture/rehabilitation-plans.md`, `docs/adr/ADR-014-rehabilitation-plan-revisions.md` |
+| Execution tracking | Patient records exercise completion and daily observations | `ExerciseCompletion`, `DailyReport`, provenance and versions | `/patient/exercises`, `/patient/daily-report`, monitoring views | Patient self-context; completion never edits prescriptions | Monitoring service/API/E2E tests | SATISFIED | `docs/architecture/patient-monitoring.md` |
+| Recovery dynamics / mobility | Structured ROM, timed-up-and-go, walk distance, strength, and pain time series | `MeasurementDefinition`, `Measurement`, bounded progress projections | Progress charts and clinical reports | Specialist clinical permission and org isolation | Progress and measurement tests | SATISFIED | `docs/architecture/measurements.md`, `docs/architecture/progress-analytics.md` |
+| Daily reports | Validated, versioned patient daily reports with history | `DailyReport` and audit events | Daily report form and clinician monitoring | Self-only write/read; clinician scoped read | Monitoring tests and patient E2E | SATISFIED | `apps/api/src/patient-portal`, `apps/web/e2e/patient-portal.spec.ts` |
+| Symptom monitoring | Pain and other structured measurements retain source provenance | Patient-reported vs clinician-recorded measurement source | Patient entry, progress, monitoring review | Provenance is server-assigned and not caller-owned | Measurement/monitoring tests | SATISFIED | `docs/architecture/measurements.md`, `docs/architecture/patient-monitoring.md` |
+| Notifications for doctors and patients | Recipient-owned in-app notifications plus clinician alerts | `Notification`, `ClinicalAlert`, IN_APP channel | Patient notifications and `/app/alerts` | Recipient, organization, and responsible-practitioner scoping | Notification, alert-rule, accessibility, and E2E tests | SATISFIED | `docs/architecture/notifications-alerts.md` |
+| Role separation | Doctor, patient, administrator, and operational receptionist roles | Keycloak identity plus PostgreSQL memberships/permissions | Separate `/patient` and `/app` surfaces | Deny-by-default guards and patient self-context | Role, auth, isolation, and E2E tests | SATISFIED | `docs/security/access-control.md` |
+| Medical-data protection | Layered identity, authorization, validation, audit, concurrency, and storage controls | OIDC/JWT, Prisma constraints, audit, private object storage | Safe projections and signed downloads | BFF cookies, CSP/CORS/CSRF controls, rate limits, redacted logs | Security and regression tests | SATISFIED | `docs/security/access-control.md`, `docs/security/threat-model.md` |
+| Database testing | Migration, constraint, seed, concurrency, and isolation verification | PostgreSQL/Prisma schema and migrations | N/A | Database constraints reinforce authorization | Current final run: Prisma validation/migration status PASS; seed twice PASS; API tests PASS | SATISFIED | `docs/operations/test-strategy.md` |
+| User-interface testing | Unit/component, accessibility, workflow, and browser testing | N/A | Staff and patient workflows covered | Browser authorization boundaries included | Current final run: Web tests 56 PASS; Chromium E2E/accessibility 11/11 PASS | SATISFIED | `apps/web/e2e`, `apps/web/src/**/*.test.*` |
+
+## Scope conclusion
+
+Every functional requirement in the supplied official description has a concrete implementation and verification path. The system does not claim national EHR certification, medical-device status, formal HIPAA/GDPR/ISO certification, hardware sensor collection, or autonomous diagnosis.
+

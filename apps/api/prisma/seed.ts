@@ -104,6 +104,17 @@ async function main(): Promise<void> {
       membershipStatus: MembershipStatus.ACTIVE,
       practitioner: true,
     },
+    {
+      id: DEV_SEED.users.patient,
+      subject: DEV_SEED.keycloakSubjects.patient,
+      email: 'patient@rehabcrm.local',
+      displayName: 'Demo Patient Portal',
+      status: UserStatus.ACTIVE,
+      orgId: DEV_SEED.organizations.demo.id,
+      role: StaffRole.PATIENT,
+      membershipStatus: MembershipStatus.ACTIVE,
+      practitioner: false,
+    },
   ] as const;
 
   for (const person of staff) {
@@ -117,6 +128,7 @@ async function main(): Promise<void> {
         },
       },
       update: {
+        id: person.id,
         email: person.email,
         firstName,
         lastName,
@@ -267,6 +279,12 @@ async function main(): Promise<void> {
       });
     }
   }
+
+  await prisma.patientPortalAccount.upsert({
+    where: { id: DEV_SEED.portalAccounts.demo },
+    update: { organizationId: DEV_SEED.organizations.demo.id, userId: DEV_SEED.users.patient, patientId: DEV_SEED.patients.demo, status: 'ACTIVE', updatedByUserId: DEV_SEED.users.specialist },
+    create: { id: DEV_SEED.portalAccounts.demo, organizationId: DEV_SEED.organizations.demo.id, userId: DEV_SEED.users.patient, patientId: DEV_SEED.patients.demo, status: 'ACTIVE', createdByUserId: DEV_SEED.users.specialist, updatedByUserId: DEV_SEED.users.specialist },
+  });
 
   const demoOrgId = DEV_SEED.organizations.demo.id;
   const receptionistId = DEV_SEED.users.receptionist;
@@ -1253,6 +1271,27 @@ async function main(): Promise<void> {
     practitionerId: demoPractitioner.id,
     userId: specialistUserId,
   });
+
+  const monitoringDates = [new Date(Date.UTC(2026, 8, 13)), new Date(Date.UTC(2026, 8, 14))];
+  for (const [index, reportDate] of monitoringDates.entries()) {
+    await prisma.dailyReport.upsert({
+      where: { organizationId_patientId_reportDate: { organizationId: demoOrgId, patientId: DEV_SEED.patients.demo, reportDate } },
+      update: { overallWellbeing: index === 0 ? 7 : 8, fatigueLevel: index === 0 ? 5 : 3, painScore: index === 0 ? 4 : 2, comment: index === 0 ? 'Демонстраційний звіт за попередній день.' : 'Демонстраційний звіт за сьогодні.', source: 'PATIENT_REPORTED' },
+      create: { id: index === 0 ? DEV_SEED.monitoring.dailyReportOne : DEV_SEED.monitoring.dailyReportTwo, organizationId: demoOrgId, patientId: DEV_SEED.patients.demo, reportDate, overallWellbeing: index === 0 ? 7 : 8, fatigueLevel: index === 0 ? 5 : 3, painScore: index === 0 ? 4 : 2, comment: index === 0 ? 'Демонстраційний звіт за попередній день.' : 'Демонстраційний звіт за сьогодні.' },
+    });
+  }
+  for (const [index, executionDate] of monitoringDates.entries()) {
+    await prisma.exerciseCompletion.upsert({
+      where: { organizationId_patientId_exercisePrescriptionId_executionDate: { organizationId: demoOrgId, patientId: DEV_SEED.patients.demo, exercisePrescriptionId: `b6140000-0000-4000-8000-00000000001${index + 1}`, executionDate } },
+      update: { status: index === 0 ? 'PARTIAL' : 'COMPLETED', completedSets: index === 0 ? 2 : 4, completedRepetitions: 10, source: 'PATIENT_REPORTED' },
+      create: { id: index === 0 ? DEV_SEED.monitoring.completionOne : DEV_SEED.monitoring.completionTwo, organizationId: demoOrgId, patientId: DEV_SEED.patients.demo, rehabilitationPlanId: demoPlanId, planRevisionId: secondRevisionId, exercisePrescriptionId: `b6140000-0000-4000-8000-00000000001${index + 1}`, executionDate, status: index === 0 ? 'PARTIAL' : 'COMPLETED', completedSets: index === 0 ? 2 : 4, completedRepetitions: 10 },
+    });
+  }
+  await prisma.notification.upsert({ where: { id: DEV_SEED.notifications.patientPlanUpdate }, update: { status: 'UNREAD', title: 'Ваш план оновлено', message: 'Ваш план реабілітації оновлено клініцистом.', type: 'PLAN_UPDATED', category: 'PATIENT', recipientUserId: DEV_SEED.users.patient, organizationId: demoOrgId }, create: { id: DEV_SEED.notifications.patientPlanUpdate, organizationId: demoOrgId, recipientUserId: DEV_SEED.users.patient, type: 'PLAN_UPDATED', category: 'PATIENT', title: 'Ваш план оновлено', message: 'Ваш план реабілітації оновлено клініцистом.', relatedPatientId: DEV_SEED.patients.demo } });
+  await prisma.notification.upsert({ where: { id: DEV_SEED.notifications.clinicianReport }, update: { status: 'UNREAD', title: 'Новий звіт пацієнта', message: 'Новий звіт пацієнта потребує перегляду.', type: 'NEW_PATIENT_REPORT', category: 'CLINICAL', recipientUserId: specialistUserId, organizationId: demoOrgId, relatedPatientId: DEV_SEED.patients.demo, relatedDailyReportId: DEV_SEED.monitoring.dailyReportTwo }, create: { id: DEV_SEED.notifications.clinicianReport, organizationId: demoOrgId, recipientUserId: specialistUserId, type: 'NEW_PATIENT_REPORT', category: 'CLINICAL', title: 'Новий звіт пацієнта', message: 'Новий звіт пацієнта потребує перегляду.', relatedPatientId: DEV_SEED.patients.demo, relatedDailyReportId: DEV_SEED.monitoring.dailyReportTwo } });
+  for (const [id, status] of [[DEV_SEED.notifications.alertOpen, 'OPEN'], [DEV_SEED.notifications.alertAcknowledged, 'ACKNOWLEDGED'], [DEV_SEED.notifications.alertResolved, 'RESOLVED']] as const) {
+    await prisma.clinicalAlert.upsert({ where: { id }, update: { status, version: status === 'OPEN' ? 1 : 2 }, create: { id, organizationId: demoOrgId, patientId: DEV_SEED.patients.demo, type: 'SYMPTOM_CHANGE', severity: status === 'RESOLVED' ? 'INFO' : 'ATTENTION', status, title: 'Потребує уваги', summary: 'Показник пацієнта досяг визначеного порогу та потребує перегляду.', sourceDailyReportId: status === 'OPEN' ? DEV_SEED.monitoring.dailyReportTwo : undefined, createdByUserId: specialistUserId, resolvedByUserId: status === 'RESOLVED' ? specialistUserId : undefined, acknowledgedAt: status === 'OPEN' ? undefined : new Date(), resolvedAt: status === 'RESOLVED' ? new Date() : undefined } });
+  }
 }
 
 main()

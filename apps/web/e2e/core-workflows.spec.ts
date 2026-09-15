@@ -15,12 +15,16 @@ test('receptionist uses patient and scheduling administration without staff acce
 test('specialist opens progress, reports, and the 3D body map', async ({ page }) => {
   await signIn(page, 'specialist');
   const patient = 'd1000000-0000-4000-8000-000000000001';
+  await page.goto(`/app/patients/${patient}`);
+  await expect(page.getByRole('heading', { name: 'Фото та відео' })).toBeVisible();
   await page.goto(`/app/patients/${patient}/progress`);
   await expect(page.getByRole('heading').first()).toBeVisible();
   await page.goto(`/app/patients/${patient}/reports`);
   await expect(page.getByText(/звіт|report/i).first()).toBeVisible();
   await page.goto(`/app/patients/${patient}/body-map`);
   await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  await page.goto('/app/alerts');
+  await expect(page.getByRole('heading', { name: 'Пацієнти, що потребують уваги' })).toBeVisible();
 });
 
 test('organization admin opens staff administration without a CRM password field', async ({
