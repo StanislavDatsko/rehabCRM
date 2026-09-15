@@ -31,5 +31,4 @@ blob-report
 *.log
 
 # Developer-local anatomy source and generated model binaries
-/assets/anatomy/source/*.glb
 /assets/anatomy/processed/*.glb
