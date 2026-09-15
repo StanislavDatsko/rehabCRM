@@ -17,6 +17,7 @@ export const webEnvSchema = z
     AUTH_KEYCLOAK_SECRET: z.string().min(1),
     AUTH_KEYCLOAK_ISSUER: z.string().url(),
     AUTH_URL: z.string().url().default('http://localhost:3000'),
+    REDIS_URL: z.string().url().default('redis://localhost:6379'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url().optional(),
     APP_VERSION: z.string().min(1).default('0.0.0-dev'),

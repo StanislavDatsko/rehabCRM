@@ -8,10 +8,11 @@ export default async function HomePage() {
   const session = await auth();
   if (session && !session.error) {
     const { serverApiFetch } = await import('../lib/api/server-api-client');
+    let me: { role: string };
     try {
-      const me = await serverApiFetch<{ role: string }>('/api/v1/me');
-      redirect(routeForRole(me.role));
+      me = await serverApiFetch<{ role: string }>('/api/v1/me');
     } catch { redirect('/login?reason=denied'); }
+    redirect(routeForRole(me.role));
   }
   redirect('/login');
 }
