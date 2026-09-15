@@ -156,7 +156,10 @@ jobs:
       METRICS_TOKEN: ci-only-metrics-token-not-for-production
       E2E_BASE_URL: http://localhost:3000
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: pnpm/action-setup@v4
         with: { version: 9.15.9 }
       - uses: actions/setup-node@v4
