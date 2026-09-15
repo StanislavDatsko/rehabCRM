@@ -218,6 +218,18 @@ jobs:
           cat /tmp/rehabcrm-api.log /tmp/rehabcrm-web.log
           exit 1
       - run: pnpm e2e
+      - name: Dump bounded application diagnostics
+        if: failure()
+        run: |
+          echo '--- web log (last 200 lines) ---'
+          tail -n 200 /tmp/rehabcrm-web.log || true
+          echo '--- api log (last 200 lines) ---'
+          tail -n 200 /tmp/rehabcrm-api.log || true
+          echo '--- container state ---'
+          docker ps -a --format 'table {{.Names}}\t{{.Status}}' || true
+          echo '--- host resources ---'
+          free -m || true
+          df -h || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

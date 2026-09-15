@@ -33,5 +33,15 @@ export async function signIn(page: Page, username: keyof typeof passwordByUser):
   await usernameField.fill(username);
   await page.locator('#password').fill(passwordByUser[username] ?? '');
   await page.locator('#kc-login').click();
-  await expect(page).toHaveURL(username === 'patient' ? /\/patient/ : /\/app/);
+  const expectedRoute = username === 'patient' ? /\/patient(?:$|\/)/ : /\/app(?:$|\/)/;
+  try {
+    await expect(page).toHaveURL(expectedRoute, { timeout: 15_000 });
+  } catch {
+    throw new Error(`E2E authentication route failed for ${username} at ${new Date().toISOString()}: ${page.url()}`);
+  }
+  if (username === 'patient') {
+    await expect(page.getByRole('link', { name: 'Огляд' })).toBeVisible({ timeout: 15_000 });
+  } else {
+    await expect(page.getByText('Робоче місце фахівця')).toBeVisible({ timeout: 15_000 });
+  }
 }
