@@ -183,10 +183,28 @@ jobs:
       - name: Build shared config
         run: pnpm --filter @repo/config build
       - run: pnpm --filter @rehabcrm/api anatomy:import -- --apply
-      - name: Create report bucket
+      - name: Wait for MinIO client access
+        env:
+          MC_HOST_local: http://${{ env.S3_ACCESS_KEY }}:${{ env.S3_SECRET_KEY }}@localhost:9000
         run: |
-          docker run --rm --network host --entrypoint /bin/sh minio/mc -c \
-            "mc alias set local http://127.0.0.1:9000 rehabcrm rehabcrmsecret >/dev/null && mc mb --ignore-existing local/rehabcrm-documents"
+          for attempt in $(seq 1 30); do
+            if docker run --rm --network host \
+              -e MC_HOST_local="$MC_HOST_local" \
+              quay.io/minio/mc:latest ready local >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MinIO did not become ready for mc access."
+          exit 1
+      - name: Create report bucket
+        env:
+          MC_HOST_local: http://${{ env.S3_ACCESS_KEY }}:${{ env.S3_SECRET_KEY }}@localhost:9000
+        run: |
+          docker run --rm --network host \
+            -e MC_HOST_local="$MC_HOST_local" \
+            quay.io/minio/mc:latest \
+            mb --ignore-existing local/rehabcrm-documents
       - run: pnpm build
       - name: Start application
         run: |
