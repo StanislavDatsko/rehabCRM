@@ -80,7 +80,7 @@ export function StaffShell({
       <div className="flex-1 bg-background">
         <header className="flex items-center justify-between border-b border-border bg-surface/90 px-8 py-5 backdrop-blur">
           <div><p className="rc-kicker">Clinical workspace</p><p className="mt-1 text-sm text-text-secondary">{user.organization.name}</p></div>
-          <div className="h-2 w-2 rounded-full bg-brand-lime shadow-[0_0_0_4px_rgb(154_205_50_/_0.15)]" aria-label="Online" />
+          <div className="h-2 w-2 rounded-full bg-brand-lime shadow-[0_0_0_4px_rgb(154_205_50_/_0.15)]" aria-hidden="true" />
         </header>
         <main id="main" className="px-6 py-8 lg:px-10">
           {children}
