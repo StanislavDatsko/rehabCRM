@@ -12,8 +12,7 @@ describe('parseApiEnv', () => {
       S3_SECRET_KEY: 'secret',
       S3_BUCKET_DOCUMENTS: 'docs',
       S3_BUCKET_MODELS: 'models',
-      OIDC_ISSUER: 'http://localhost:8080/realms/rehabcrm',
-      OIDC_AUDIENCE: 'rehabcrm-api',
+      NEON_AUTH_BASE_URL: 'http://localhost:3000/neondb/auth',
     });
     expect(env.API_PORT).toBe(3001);
     expect(env.S3_FORCE_PATH_STYLE).toBe(true);
@@ -32,8 +31,7 @@ describe('parseApiEnv', () => {
         S3_SECRET_KEY: 'rehabcrmsecret',
         S3_BUCKET_DOCUMENTS: 'docs',
         S3_BUCKET_MODELS: 'models',
-        OIDC_ISSUER: 'http://localhost:8080/realms/rehabcrm',
-        OIDC_AUDIENCE: 'rehabcrm-api',
+        NEON_AUTH_BASE_URL: 'http://localhost:3000/neondb/auth',
         SWAGGER_ENABLED: 'true',
       }),
     ).toThrow();
@@ -53,12 +51,10 @@ describe('parseApiEnv', () => {
       S3_SECRET_KEY: `test-s3-${'x'.repeat(40)}`,
       S3_BUCKET_DOCUMENTS: 'docs',
       S3_BUCKET_MODELS: 'models',
-      OIDC_ISSUER: 'https://identity.example.test/realms/rehabcrm',
-      OIDC_AUDIENCE: 'rehabcrm-api',
-      OIDC_ADMIN_BASE_URL: 'https://identity.example.test',
-      OIDC_ADMIN_REALM: 'rehabcrm',
-      OIDC_ADMIN_CLIENT_ID: 'rehabcrm-provisioner',
-      OIDC_ADMIN_CLIENT_SECRET: `test-admin-${'x'.repeat(40)}`,
+      NEON_AUTH_BASE_URL: 'https://auth.example.test/neondb/auth',
+      NEON_API_KEY: `test-neon-key-${'x'.repeat(40)}`,
+      NEON_PROJECT_ID: 'project-id',
+      NEON_BRANCH_ID: 'branch-id',
       METRICS_TOKEN: `test-metrics-${'x'.repeat(40)}`,
       APP_VERSION: '9.0.0',
       APP_COMMIT_SHA: '0123456789abcdef',

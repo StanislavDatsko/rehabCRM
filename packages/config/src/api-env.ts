@@ -32,18 +32,10 @@ export const apiEnvSchema = z
       .union([z.boolean(), z.string()])
       .transform((value) => value === true || value === 'true')
       .default(true),
-    OIDC_ISSUER: z.string().url(),
-    OIDC_AUDIENCE: z.string().min(1),
-    OIDC_ADMIN_BASE_URL: z.string().url().optional(),
-    OIDC_ADMIN_REALM: z.string().min(1).optional(),
-    OIDC_ADMIN_CLIENT_ID: z.string().min(1).optional(),
-    OIDC_ADMIN_CLIENT_SECRET: z.string().min(1).optional(),
-    OIDC_ADMIN_ACTION_LIFESPAN_SECONDS: z.coerce
-      .number()
-      .int()
-      .min(300)
-      .max(86_400)
-      .default(43_200),
+    NEON_AUTH_BASE_URL: z.string().url(),
+    NEON_API_KEY: z.string().min(1).optional(),
+    NEON_PROJECT_ID: z.string().min(1).optional(),
+    NEON_BRANCH_ID: z.string().min(1).optional(),
     METRICS_TOKEN: z.string().optional(),
     APP_VERSION: z.string().min(1).default('0.0.0-dev'),
     APP_COMMIT_SHA: z.string().min(1).default('unknown'),
@@ -65,28 +57,17 @@ export const apiEnvSchema = z
       ['API_PUBLIC_URL', env.API_PUBLIC_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],
       ['S3_ENDPOINT', env.S3_ENDPOINT],
-      ['OIDC_ISSUER', env.OIDC_ISSUER],
+      ['NEON_AUTH_BASE_URL', env.NEON_AUTH_BASE_URL],
     ] as const) {
       if (new URL(url).protocol !== 'https:') issue(name, 'must use HTTPS');
       if (isLocal(url)) issue(name, 'must not use a loopback host');
     }
-    if (!env.OIDC_ADMIN_BASE_URL) issue('OIDC_ADMIN_BASE_URL', 'is required');
-    else {
-      if (new URL(env.OIDC_ADMIN_BASE_URL).protocol !== 'https:')
-        issue('OIDC_ADMIN_BASE_URL', 'must use HTTPS');
-      if (isLocal(env.OIDC_ADMIN_BASE_URL))
-        issue('OIDC_ADMIN_BASE_URL', 'must not use a loopback host');
-    }
-    for (const name of [
-      'OIDC_ADMIN_REALM',
-      'OIDC_ADMIN_CLIENT_ID',
-      'OIDC_ADMIN_CLIENT_SECRET',
-    ] as const) {
+    for (const name of ['NEON_API_KEY', 'NEON_PROJECT_ID', 'NEON_BRANCH_ID'] as const) {
       if (!env[name]) issue(name, 'is required');
     }
     for (const [name, secret] of [
       ['S3_SECRET_KEY', env.S3_SECRET_KEY],
-      ['OIDC_ADMIN_CLIENT_SECRET', env.OIDC_ADMIN_CLIENT_SECRET ?? ''],
+      ['NEON_API_KEY', env.NEON_API_KEY ?? ''],
       ['METRICS_TOKEN', env.METRICS_TOKEN ?? ''],
     ] as const) {
       if (secret.length < 32) issue(name, 'must contain at least 32 characters');

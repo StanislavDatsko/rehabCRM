@@ -12,11 +12,8 @@ export const webEnvSchema = z
     DEPLOYMENT_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
     API_INTERNAL_URL: z.string().url().default('http://localhost:3001'),
     NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3001'),
-    AUTH_SECRET: z.string().min(32),
-    AUTH_KEYCLOAK_ID: z.string().min(1),
-    AUTH_KEYCLOAK_SECRET: z.string().min(1),
-    AUTH_KEYCLOAK_ISSUER: z.string().url(),
-    AUTH_URL: z.string().url().default('http://localhost:3000'),
+    NEON_AUTH_BASE_URL: z.string().url(),
+    NEON_AUTH_COOKIE_SECRET: z.string().min(32),
     REDIS_URL: z.string().url().default('redis://localhost:6379'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url().optional(),
@@ -32,16 +29,14 @@ export const webEnvSchema = z
       issue('NODE_ENV', 'staging/production deployments require NODE_ENV=production');
     for (const [name, url] of [
       ['NEXT_PUBLIC_API_URL', env.NEXT_PUBLIC_API_URL],
-      ['AUTH_KEYCLOAK_ISSUER', env.AUTH_KEYCLOAK_ISSUER],
-      ['AUTH_URL', env.AUTH_URL],
+      ['NEON_AUTH_BASE_URL', env.NEON_AUTH_BASE_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],
     ] as const) {
       if (new URL(url).protocol !== 'https:') issue(name, 'must use HTTPS');
       if (isLocal(url)) issue(name, 'must not use a loopback host');
     }
     for (const [name, secret] of [
-      ['AUTH_SECRET', env.AUTH_SECRET],
-      ['AUTH_KEYCLOAK_SECRET', env.AUTH_KEYCLOAK_SECRET],
+      ['NEON_AUTH_COOKIE_SECRET', env.NEON_AUTH_COOKIE_SECRET],
     ] as const) {
       if (secret.length < 32) issue(name, 'must contain at least 32 characters');
       if (insecureSecretMarkers.some((marker) => secret.toLowerCase().includes(marker))) {

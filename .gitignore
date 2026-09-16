@@ -32,3 +32,5 @@ blob-report
 
 # Developer-local anatomy source and generated model binaries
 /assets/anatomy/processed/*.glb
+.vercel
+.env*

@@ -7,9 +7,9 @@ import { serverApiFetch } from '../../lib/api/server-api-client';
 
 export const dynamic = 'force-dynamic';
 export default async function PatientLayout({ children }: { children: ReactNode }) {
-  const session = await auth();
+  const { data: session } = await auth.getSession();
   const user = await loadCurrentUser();
-  if (!session || user === 'unauthenticated') redirect('/login?reason=expired');
+  if (!session?.user || user === 'unauthenticated') redirect('/login?reason=expired');
   if (user === 'denied' || user.role !== 'PATIENT') redirect('/app');
   const unread = await loadUnreadCount();
   const links = [['/patient', 'Огляд'], ['/patient/plan', 'Мій план'], ['/patient/progress', 'Мій прогрес'], ['/patient/daily-report', 'Щоденний звіт'], ['/patient/exercises', 'Вправи'], ['/patient/notifications', `Сповіщення${unread ? ` (${unread})` : ''}`]] as const;

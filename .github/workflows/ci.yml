@@ -28,13 +28,11 @@ jobs:
       S3_BUCKET_MODELS: rehabcrm-models
       API_INTERNAL_URL: http://localhost:3001
       NEXT_PUBLIC_API_URL: http://localhost:3001
-      OIDC_ISSUER: http://localhost:8080/realms/rehabcrm
-      OIDC_AUDIENCE: rehabcrm-api
-      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
-      AUTH_KEYCLOAK_ID: rehabcrm-web
-      AUTH_KEYCLOAK_SECRET: rehabcrm-web-dev-secret
-      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/rehabcrm
-      AUTH_URL: http://localhost:3000
+      NEON_AUTH_BASE_URL: ${{ secrets.NEON_AUTH_BASE_URL }}
+      NEON_AUTH_COOKIE_SECRET: ${{ secrets.NEON_AUTH_COOKIE_SECRET }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+      NEON_BRANCH_ID: ${{ secrets.NEON_BRANCH_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -110,7 +108,7 @@ jobs:
           build-args: |
             DEPLOYMENT_ENV=production
             NEXT_PUBLIC_API_URL=https://api.example.test
-            AUTH_KEYCLOAK_ISSUER=https://identity.example.test/realms/rehabcrm
+            NEON_AUTH_BASE_URL=https://auth.example.test
             NEXT_PUBLIC_S3_PUBLIC_URL=https://objects.example.test
       - uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -145,17 +143,11 @@ jobs:
       API_RATE_LIMIT_MAX: 1000
       NEXT_PUBLIC_API_URL: http://localhost:3001
       WEB_PUBLIC_URL: http://localhost:3000
-      AUTH_URL: http://localhost:3000
-      AUTH_SECRET: ci-only-auth-secret-not-for-production-use
-      AUTH_KEYCLOAK_ID: rehabcrm-web
-      AUTH_KEYCLOAK_SECRET: rehabcrm-web-dev-secret
-      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/rehabcrm
-      OIDC_ISSUER: http://localhost:8080/realms/rehabcrm
-      OIDC_AUDIENCE: rehabcrm-api
-      OIDC_ADMIN_BASE_URL: http://localhost:8080
-      OIDC_ADMIN_REALM: rehabcrm
-      OIDC_ADMIN_CLIENT_ID: rehabcrm-provisioner
-      OIDC_ADMIN_CLIENT_SECRET: rehabcrm-provisioner-dev-secret
+      NEON_AUTH_BASE_URL: ${{ secrets.NEON_AUTH_BASE_URL }}
+      NEON_AUTH_COOKIE_SECRET: ${{ secrets.NEON_AUTH_COOKIE_SECRET }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+      NEON_BRANCH_ID: ${{ secrets.NEON_BRANCH_ID }}
       METRICS_TOKEN: ci-only-metrics-token-not-for-production
       E2E_BASE_URL: http://localhost:3000
     steps:
@@ -173,7 +165,6 @@ jobs:
       - name: Wait for infrastructure
         run: |
           for attempt in $(seq 1 60); do
-            curl --fail --silent http://localhost:8080/realms/rehabcrm/.well-known/openid-configuration >/dev/null &&
             curl --fail --silent http://localhost:9000/minio/health/live >/dev/null && exit 0
             sleep 2
           done

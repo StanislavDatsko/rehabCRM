@@ -8,7 +8,7 @@ import { MeController } from './me.controller';
 import { PermissionsGuard } from './permissions.guard';
 import { TOKEN_VERIFIER } from './token-verifier';
 import { IDENTITY_PROVIDER_ADMIN } from './identity-provider-admin.port';
-import { KeycloakIdentityProviderAdminAdapter } from './keycloak-identity-provider-admin.adapter';
+import { NeonAuthIdentityProviderAdminAdapter } from './neon-auth-identity-provider-admin.adapter';
 
 @Global()
 @Module({
@@ -17,7 +17,7 @@ import { KeycloakIdentityProviderAdminAdapter } from './keycloak-identity-provid
     IdentityService,
     SecurityEventLogger,
     { provide: TOKEN_VERIFIER, useClass: JoseTokenVerifier },
-    { provide: IDENTITY_PROVIDER_ADMIN, useClass: KeycloakIdentityProviderAdminAdapter },
+    { provide: IDENTITY_PROVIDER_ADMIN, useClass: NeonAuthIdentityProviderAdminAdapter },
     { provide: APP_GUARD, useClass: AuthenticationGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },
   ],

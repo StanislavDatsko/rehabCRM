@@ -68,7 +68,7 @@ export class HealthService {
 
   private async identityReachable(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.env.OIDC_ISSUER}/.well-known/openid-configuration`, {
+      const response = await fetch(`${this.env.NEON_AUTH_BASE_URL}/.well-known/jwks.json`, {
         signal: AbortSignal.timeout(3_000),
       });
       return response.ok;

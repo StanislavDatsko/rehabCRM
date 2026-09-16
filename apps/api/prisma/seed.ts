@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const staff = [
     {
       id: DEV_SEED.users.organizationAdmin,
-      subject: DEV_SEED.keycloakSubjects.organizationAdmin,
+      subject: DEV_SEED.neonAuthSubjects.organizationAdmin,
       email: 'admin@rehabcrm.local',
       displayName: 'Iryna Organization Admin',
       status: UserStatus.ACTIVE,
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.receptionist,
-      subject: DEV_SEED.keycloakSubjects.receptionist,
+      subject: DEV_SEED.neonAuthSubjects.receptionist,
       email: 'receptionist@rehabcrm.local',
       displayName: 'Olena Reception Demo',
       status: UserStatus.ACTIVE,
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.specialist,
-      subject: DEV_SEED.keycloakSubjects.specialist,
+      subject: DEV_SEED.neonAuthSubjects.specialist,
       email: 'specialist@rehabcrm.local',
       displayName: 'Andriy Specialist Demo',
       status: UserStatus.ACTIVE,
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.disabledUser,
-      subject: DEV_SEED.keycloakSubjects.disabledUser,
+      subject: DEV_SEED.neonAuthSubjects.disabledUser,
       email: 'disabled-user@rehabcrm.local',
       displayName: 'Disabled User Demo',
       status: UserStatus.DISABLED,
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.disabledMembership,
-      subject: DEV_SEED.keycloakSubjects.disabledMembership,
+      subject: DEV_SEED.neonAuthSubjects.disabledMembership,
       email: 'disabled-membership@rehabcrm.local',
       displayName: 'Disabled Membership Demo',
       status: UserStatus.ACTIVE,
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.otherOrgSpecialist,
-      subject: DEV_SEED.keycloakSubjects.otherOrgSpecialist,
+      subject: DEV_SEED.neonAuthSubjects.otherOrgSpecialist,
       email: 'other-specialist@rehabcrm.local',
       displayName: 'Other Clinic Specialist Demo',
       status: UserStatus.ACTIVE,
@@ -106,7 +106,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.patient,
-      subject: DEV_SEED.keycloakSubjects.patient,
+      subject: DEV_SEED.neonAuthSubjects.patient,
       email: 'patient@rehabcrm.local',
       displayName: 'Demo Patient Portal',
       status: UserStatus.ACTIVE,

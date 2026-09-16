@@ -8,7 +8,7 @@ const origin = (value: string | undefined, fallback: string) => {
   }
 };
 const apiOrigin = origin(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3001');
-const identityOrigin = origin(process.env.AUTH_KEYCLOAK_ISSUER, 'http://localhost:8080');
+const identityOrigin = origin(process.env.NEON_AUTH_BASE_URL, 'http://localhost:3000');
 const storageOrigin = origin(process.env.NEXT_PUBLIC_S3_PUBLIC_URL, 'http://localhost:9000');
 const hardenedDeployment = ['staging', 'production'].includes(
   process.env.DEPLOYMENT_ENV ?? 'development',

@@ -29,7 +29,7 @@ function row(overrides: Record<string, unknown> = {}) {
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     user: {
       id: 'staff-user',
-      identityProvider: 'keycloak',
+      identityProvider: 'neon-auth',
       identityProviderSubject: 'staff-subject',
       email: 'staff@example.com',
       firstName: 'Staff',

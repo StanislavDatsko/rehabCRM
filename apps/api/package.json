@@ -14,7 +14,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "anatomy:import": "tsx scripts/import-anatomy-models.ts",
     "anatomy:human-atlas:import": "tsx scripts/import-human-atlas.ts",
-    "anatomy:human-atlas:mappings": "tsx scripts/generate-human-atlas-mapping.ts"
+    "anatomy:human-atlas:mappings": "tsx scripts/generate-human-atlas-mapping.ts",
+    "identity:migrate-neon-auth": "tsx scripts/migrate-neon-auth-identities.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1125.0",

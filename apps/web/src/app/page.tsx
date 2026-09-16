@@ -5,8 +5,8 @@ import { routeForRole } from '../features/patient-portal/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const session = await auth();
-  if (session && !session.error) {
+  const { data: session } = await auth.getSession();
+  if (session?.user) {
     const { serverApiFetch } = await import('../lib/api/server-api-client');
     let me: { role: string };
     try {

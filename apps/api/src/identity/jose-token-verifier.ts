@@ -12,11 +12,10 @@ export class JoseTokenVerifier implements TokenVerifier {
 
   constructor() {
     const env = parseApiEnv();
-    this.issuer = env.OIDC_ISSUER;
-    this.audience = env.OIDC_AUDIENCE;
-    this.jwks = createRemoteJWKSet(
-      new URL(`${env.OIDC_ISSUER}/protocol/openid-connect/certs`),
-    );
+    const authUrl = new URL(env.NEON_AUTH_BASE_URL);
+    this.issuer = authUrl.origin;
+    this.audience = authUrl.origin;
+    this.jwks = createRemoteJWKSet(new URL(`${env.NEON_AUTH_BASE_URL}/.well-known/jwks.json`));
   }
 
   verify(accessToken: string): Promise<VerifiedAccessToken> {

@@ -1,33 +1,17 @@
-import { NextResponse } from 'next/server';
-import { auth } from './src/auth';
+import { NextResponse, type NextRequest } from 'next/server';
+import { auth } from './src/lib/auth/server';
 
-export default auth((request) => {
-  const { pathname } = request.nextUrl;
-  const session = request.auth;
-  const valid = Boolean(session && !session.error);
-
+const neonMiddleware = auth.middleware({ loginUrl: '/login' });
+export default async function middleware(request: NextRequest) {
   if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
     const requestOrigin = request.headers.get('origin');
     if (requestOrigin && requestOrigin !== request.nextUrl.origin) {
       return new NextResponse('Cross-site mutation rejected', { status: 403 });
     }
   }
-
-  if (pathname.startsWith('/app') && !valid) {
-    const login = new URL('/login', request.nextUrl.origin);
-    if (session?.error === 'RefreshTokenError') {
-      login.searchParams.set('reason', 'expired');
-    }
-    return NextResponse.redirect(login);
-  }
-
-  if (pathname === '/login' && valid) {
-    return NextResponse.redirect(new URL('/app', request.nextUrl.origin));
-  }
-
-  return NextResponse.next();
-});
+  return neonMiddleware(request);
+}
 
 export const config = {
-  matcher: ['/app/:path*', '/login'],
+  matcher: ['/app/:path*'],
 };

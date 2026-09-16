@@ -13,8 +13,7 @@ export default defineConfig({
       S3_SECRET_KEY: 'testsecret',
       S3_BUCKET_DOCUMENTS: 'rehabcrm-documents',
       S3_BUCKET_MODELS: 'rehabcrm-models',
-      OIDC_ISSUER: 'http://localhost:8080/realms/rehabcrm',
-      OIDC_AUDIENCE: 'rehabcrm-api',
+      NEON_AUTH_BASE_URL: 'http://localhost:3000/neondb/auth',
     },
   },
 });

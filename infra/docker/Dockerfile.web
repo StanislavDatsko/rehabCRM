@@ -6,11 +6,11 @@ WORKDIR /app
 FROM base AS build
 ARG DEPLOYMENT_ENV=production
 ARG NEXT_PUBLIC_API_URL
-ARG AUTH_KEYCLOAK_ISSUER
+ARG NEON_AUTH_BASE_URL
 ARG NEXT_PUBLIC_S3_PUBLIC_URL
 ENV DEPLOYMENT_ENV=$DEPLOYMENT_ENV
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV AUTH_KEYCLOAK_ISSUER=$AUTH_KEYCLOAK_ISSUER
+ENV NEON_AUTH_BASE_URL=$NEON_AUTH_BASE_URL
 ENV NEXT_PUBLIC_S3_PUBLIC_URL=$NEXT_PUBLIC_S3_PUBLIC_URL
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY apps/api/package.json apps/api/package.json
@@ -18,7 +18,7 @@ COPY apps/web/package.json apps/web/package.json
 COPY packages packages
 RUN pnpm install --filter @rehabcrm/web... --frozen-lockfile
 COPY . .
-RUN test -n "$NEXT_PUBLIC_API_URL" && test -n "$AUTH_KEYCLOAK_ISSUER" && test -n "$NEXT_PUBLIC_S3_PUBLIC_URL"
+RUN test -n "$NEXT_PUBLIC_API_URL" && test -n "$NEON_AUTH_BASE_URL" && test -n "$NEXT_PUBLIC_S3_PUBLIC_URL"
 RUN pnpm --filter @rehabcrm/web... build
 
 FROM ${NODE_IMAGE} AS runner

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseWebEnv } from './web-env';
 
 describe('parseWebEnv', () => {
-  it('rejects missing Auth.js secrets', () => {
+  it('rejects missing Neon Auth secrets', () => {
     expect(() =>
       parseWebEnv({
         API_INTERNAL_URL: 'http://localhost:3001',
@@ -16,10 +16,8 @@ describe('parseWebEnv', () => {
       parseWebEnv({
         NODE_ENV: 'production',
         DEPLOYMENT_ENV: 'production',
-        AUTH_SECRET: 'dev-only-auth-secret-not-for-production-use',
-        AUTH_KEYCLOAK_ID: 'rehabcrm-web',
-        AUTH_KEYCLOAK_SECRET: 'rehabcrm-web-dev-secret',
-        AUTH_KEYCLOAK_ISSUER: 'http://localhost:8080/realms/rehabcrm',
+        NEON_AUTH_BASE_URL: 'http://localhost:3000/neondb/auth',
+        NEON_AUTH_COOKIE_SECRET: 'dev-only-neon-auth-cookie-secret-change-me',
       }),
     ).toThrow();
   });
@@ -30,11 +28,8 @@ describe('parseWebEnv', () => {
       DEPLOYMENT_ENV: 'production',
       API_INTERNAL_URL: 'http://api.internal:3001',
       NEXT_PUBLIC_API_URL: 'https://api.example.test',
-      AUTH_SECRET: `test-auth-${'x'.repeat(40)}`,
-      AUTH_KEYCLOAK_ID: 'rehabcrm-web',
-      AUTH_KEYCLOAK_SECRET: `test-keycloak-${'x'.repeat(40)}`,
-      AUTH_KEYCLOAK_ISSUER: 'https://identity.example.test/realms/rehabcrm',
-      AUTH_URL: 'https://app.example.test',
+      NEON_AUTH_BASE_URL: 'https://auth.example.test/neondb/auth',
+      NEON_AUTH_COOKIE_SECRET: `test-neon-auth-${'x'.repeat(40)}`,
       WEB_PUBLIC_URL: 'https://app.example.test',
       APP_VERSION: '9.0.0',
       APP_COMMIT_SHA: '0123456789abcdef',
@@ -42,13 +37,11 @@ describe('parseWebEnv', () => {
     expect(env.DEPLOYMENT_ENV).toBe('production');
   });
 
-  it('parses BFF OIDC configuration', () => {
+  it('parses Neon Auth configuration', () => {
     const env = parseWebEnv({
-      AUTH_SECRET: 'dev-only-auth-secret-not-for-production-use',
-      AUTH_KEYCLOAK_ID: 'rehabcrm-web',
-      AUTH_KEYCLOAK_SECRET: 'rehabcrm-web-dev-secret',
-      AUTH_KEYCLOAK_ISSUER: 'http://localhost:8080/realms/rehabcrm',
+      NEON_AUTH_BASE_URL: 'http://localhost:3000/neondb/auth',
+      NEON_AUTH_COOKIE_SECRET: 'dev-only-neon-auth-cookie-secret-change-me',
     });
-    expect(env.AUTH_KEYCLOAK_ID).toBe('rehabcrm-web');
+    expect(env.NEON_AUTH_BASE_URL).toContain('neondb/auth');
   });
 });

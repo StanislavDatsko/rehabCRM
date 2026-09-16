@@ -7,7 +7,7 @@ describe('development seed identifiers', () => {
   it('uses valid UUIDs for every persisted identifier', () => {
     const identifiers = [
       ...Object.values(DEV_SEED.organizations).map(({ id }) => id),
-      ...Object.values(DEV_SEED.keycloakSubjects),
+      ...Object.values(DEV_SEED.neonAuthSubjects),
       ...Object.values(DEV_SEED.users),
       ...Object.values(DEV_SEED.patients),
       ...Object.values(DEV_SEED.locations),
