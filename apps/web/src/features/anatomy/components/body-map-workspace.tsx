@@ -21,6 +21,8 @@ import { AnnotationEditor } from './annotation-editor';
 import { AnatomyViewerBoundary } from './anatomy-viewer-loader';
 import type { SurfaceSelection, UnmappedSurfaceSelection } from './anatomy-viewer';
 import { StructureInspector } from './structure-inspector';
+import { HumanAtlasExplorer } from '../human-atlas/human-atlas-explorer';
+import type { AtlasSelection } from '../human-atlas/scene';
 
 const initial: AnatomyActionState = { error: null, ok: false };
 
@@ -49,6 +51,7 @@ export function BodyMapWorkspace({
   const [unmappedSelection, setUnmappedSelection] = useState<UnmappedSurfaceSelection | null>(null);
   const [isolate, setIsolate] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [hiddenMeshKeys, setHiddenMeshKeys] = useState<Set<string>>(new Set());
   const [heatmap, setHeatmap] = useState(false);
   const [preset, setPreset] = useState('anterior');
   const [viewerMessage, setViewerMessage] = useState<string | null>(null);
@@ -76,6 +79,21 @@ export function BodyMapWorkspace({
     data.annotations.find((item) => item.id === selectedAnnotationId) ?? null;
   const selectedStructure = data.structures.find((item) => item.id === selectedStructureId) ?? null;
   const context = data.clinicalContext.find((item) => item.structureId === selectedStructureId);
+  const hasSelection = Boolean(selectedStructureId || unmappedSelection);
+  const heatmapHasData = data.annotations.some(
+    (item) => item.status === 'ACTIVE' && item.severity !== null,
+  );
+  const humanAtlasSeverity = useMemo(() => {
+    const result: Record<string, number> = {};
+    data.mappings.forEach((mapping) => {
+      if (!mapping.sourcePartId) return;
+      const maximum = data.annotations
+        .filter((annotation) => annotation.status === 'ACTIVE' && annotation.structure.id === mapping.structureId && annotation.severity !== null)
+        .reduce((value, annotation) => Math.max(value, annotation.severity ?? 0), 0);
+      if (maximum > 0) result[mapping.sourcePartId] = maximum;
+    });
+    return result;
+  }, [data.annotations, data.mappings]);
   const chooseSurface = (next: SurfaceSelection) => {
     setSelection(next);
     setUnmappedSelection(null);
@@ -89,6 +107,24 @@ export function BodyMapWorkspace({
     setSelectedStructureId(null);
     setSelectedAnnotationId(null);
     setViewerMessage('Вибрано геометрію без підтвердженого анатомічного зіставлення.');
+  };
+  const chooseHumanAtlas = (next: AtlasSelection) => {
+    const atlasModel = data.models.find((model) => model.activeVersion?.format === 'ATLAS');
+    const version = atlasModel?.activeVersion;
+    const mapping = data.mappings.find(
+      (item) => item.modelVersionId === version?.id && item.sourcePartId === next.sourcePartId,
+    );
+    if (!version || !mapping) {
+      chooseUnmapped({
+        modelVersionId: version?.id ?? 'human-atlas-unavailable',
+        meshName: next.sourcePartId,
+        meshKey: next.anchor.stableMeshKey,
+        primitiveIndex: next.anchor.primitiveIndex,
+        mappingStatus: 'UNMAPPED',
+      });
+      return;
+    }
+    chooseSurface({ anchor: next.anchor, mapping, modelVersionId: version.id });
   };
   const chooseStructure = (structureId: string) => {
     setSelectedStructureId(structureId);
@@ -191,6 +227,17 @@ export function BodyMapWorkspace({
           </section>
         </aside>
         <main className="rc-card space-y-3 p-4 lg:p-5">
+          <section aria-labelledby="human-atlas-primary-title" className="space-y-2">
+            <div>
+              <h2 id="human-atlas-primary-title" className="font-medium">Human Atlas · primary source</h2>
+              <p className="text-sm text-text-secondary">Source geometry is selectable for inspection. Clinical annotations require a verified RehabMIS mapping.</p>
+            </div>
+            <HumanAtlasExplorer onSelect={chooseHumanAtlas} severity={humanAtlasSeverity} />
+          </section>
+          <details className="rounded border border-border p-3">
+            <summary className="cursor-pointer text-sm font-medium">Historical Z-Anatomy annotations</summary>
+            <p className="mt-2 text-xs text-text-secondary">Existing model versions and annotations remain readable and immutable.</p>
+          </details>
           <div className="flex flex-wrap gap-2">
             {['anterior', 'posterior', 'left', 'right'].map((item) => (
               <button
@@ -208,23 +255,26 @@ export function BodyMapWorkspace({
               Reset
             </button>
             <button
-              disabled={!selectedStructureId}
+              disabled={!hasSelection}
               onClick={() => setIsolate((value) => !value)}
               className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
             >
               {isolate ? 'Show all' : 'Isolate'}
             </button>
             <button
-              disabled={!selectedStructureId}
+              disabled={!hasSelection}
               onClick={() =>
-                selectedStructureId && setPreset(`fit:${selectedStructureId}:${Date.now()}`)
+                selectedStructureId
+                  ? setPreset(`fit:${selectedStructureId}:${Date.now()}`)
+                  : unmappedSelection &&
+                    setPreset(`fit-mesh:${unmappedSelection.meshKey}:${Date.now()}`)
               }
               className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
             >
               Fit selection
             </button>
             <button
-              disabled={!selectedStructureId}
+              disabled={!hasSelection}
               onClick={() =>
                 selectedStructureId &&
                 setHidden((current) => new Set([...current, selectedStructureId]))
@@ -234,11 +284,24 @@ export function BodyMapWorkspace({
               Hide
             </button>
             <button
-              onClick={() => setHidden(new Set())}
+              onClick={() => {
+                setHidden(new Set());
+                setHiddenMeshKeys(new Set());
+              }}
               className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
             >
               Unhide all
             </button>
+            {unmappedSelection ? (
+              <button
+                onClick={() =>
+                  setHiddenMeshKeys((current) => new Set([...current, unmappedSelection.meshKey]))
+                }
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              >
+                Hide selected mesh
+              </button>
+            ) : null}
             <button
               aria-pressed={heatmap}
               onClick={() => setHeatmap((value) => !value)}
@@ -257,6 +320,7 @@ export function BodyMapWorkspace({
             selectedMeshKey={unmappedSelection?.meshKey ?? null}
             isolate={isolate}
             hiddenStructureIds={hidden}
+            hiddenMeshKeys={hiddenMeshKeys}
             heatmap={heatmap}
             preset={preset}
             onSelect={chooseSurface}
@@ -272,7 +336,12 @@ export function BodyMapWorkspace({
             </p>
           ) : null}
           {heatmap ? (
-            <div className="flex items-center gap-3 text-xs text-text-secondary">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-text-secondary">
+              {!heatmapHasData ? (
+                <span className="rounded-full bg-surface-muted px-3 py-1">
+                  Немає збережених severity data — геометрія neutral
+                </span>
+              ) : null}
               <span>Recorded intensity 0–3</span>
               <span className="h-2 w-16 bg-success" />
               <span>Recorded intensity 4–6</span>

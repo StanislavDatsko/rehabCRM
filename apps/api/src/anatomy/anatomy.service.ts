@@ -153,10 +153,21 @@ export class AnatomyService {
         meshName: true,
         primitiveIndex: true,
         stableMeshKey: true,
+        sourcePartId: true,
         confidence: true,
       },
       orderBy: [{ nodeName: 'asc' }, { primitiveIndex: 'asc' }],
     });
+  }
+
+  async listVersionAssets(modelVersionId: string) {
+    const assets = await this.prisma.anatomicalModelAsset.findMany({
+      where: { modelVersionId },
+      orderBy: [{ kind: 'asc' }, { assetIndex: 'asc' }],
+      select: { kind: true, assetIndex: true, storageKey: true, checksumSha256: true, bytes: true, contentEncoding: true, contentType: true },
+    });
+    if (!assets.length) throw new NotFoundException({ code: 'ANATOMICAL_MODEL_ASSETS_NOT_FOUND', message: 'Anatomical model assets were not found.' });
+    return Promise.all(assets.map(async (asset) => ({ ...asset, url: (await this.storage.signModelRead(asset.storageKey)).url })));
   }
 
   async listAnnotations(
@@ -659,7 +670,7 @@ export class AnatomyService {
       version: row.version,
       checksumSha256: row.checksumSha256,
       bytes: row.bytes,
-      format: 'GLB' as const,
+      format: row.format === 'ATLAS' ? ('ATLAS' as const) : ('GLB' as const),
       transform: {
         position: [row.positionX, row.positionY, row.positionZ] as [number, number, number],
         rotation: [row.rotationX, row.rotationY, row.rotationZ] as [number, number, number],

@@ -75,6 +75,12 @@ export class AnatomyController {
     return this.anatomy.getActiveVersion(modelId);
   }
 
+  @Get('anatomy/model-versions/:versionId/assets')
+  @RequirePermissions(PERMISSIONS.ANATOMY_MODEL_READ)
+  assets(@Param('versionId', ParseUUIDPipe) versionId: string) {
+    return this.anatomy.listVersionAssets(versionId);
+  }
+
   @Get('anatomy/model-versions/:versionId/mappings')
   @RequirePermissions(PERMISSIONS.ANATOMY_READ, PERMISSIONS.ANATOMY_MODEL_READ)
   mappings(@Param('versionId', ParseUUIDPipe) versionId: string) {

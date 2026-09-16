@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type MediaItem = {
   id: string;
@@ -22,16 +22,51 @@ export function PatientMediaGallery({
   initialItems: MediaItem[];
   initialTotal: number;
 }) {
-  const [items] = useState(initialItems);
+  const [items, setItems] = useState(initialItems);
   const [total] = useState(initialTotal);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [previewErrors, setPreviewErrors] = useState<Record<string, boolean>>({});
+  const [localPreviews, setLocalPreviews] = useState<
+    Array<{ id: string; name: string; url: string; kind: 'IMAGE' | 'VIDEO'; file: File; status: 'uploading' | 'failed' }>
+  >([]);
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      initialItems.slice(0, 25).map(async (item) => {
+        const response = await fetch(`/api/patient-media/${patientId}/${item.id}/access`);
+        if (!response.ok) return null;
+        const data = (await response.json()) as { url: string };
+        return [item.id, data.url] as const;
+      }),
+    ).then((entries) => {
+      if (!cancelled)
+        setUrls(
+          Object.fromEntries(
+            entries.filter((entry): entry is readonly [string, string] => entry !== null),
+          ),
+        );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialItems, patientId]);
   async function upload(files: FileList | null) {
     if (!files?.length) return;
+    const pendingPreviews = Array.from(files).map((file) => ({
+      id: `${file.name}-${file.lastModified}`,
+      name: file.name,
+      url: URL.createObjectURL(file),
+      kind: file.type.startsWith('video/') ? ('VIDEO' as const) : ('IMAGE' as const),
+      file,
+      status: 'uploading' as const,
+    }));
+    setLocalPreviews(pendingPreviews);
     setBusy(true);
     setMessage('');
     let completed = 0;
+    const failedUploadIds = new Set<string>();
     for (const file of Array.from(files)) {
       try {
         const kind = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
@@ -63,20 +98,55 @@ export function PatientMediaGallery({
           body: '{}',
         });
         if (!done.ok) throw new Error('complete');
+        const ready = (await done.json()) as { id: string };
+        const access = await fetch(`/api/patient-media/${patientId}/${ready.id}/access`);
+        if (!access.ok) throw new Error('access');
+        const accessData = (await access.json()) as { url: string };
+        setUrls((current) => ({ ...current, [ready.id]: accessData.url }));
+        setItems((current) => [
+          {
+            id: ready.id,
+            kind,
+            mimeType: file.type,
+            originalFileName: file.name,
+            title: null,
+            description: null,
+            capturedAt: null,
+            createdAt: new Date().toISOString(),
+            uploadedBy: 'Ви',
+            sizeBytes: String(file.size),
+          },
+          ...current,
+        ]);
         completed += 1;
       } catch {
+        const localId = `${file.name}-${file.lastModified}`;
+        failedUploadIds.add(localId);
+        setLocalPreviews((current) =>
+          current.map((preview) => (preview.id === localId ? { ...preview, status: 'failed' } : preview)),
+        );
         setMessage(`${file.name}: не вдалося завантажити.`);
+        continue;
       }
     }
     setBusy(false);
-    if (completed) window.location.reload();
+    const failedIds = failedUploadIds;
+    pendingPreviews.forEach((item) => {
+      if (!failedIds.has(item.id)) URL.revokeObjectURL(item.url);
+    });
+    setLocalPreviews((current) => current.filter((preview) => failedIds.has(preview.id)));
+    if (completed)
+      setMessage(
+        `${completed} файл(ів) завантажено. Нові записи з’являться після оновлення списку.`,
+      );
   }
   async function open(item: MediaItem) {
     const response = await fetch(`/api/patient-media/${patientId}/${item.id}/access`);
     if (response.ok) {
       const data = (await response.json()) as { url: string };
       setUrls((current) => ({ ...current, [item.id]: data.url }));
-    }
+      setPreviewErrors((current) => ({ ...current, [item.id]: false }));
+    } else setPreviewErrors((current) => ({ ...current, [item.id]: true }));
   }
   return (
     <section className="rc-card rc-card-elevated p-5" aria-labelledby="patient-media-title">
@@ -110,6 +180,52 @@ export function PatientMediaGallery({
         </p>
       ) : null}
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {localPreviews.map((item) => (
+          <article
+            key={item.id}
+            className="overflow-hidden rounded-xl border border-brand/30 bg-brand/5"
+          >
+            <div className="relative">
+              {item.kind === 'VIDEO' ? (
+                <video
+                  className="aspect-video w-full object-cover"
+                  src={item.url}
+                  onError={() =>
+                    setMessage(`${item.name}: локальний preview недоступний у цьому браузері.`)
+                  }
+                />
+              ) : (
+                <img
+                  className="aspect-video w-full object-cover"
+                  src={item.url}
+                  alt={item.name}
+                  onError={() =>
+                    setMessage(`${item.name}: локальний preview недоступний у цьому браузері.`)
+                  }
+                />
+              )}
+              <span className="absolute bottom-2 left-2 rounded-full bg-text-primary/80 px-2 py-1 text-xs text-white">
+                {item.status === 'failed' ? 'Помилка завантаження' : 'Завантаження…'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 p-3">
+              <p className="text-sm font-medium">{item.name}</p>
+              {item.status === 'failed' ? (
+                <span className="flex gap-2 text-xs">
+                  <button type="button" className="text-brand underline" onClick={() => {
+                    const transfer = new DataTransfer();
+                    transfer.items.add(item.file);
+                    void upload(transfer.files);
+                  }}>Повторити</button>
+                  <button type="button" className="text-danger underline" onClick={() => {
+                    URL.revokeObjectURL(item.url);
+                    setLocalPreviews((current) => current.filter((preview) => preview.id !== item.id));
+                  }}>Видалити</button>
+                </span>
+              ) : null}
+            </div>
+          </article>
+        ))}
         {items.map((item) => (
           <article
             key={item.id}
@@ -122,19 +238,25 @@ export function PatientMediaGallery({
                 void open(item);
               }}
             >
-              {urls[item.id] ? (
+              {previewErrors[item.id] ? (
+                <div className="flex aspect-video items-center justify-center bg-danger/5 p-4 text-center text-sm text-danger">
+                  Не вдалося завантажити передогляд. Натисніть, щоб повторити.
+                </div>
+              ) : urls[item.id] ? (
                 item.kind === 'VIDEO' ? (
                   <video
                     className="aspect-video w-full object-cover"
                     controls
                     preload="metadata"
                     src={urls[item.id]}
+                    onError={() => setPreviewErrors((current) => ({ ...current, [item.id]: true }))}
                   />
                 ) : (
                   <img
                     className="aspect-video w-full object-cover"
                     src={urls[item.id]}
                     alt={item.title ?? item.originalFileName}
+                    onError={() => setPreviewErrors((current) => ({ ...current, [item.id]: true }))}
                   />
                 )
               ) : (

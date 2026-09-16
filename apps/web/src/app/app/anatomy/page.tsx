@@ -1,4 +1,5 @@
 import { listPatients } from '../../../features/patients/api/patients-api';
+import { HumanAtlasExplorer } from '../../../features/anatomy/human-atlas/human-atlas-explorer';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,7 @@ export default async function AnatomyIndex() {
           Оберіть пацієнта для body-map workspace та versioned annotations.
         </p>
       </header>
+      <HumanAtlasExplorer />
       <section className="rc-card p-5">
         <h2 className="font-serif text-xl">Пацієнтський body map</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">

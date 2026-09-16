@@ -26,6 +26,7 @@
     "anatomy:inspect": "tsx scripts/anatomy/inspect-glb.ts",
     "anatomy:mappings": "tsx scripts/anatomy/generate-mapping-report.ts",
     "anatomy:mappings:validate": "tsx scripts/anatomy/validate-mapping.ts",
+    "anatomy:human-atlas:import": "tsx scripts/anatomy/import-human-atlas.ts",
     "anatomy:import": "pnpm --filter @rehabcrm/api anatomy:import",
     "db:backup": "scripts/operations/postgres-backup.sh",
     "db:restore": "scripts/operations/postgres-restore.sh",

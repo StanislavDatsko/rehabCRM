@@ -1,6 +1,6 @@
 'use client';
 
-import { Html, OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls, useGLTF } from '@react-three/drei';
 import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
 import type {
   AnatomicalMappingResponse,
@@ -81,23 +81,30 @@ function markerPoint(scene: Group, annotation: BodyAnnotationResponse): Vector3 
 function CameraRig({
   preset,
   selectedStructureId,
+  selectedMeshKey,
   mappings,
 }: {
   preset: string;
   selectedStructureId: string | null;
+  selectedMeshKey: string | null;
   mappings: AnatomicalMappingResponse[];
 }) {
   const { camera, scene } = useThree();
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   useEffect(() => {
-    if (preset.startsWith('fit:') && selectedStructureId && camera instanceof PerspectiveCamera) {
+    if (preset.startsWith('fit') && camera instanceof PerspectiveCamera) {
       const bounds = new Box3();
-      mappings
-        .filter((mapping) => mapping.structureId === selectedStructureId)
-        .forEach((mapping) => {
-          const object = findGltfSourceNode(scene, mapping.nodeName);
-          if (object) bounds.expandByObject(object);
-        });
+      if (preset.startsWith('fit:') && selectedStructureId)
+        mappings
+          .filter((mapping) => mapping.structureId === selectedStructureId)
+          .forEach((mapping) => {
+            const object = findGltfSourceNode(scene, mapping.nodeName);
+            if (object) bounds.expandByObject(object);
+          });
+      if (preset.startsWith('fit-mesh:') && selectedMeshKey) {
+        const object = findGltfSourceNode(scene, selectedMeshKey);
+        if (object) bounds.expandByObject(object);
+      }
       if (!bounds.isEmpty()) {
         const center = bounds.getCenter(new Vector3());
         const size = bounds.getSize(new Vector3());
@@ -150,6 +157,7 @@ function ModelLayer({
   selectedMeshKey,
   isolate,
   hiddenStructureIds,
+  hiddenMeshKeys,
   heatmap,
   hoveredStructureId,
   onSelect,
@@ -166,6 +174,7 @@ function ModelLayer({
   selectedMeshKey: string | null;
   isolate: boolean;
   hiddenStructureIds: Set<string>;
+  hiddenMeshKeys: Set<string>;
   heatmap: boolean;
   hoveredStructureId: string | null;
   onSelect: (selection: SurfaceSelection) => void;
@@ -206,8 +215,9 @@ function ModelLayer({
       if (!mesh.isMesh) return;
       const found = mappedNode(mesh, byNode);
       const structureId = found?.mappings[0]?.structureId;
+      const meshKey = gltfSourceNodeName(mesh);
       mesh.visible = !structureId
-        ? !isolate
+        ? !hiddenMeshKeys.has(meshKey) && (!isolate || meshKey === selectedMeshKey)
         : !hiddenStructureIds.has(structureId) && (!isolate || structureId === selectedStructureId);
       const materials = (
         Array.isArray(mesh.material) ? mesh.material : [mesh.material]
@@ -241,10 +251,13 @@ function ModelLayer({
     byNode,
     heatmap,
     hiddenStructureIds,
+    hiddenMeshKeys,
     hoveredStructureId,
     isolate,
     scene,
     selectedStructureId,
+    selectedMeshKey,
+    selectedMeshKey,
     selectedMeshKey,
     severity,
     state.opacity,
@@ -333,10 +346,11 @@ export function AnatomyViewer({
   annotations,
   layers,
   selectedStructureId,
-  selectedAnnotationId,
   selectedMeshKey,
+  selectedAnnotationId,
   isolate,
   hiddenStructureIds,
+  hiddenMeshKeys,
   heatmap,
   preset,
   onSelect,
@@ -348,17 +362,20 @@ export function AnatomyViewer({
   annotations: BodyAnnotationResponse[];
   layers: LayerState;
   selectedStructureId: string | null;
-  selectedAnnotationId: string | null;
   selectedMeshKey: string | null;
+  selectedAnnotationId: string | null;
   isolate: boolean;
   hiddenStructureIds: Set<string>;
+  hiddenMeshKeys: Set<string>;
   heatmap: boolean;
   preset: string;
   onSelect: (selection: SurfaceSelection) => void;
   onAnnotationSelect: (annotationId: string) => void;
   onUnmapped: (selection: UnmappedSurfaceSelection) => void;
 }) {
-  const available = models.filter((model) => model.activeVersion);
+  // ATLAS versions are rendered by HumanAtlasExplorer; this historical viewer
+  // must only attempt GLB assets so legacy annotations remain readable.
+  const available = models.filter((model) => model.activeVersion?.format === 'GLB');
   const [hoveredStructureId, setHoveredStructureId] = useState<string | null>(null);
   return (
     <div
@@ -375,11 +392,10 @@ export function AnatomyViewer({
         <directionalLight position={[2, 3, 2]} intensity={2} />
         <Suspense
           fallback={
-            <Html center>
-              <div className="whitespace-nowrap rounded bg-slate-900 px-3 py-2 text-sm text-white">
-                Loading model layers…
-              </div>
-            </Html>
+            <mesh position={[0, 0.85, 0]}>
+              <sphereGeometry args={[0.08, 16, 16]} />
+              <meshBasicMaterial color="#9acd32" />
+            </mesh>
           }
         >
           {available.map((model) => (
@@ -390,10 +406,11 @@ export function AnatomyViewer({
               mappings={mappings}
               annotations={annotations}
               selectedStructureId={selectedStructureId}
-              selectedAnnotationId={selectedAnnotationId}
               selectedMeshKey={selectedMeshKey}
+              selectedAnnotationId={selectedAnnotationId}
               isolate={isolate}
               hiddenStructureIds={hiddenStructureIds}
+              hiddenMeshKeys={hiddenMeshKeys}
               heatmap={heatmap}
               hoveredStructureId={hoveredStructureId}
               onSelect={onSelect}
@@ -403,7 +420,12 @@ export function AnatomyViewer({
             />
           ))}
         </Suspense>
-        <CameraRig preset={preset} selectedStructureId={selectedStructureId} mappings={mappings} />
+        <CameraRig
+          preset={preset}
+          selectedStructureId={selectedStructureId}
+          selectedMeshKey={selectedMeshKey}
+          mappings={mappings}
+        />
       </Canvas>
     </div>
   );

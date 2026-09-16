@@ -224,6 +224,23 @@ describe('AnatomyService annotation commands', () => {
     expect(auditCall.data.metadata).not.toHaveProperty('note');
   });
 
+  it('accepts a Human Atlas source part only through its verified mapping and anchor', async () => {
+    const prisma = commandPrisma();
+    const atlasAnchor = { ...anchor, stableMeshKey: 'FJ3259', triangleIndex: 12 };
+    prisma.anatomicalModelStructureMapping.findUnique.mockResolvedValue({
+      ...activeMapping,
+      modelVersionId: 'a7100000-0000-4000-8000-000000000010',
+      structureId: 'structure-1',
+      stableMeshKey: 'FJ3259',
+      sourcePartId: 'FJ3259',
+    });
+    prisma.bodyAnnotation.create.mockResolvedValue({ id: 'annotation-1' });
+    prisma.bodyAnnotation.findFirst.mockResolvedValue(annotationRow({ modelVersionId: 'a7100000-0000-4000-8000-000000000010', stableMeshKey: 'FJ3259', triangleIndex: 12 }));
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(service.create(principal, 'patient-1', { structureId: 'structure-1', modelVersionId: 'a7100000-0000-4000-8000-000000000010', mappingId: 'mapping-1', type: 'PAIN', severity: 5, title: 'Atlas finding', note: null, anchor: atlasAnchor }, 'req')).resolves.toMatchObject({ id: 'annotation-1' });
+    expect(prisma.bodyAnnotation.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ stableMeshKey: 'FJ3259', triangleIndex: 12 }) }));
+  });
+
   it('rejects a structure mismatch and a retired model version', async () => {
     const prisma = commandPrisma();
     const service = new AnatomyService(prisma as never, {} as never);

@@ -27,6 +27,38 @@ test('specialist opens progress, reports, and the 3D body map', async ({ page })
   await expect(page.getByRole('heading', { name: 'Пацієнти, що потребують уваги' })).toBeVisible();
 });
 
+test('patient media uploads with an immediate and persistent private preview', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'MinIO upload smoke runs once in Chromium.');
+  await signIn(page, 'specialist');
+  const patient = 'd1000000-0000-4000-8000-000000000001';
+  const fileName = `e2e-preview-${Date.now()}.png`;
+  await page.goto(`/app/patients/${patient}`);
+  await page.locator('input[type="file"]').setInputFiles({
+    name: fileName,
+    mimeType: 'image/png',
+    buffer: Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR42mNk+M/wHwAF/gL+Hf8KAAAAAElFTkSuQmCC',
+      'base64',
+    ),
+  });
+  await expect(page.getByText(fileName)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Фото та відео' }).locator('span', { hasText: 'Завантаження…' })).toBeVisible();
+  await expect(page.locator(`img[alt="${fileName}"]`)).toHaveAttribute('src', /^blob:/);
+  await expect(page.locator(`img[alt="${fileName}"]`)).toHaveAttribute('src', /^http/, { timeout: 30_000 });
+  await page.reload();
+  await expect(page.locator(`img[alt="${fileName}"]`)).toHaveAttribute('src', /^http/, { timeout: 15_000 });
+});
+
+test('Human Atlas explorer loads its versioned source manifest and renderer', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Human Atlas renderer smoke runs once in Chromium.');
+  await signIn(page, 'specialist');
+  await page.goto('/app/anatomy');
+  await expect(page.getByText('Human Atlas', { exact: true })).toBeVisible();
+  await expect(page.getByText(/2,234 source parts/)).toBeVisible();
+  await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('checkbox', { name: 'Skeleton' })).toBeVisible();
+});
+
 test('organization admin opens staff administration without a CRM password field', async ({
   page,
 }) => {

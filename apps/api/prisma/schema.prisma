@@ -241,6 +241,11 @@ enum AnatomicalModelVersionStatus {
   RETIRED
 }
 
+enum AnatomicalModelAssetKind {
+  MANIFEST
+  GEOMETRY_CHUNK
+}
+
 enum AnatomicalStructureCategory {
   SYSTEM
   REGION
@@ -1203,10 +1208,51 @@ model AnatomicalModelVersion {
   model       AnatomicalModel                   @relation(fields: [modelId], references: [id], onDelete: Restrict)
   mappings    AnatomicalModelStructureMapping[]
   annotations BodyAnnotation[]
+  assets      AnatomicalModelAsset[]
+  sourceParts AnatomicalSourcePart[]
 
   @@unique([modelId, version])
   @@index([modelId, status])
   @@map("anatomical_model_versions")
+}
+
+/// Manifest and chunk objects for non-GLB anatomy sources such as Human Atlas.
+model AnatomicalModelAsset {
+  id              String                    @id @default(uuid()) @db.Uuid
+  modelVersionId  String                    @db.Uuid
+  kind            AnatomicalModelAssetKind
+  assetIndex      Int                       @default(0)
+  storageKey      String                    @db.VarChar(500)
+  checksumSha256  String                    @db.Char(64)
+  bytes           Int
+  contentEncoding String?                   @db.VarChar(32)
+  contentType     String                    @default("application/octet-stream") @db.VarChar(120)
+  createdAt       DateTime                  @default(now()) @db.Timestamptz(3)
+
+  modelVersion AnatomicalModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  @@unique([modelVersionId, kind, assetIndex])
+  @@index([modelVersionId, kind])
+  @@map("anatomical_model_assets")
+}
+
+/// Immutable Human Atlas source identity; intentionally separate from clinical mappings.
+model AnatomicalSourcePart {
+  id             String   @id @default(uuid()) @db.Uuid
+  modelVersionId String   @db.Uuid
+  sourcePartId   String   @db.VarChar(64)
+  conceptId      String   @db.VarChar(64)
+  name           String   @db.VarChar(500)
+  system         String   @db.VarChar(64)
+  chunkIndex     Int
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  modelVersion AnatomicalModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  mappings     AnatomicalModelStructureMapping[]
+
+  @@unique([modelVersionId, sourcePartId])
+  @@index([modelVersionId, conceptId])
+  @@index([modelVersionId, system])
+  @@map("anatomical_source_parts")
 }
 
 /// Stable clinical vocabulary independent of any GLB node hierarchy.
@@ -1243,6 +1289,7 @@ model AnatomicalModelStructureMapping {
   meshName       String                      @db.VarChar(500)
   primitiveIndex Int                         @default(0)
   stableMeshKey  String                      @db.VarChar(1000)
+  sourcePartId   String?                     @db.VarChar(64)
   confidence     AnatomicalMappingConfidence
   reviewerNote   String?                     @db.VarChar(1000)
   createdAt      DateTime                    @default(now()) @db.Timestamptz(3)
@@ -1250,6 +1297,7 @@ model AnatomicalModelStructureMapping {
 
   modelVersion AnatomicalModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
   structure    AnatomicalStructure    @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  sourcePart   AnatomicalSourcePart?  @relation(fields: [modelVersionId, sourcePartId], references: [modelVersionId, sourcePartId], onDelete: Restrict)
   annotations  BodyAnnotation[]
 
   @@unique([modelVersionId, stableMeshKey, primitiveIndex])

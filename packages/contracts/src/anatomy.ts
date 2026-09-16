@@ -57,6 +57,7 @@ export type AnatomicalMappingResponse = {
   meshName: string;
   primitiveIndex: number;
   stableMeshKey: string;
+  sourcePartId?: string | null;
   confidence: 'EXACT' | 'HIGH_CONFIDENCE' | 'MANUAL_REQUIRED';
 };
 
@@ -66,7 +67,7 @@ export type AnatomicalModelVersionResponse = {
   version: number;
   checksumSha256: string;
   bytes: number;
-  format: 'GLB';
+  format: 'GLB' | 'ATLAS';
   transform: {
     position: [number, number, number];
     rotation: [number, number, number];

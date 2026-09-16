@@ -1,0 +1,127 @@
+{
+  "source": "BodyParts3D 4.0 / Human Atlas",
+  "upstreamCommit": "1c38bf35c254a891200d3cedecfd57abebe83d8d",
+  "status": "REVIEWED_EXACT_NAME_MATCH",
+  "mappings": [
+    {
+      "sourcePartId": "FJ1418",
+      "conceptId": "FMA22328",
+      "structureCode": "gluteus_maximus.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ1418M",
+      "conceptId": "FMA22329",
+      "structureCode": "gluteus_maximus.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3237",
+      "conceptId": "FMA13323",
+      "structureCode": "clavicle.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3259",
+      "conceptId": "FMA24475",
+      "structureCode": "femur.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3260",
+      "conceptId": "FMA24481",
+      "structureCode": "fibula.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3262",
+      "conceptId": "FMA23131",
+      "structureCode": "humerus.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3275",
+      "conceptId": "FMA24487",
+      "structureCode": "patella.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3277",
+      "conceptId": "FMA23465",
+      "structureCode": "radius.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3279",
+      "conceptId": "FMA13396",
+      "structureCode": "scapula.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3282",
+      "conceptId": "FMA24478",
+      "structureCode": "tibia.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3286",
+      "conceptId": "FMA23468",
+      "structureCode": "ulna.left",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3349",
+      "conceptId": "FMA23464",
+      "structureCode": "radius.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3362",
+      "conceptId": "FMA13322",
+      "structureCode": "clavicle.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3365",
+      "conceptId": "FMA24474",
+      "structureCode": "femur.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3366",
+      "conceptId": "FMA24480",
+      "structureCode": "fibula.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3368",
+      "conceptId": "FMA23130",
+      "structureCode": "humerus.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3381",
+      "conceptId": "FMA24486",
+      "structureCode": "patella.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3384",
+      "conceptId": "FMA13395",
+      "structureCode": "scapula.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3387",
+      "conceptId": "FMA24477",
+      "structureCode": "tibia.right",
+      "confidence": "HIGH_CONFIDENCE"
+    },
+    {
+      "sourcePartId": "FJ3391",
+      "conceptId": "FMA23467",
+      "structureCode": "ulna.right",
+      "confidence": "HIGH_CONFIDENCE"
+    }
+  ]
+}
