@@ -6,6 +6,9 @@ test('core authenticated pages have no serious or critical axe violations', asyn
   await signIn(page, 'receptionist');
   for (const path of ['/app', '/app/patients', '/app/calendar']) {
     await page.goto(path);
+    if (path === '/app/calendar') {
+      await expect(page.locator('[data-a11y-ready="true"]')).toBeVisible();
+    }
     const results = await new AxeBuilder({ page }).analyze();
     const blocking = results.violations.filter(
       (item) => item.impact === 'serious' || item.impact === 'critical',

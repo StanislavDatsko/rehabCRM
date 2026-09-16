@@ -28,6 +28,7 @@ export function PatientMediaGallery({
   const [message, setMessage] = useState('');
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [previewErrors, setPreviewErrors] = useState<Record<string, boolean>>({});
+  const [hydrated, setHydrated] = useState(false);
   const [localPreviews, setLocalPreviews] = useState<
     Array<{ id: string; name: string; url: string; kind: 'IMAGE' | 'VIDEO'; file: File; status: 'uploading' | 'failed' }>
   >([]);
@@ -52,6 +53,9 @@ export function PatientMediaGallery({
       cancelled = true;
     };
   }, [initialItems, patientId]);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
   async function upload(files: FileList | null) {
     if (!files?.length) return;
     const pendingPreviews = Array.from(files).map((file) => ({
@@ -162,11 +166,13 @@ export function PatientMediaGallery({
         <label className="rc-btn rc-btn-primary cursor-pointer">
           {busy ? 'Завантаження…' : 'Додати медіа'}
           <input
+            data-testid="patient-media-input"
+            data-hydrated={hydrated ? 'true' : 'false'}
             className="sr-only"
             type="file"
             accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime,video/webm"
             multiple
-            disabled={busy}
+            disabled={!hydrated || busy}
             onChange={(event) => {
               void upload(event.target.files);
               event.currentTarget.value = '';

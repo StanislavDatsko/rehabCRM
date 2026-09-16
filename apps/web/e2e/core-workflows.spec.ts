@@ -33,7 +33,9 @@ test('patient media uploads with an immediate and persistent private preview', a
   const patient = 'd1000000-0000-4000-8000-000000000001';
   const fileName = `e2e-preview-${Date.now()}.png`;
   await page.goto(`/app/patients/${patient}`);
-  await page.locator('input[type="file"]').setInputFiles({
+  const input = page.getByTestId('patient-media-input');
+  await expect(input).toHaveAttribute('data-hydrated', 'true');
+  await input.setInputFiles({
     name: fileName,
     mimeType: 'image/png',
     buffer: Buffer.from(
@@ -55,6 +57,7 @@ test('Human Atlas explorer loads its versioned source manifest and renderer', as
   await page.goto('/app/anatomy');
   await expect(page.getByText('Human Atlas', { exact: true })).toBeVisible();
   await expect(page.getByText(/2,234 source parts/)).toBeVisible();
+  await expect(page.getByRole('alert')).toBeHidden();
   await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole('checkbox', { name: 'Skeleton' })).toBeVisible();
 });

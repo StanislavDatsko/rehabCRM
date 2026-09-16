@@ -1,7 +1,7 @@
 'use client';
 
 import type { AppointmentCalendarItem } from '@repo/contracts';
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Calendar, dateFnsLocalizer, type View } from 'react-big-calendar';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
 import { uk } from 'date-fns/locale';
@@ -47,8 +47,9 @@ export function SchedulingCalendar({
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
   const calendarView: View = view === 'day' ? 'day' : 'week';
   const calendarContainer = useRef<HTMLDivElement>(null);
+  const [a11yReady, setA11yReady] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // react-big-calendar emits an incomplete ARIA grid hierarchy in time views.
     // Keep its native interactive controls, but remove the invalid structural
     // roles so assistive technology does not receive a misleading table model.
@@ -61,6 +62,7 @@ export function SchedulingCalendar({
     container
       .querySelectorAll('.rbc-allday-cell[role="rowgroup"], .rbc-row-content[role="row"]')
       .forEach((element) => element.removeAttribute('role'));
+    setA11yReady(true);
   }, [calendarView, currentDate, events]);
 
   const messages = useMemo(
@@ -81,6 +83,7 @@ export function SchedulingCalendar({
   return (
     <div
       ref={calendarContainer}
+      data-a11y-ready={a11yReady ? 'true' : 'false'}
       className="rc-scheduling-calendar rounded-md border border-border bg-surface p-3"
     >
       {/*
