@@ -22,8 +22,10 @@ test('specialist opens progress, reports, and the 3D body map', async ({ page })
   await page.goto(`/app/patients/${patient}/reports`);
   await expect(page.getByText(/звіт|report/i).first()).toBeVisible();
   await page.goto(`/app/patients/${patient}/body-map`);
+  const atlasCanvas = page.getByTestId('human-atlas-canvas');
+  await expect(atlasCanvas).toBeVisible({ timeout: 30_000 });
+  await expect(atlasCanvas).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
   await expect(page.locator('canvas')).toHaveCount(1);
-  await expect(page.getByTestId('human-atlas-canvas')).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
   await page.goto('/app/alerts');
   await expect(page.getByRole('heading', { name: 'Пацієнти, що потребують уваги' })).toBeVisible();
 });
