@@ -22,7 +22,8 @@ test('specialist opens progress, reports, and the 3D body map', async ({ page })
   await page.goto(`/app/patients/${patient}/reports`);
   await expect(page.getByText(/звіт|report/i).first()).toBeVisible();
   await page.goto(`/app/patients/${patient}/body-map`);
-  await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.getByTestId('human-atlas-canvas')).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
   await page.goto('/app/alerts');
   await expect(page.getByRole('heading', { name: 'Пацієнти, що потребують уваги' })).toBeVisible();
 });
@@ -57,8 +58,9 @@ test('Human Atlas explorer loads its versioned source manifest and renderer', as
   await page.goto('/app/anatomy');
   await expect(page.getByText('Human Atlas', { exact: true })).toBeVisible();
   await expect(page.getByText(/2,234 source parts/)).toBeVisible();
-  await expect(page.getByRole('alert')).toBeHidden();
-  await expect(page.locator('canvas')).toBeVisible({ timeout: 30_000 });
+  const humanAtlasError = page.locator('[role="alert"]').filter({ hasText: /\S/ });
+  await expect(humanAtlasError).toHaveCount(0);
+  await expect(page.getByTestId('human-atlas-canvas')).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
   await expect(page.getByRole('checkbox', { name: 'Skeleton' })).toBeVisible();
 });
 

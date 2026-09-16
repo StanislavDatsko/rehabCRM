@@ -55,6 +55,7 @@ export function BodyMapWorkspace({
   const [heatmap, setHeatmap] = useState(false);
   const [preset, setPreset] = useState('anterior');
   const [viewerMessage, setViewerMessage] = useState<string | null>(null);
+  const [showHistoricalViewer, setShowHistoricalViewer] = useState(false);
   const [status, setStatus] = useState<'ALL' | BodyAnnotationStatus>('ALL');
   const [type, setType] = useState<'ALL' | BodyAnnotationType>('ALL');
   const [from, setFrom] = useState('');
@@ -234,9 +235,31 @@ export function BodyMapWorkspace({
             </div>
             <HumanAtlasExplorer onSelect={chooseHumanAtlas} severity={humanAtlasSeverity} />
           </section>
-          <details className="rounded border border-border p-3">
+          <details
+            className="rounded border border-border p-3"
+            onToggle={(event) => setShowHistoricalViewer(event.currentTarget.open)}
+          >
             <summary className="cursor-pointer text-sm font-medium">Historical Z-Anatomy annotations</summary>
             <p className="mt-2 text-xs text-text-secondary">Existing model versions and annotations remain readable and immutable.</p>
+            {showHistoricalViewer ? (
+              <AnatomyViewerBoundary
+                models={data.models}
+                mappings={data.mappings}
+                annotations={annotations}
+                layers={layers}
+                selectedStructureId={selectedStructureId}
+                selectedAnnotationId={selectedAnnotationId}
+                selectedMeshKey={unmappedSelection?.meshKey ?? null}
+                isolate={isolate}
+                hiddenStructureIds={hidden}
+                hiddenMeshKeys={hiddenMeshKeys}
+                heatmap={heatmap}
+                preset={preset}
+                onSelect={chooseSurface}
+                onAnnotationSelect={chooseAnnotation}
+                onUnmapped={chooseUnmapped}
+              />
+            ) : null}
           </details>
           <div className="flex flex-wrap gap-2">
             {['anterior', 'posterior', 'left', 'right'].map((item) => (
@@ -310,23 +333,6 @@ export function BodyMapWorkspace({
               Severity heatmap
             </button>
           </div>
-          <AnatomyViewerBoundary
-            models={data.models}
-            mappings={data.mappings}
-            annotations={annotations}
-            layers={layers}
-            selectedStructureId={selectedStructureId}
-            selectedAnnotationId={selectedAnnotationId}
-            selectedMeshKey={unmappedSelection?.meshKey ?? null}
-            isolate={isolate}
-            hiddenStructureIds={hidden}
-            hiddenMeshKeys={hiddenMeshKeys}
-            heatmap={heatmap}
-            preset={preset}
-            onSelect={chooseSurface}
-            onAnnotationSelect={chooseAnnotation}
-            onUnmapped={chooseUnmapped}
-          />
           {viewerMessage ? (
             <p
               role="status"
