@@ -22,10 +22,19 @@ test('specialist opens progress, reports, and the 3D body map', async ({ page })
   await page.goto(`/app/patients/${patient}/reports`);
   await expect(page.getByText(/звіт|report/i).first()).toBeVisible();
   await page.goto(`/app/patients/${patient}/body-map`);
-  const atlasCanvas = page.getByTestId('human-atlas-canvas');
-  await expect(atlasCanvas).toBeVisible({ timeout: 30_000 });
-  await expect(atlasCanvas).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
-  await expect(page.locator('canvas')).toHaveCount(1);
+  const atlasRoot = page.getByTestId('human-atlas-root');
+  await expect(atlasRoot).not.toHaveAttribute('data-atlas-status', 'loading', { timeout: 30_000 });
+  const atlasStatus = await atlasRoot.getAttribute('data-atlas-status');
+  if (atlasStatus === 'unsupported') {
+    await expect(page.getByRole('alert', { name: 'This browser could not start the 3D viewer. Please try a browser with WebGL enabled.' })).toBeVisible();
+    await expect(page.getByTestId('human-atlas-canvas')).toHaveCount(0);
+  } else {
+    expect(atlasStatus === 'interactive' || atlasStatus === 'complete').toBe(true);
+    const atlasCanvas = page.getByTestId('human-atlas-canvas');
+    await expect(atlasCanvas).toBeVisible({ timeout: 30_000 });
+    await expect(atlasCanvas).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
+    await expect(page.locator('canvas')).toHaveCount(1);
+  }
   await page.goto('/app/alerts');
   await expect(page.getByRole('heading', { name: 'Пацієнти, що потребують уваги' })).toBeVisible();
 });

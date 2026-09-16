@@ -11,7 +11,7 @@ test(
     await signIn(page, 'specialist');
     const started = Date.now();
     await page.goto('/app/patients/d1000000-0000-4000-8000-000000000001/body-map');
-    await expect(page.getByTestId('human-atlas-canvas')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('human-atlas-canvas')).toHaveAttribute('data-atlas-ready', 'true', { timeout: 15_000 });
     expect(Date.now() - started).toBeLessThan(15_000);
   },
 );
