@@ -26,10 +26,11 @@ test('specialist opens progress, reports, and the 3D body map', async ({ page })
   await expect(atlasRoot).not.toHaveAttribute('data-atlas-status', 'loading', { timeout: 30_000 });
   const atlasStatus = await atlasRoot.getAttribute('data-atlas-status');
   if (atlasStatus === 'unsupported') {
-    await expect(page.getByRole('alert', { name: 'This browser could not start the 3D viewer. Please try a browser with WebGL enabled.' })).toBeVisible();
+    const unsupportedAlert = page.getByRole('alert').filter({ hasText: 'This browser could not start the 3D viewer. Please try a browser with WebGL enabled.' });
+    await expect(unsupportedAlert).toBeVisible();
     await expect(page.getByTestId('human-atlas-canvas')).toHaveCount(0);
   } else {
-    expect(atlasStatus === 'interactive' || atlasStatus === 'complete').toBe(true);
+    expect(['interactive', 'complete'], `Unexpected Human Atlas status: ${atlasStatus}`).toContain(atlasStatus);
     const atlasCanvas = page.getByTestId('human-atlas-canvas');
     await expect(atlasCanvas).toBeVisible({ timeout: 30_000 });
     await expect(atlasCanvas).toHaveAttribute('data-atlas-ready', 'true', { timeout: 30_000 });
