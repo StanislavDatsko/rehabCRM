@@ -11,7 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   verify:
     runs-on: ubuntu-latest
@@ -186,11 +188,60 @@ jobs:
       - run: pnpm --filter @rehabcrm/api anatomy:import -- --apply
       - name: Import Human Atlas
         run: pnpm --filter @rehabcrm/api anatomy:human-atlas:import -- --apply
-      - name: Verify Human Atlas assets
+      - name: Verify Human Atlas activation
+        shell: bash
         run: |
-          test "$(psql "$DATABASE_URL" -Atc "SELECT count(*) FROM anatomical_model_assets a JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\" JOIN anatomical_models m ON m.id = v.\"modelId\" WHERE m.code = 'bodyparts3d-human-atlas' AND v.format = 'ATLAS' AND v.status = 'ACTIVE';")" = 16
-          test "$(psql "$DATABASE_URL" -Atc "SELECT count(*) FROM anatomical_model_assets a JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\" JOIN anatomical_models m ON m.id = v.\"modelId\" WHERE m.code = 'bodyparts3d-human-atlas' AND v.format = 'ATLAS' AND v.status = 'ACTIVE' AND a.kind = 'MANIFEST';")" = 1
-          test "$(psql "$DATABASE_URL" -Atc "SELECT count(*) FROM anatomical_model_assets a JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\" JOIN anatomical_models m ON m.id = v.\"modelId\" WHERE m.code = 'bodyparts3d-human-atlas' AND v.format = 'ATLAS' AND v.status = 'ACTIVE' AND a.kind = 'GEOMETRY_CHUNK';")" = 15
+          set -euo pipefail
+
+          PSQL_DATABASE_URL="${DATABASE_URL%%\?*}"
+
+          ACTIVE_VERSION_COUNT="$(psql "$PSQL_DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "
+            SELECT count(*)
+            FROM anatomical_model_versions v
+            JOIN anatomical_models m ON m.id = v.\"modelId\"
+            WHERE m.code = 'bodyparts3d-human-atlas'
+              AND v.format = 'ATLAS'
+              AND v.status = 'ACTIVE';
+          ")"
+          ASSET_COUNT="$(psql "$PSQL_DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "
+            SELECT count(*)
+            FROM anatomical_model_assets a
+            JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\"
+            JOIN anatomical_models m ON m.id = v.\"modelId\"
+            WHERE m.code = 'bodyparts3d-human-atlas'
+              AND v.format = 'ATLAS'
+              AND v.status = 'ACTIVE';
+          ")"
+          MANIFEST_COUNT="$(psql "$PSQL_DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "
+            SELECT count(*)
+            FROM anatomical_model_assets a
+            JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\"
+            JOIN anatomical_models m ON m.id = v.\"modelId\"
+            WHERE m.code = 'bodyparts3d-human-atlas'
+              AND v.format = 'ATLAS'
+              AND v.status = 'ACTIVE'
+              AND a.kind = 'MANIFEST';
+          ")"
+          CHUNK_COUNT="$(psql "$PSQL_DATABASE_URL" -v ON_ERROR_STOP=1 -Atc "
+            SELECT count(*)
+            FROM anatomical_model_assets a
+            JOIN anatomical_model_versions v ON v.id = a.\"modelVersionId\"
+            JOIN anatomical_models m ON m.id = v.\"modelId\"
+            WHERE m.code = 'bodyparts3d-human-atlas'
+              AND v.format = 'ATLAS'
+              AND v.status = 'ACTIVE'
+              AND a.kind = 'GEOMETRY_CHUNK';
+          ")"
+
+          echo "Human Atlas active ATLAS versions: $ACTIVE_VERSION_COUNT"
+          echo "Human Atlas assets: $ASSET_COUNT"
+          echo "Manifest assets: $MANIFEST_COUNT"
+          echo "Geometry chunks: $CHUNK_COUNT"
+
+          test "$ACTIVE_VERSION_COUNT" = "1"
+          test "$ASSET_COUNT" = "16"
+          test "$MANIFEST_COUNT" = "1"
+          test "$CHUNK_COUNT" = "15"
       - name: Wait for MinIO client access
         env:
           MC_HOST_local: http://${{ env.S3_ACCESS_KEY }}:${{ env.S3_SECRET_KEY }}@localhost:9000
