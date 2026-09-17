@@ -1,6 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import nodemailer from 'nodemailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import MailComposer from 'nodemailer/lib/mail-composer';
 
 export const STAFF_MAILER = Symbol('STAFF_MAILER');
 
@@ -32,27 +31,44 @@ export class ConfiguredStaffMailer implements StaffMailer {
       console.info('Staff invitation email prepared', { to: input.to, subject });
       return;
     }
-    if (provider === 'gmail') {
-      const user = process.env.GMAIL_SMTP_USER;
-      const password = process.env.GMAIL_SMTP_APP_PASSWORD;
-      if (process.env.DEPLOYMENT_ENV === 'production' && (!user || !password || !process.env.EMAIL_FROM)) {
-        throw new ServiceUnavailableException('Production email provider is not configured.');
+    if (provider === 'gmail-api') {
+      const from = process.env.EMAIL_FROM;
+      const clientId = process.env.GMAIL_API_CLIENT_ID;
+      const clientSecret = process.env.GMAIL_API_CLIENT_SECRET;
+      const refreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
+      if (!from || !clientId || !clientSecret || !refreshToken) {
+        throw new ServiceUnavailableException('Gmail API provider is not configured.');
       }
-      if (!user || !password || !process.env.EMAIL_FROM) {
-        throw new ServiceUnavailableException('Gmail SMTP provider is not configured.');
+
+      let tokenResponse: Response;
+      try {
+        tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: 'refresh_token' }),
+          signal: AbortSignal.timeout(10_000),
+        });
+      } catch {
+        throw new ServiceUnavailableException('Staff invitation email could not be delivered.');
       }
-      const transportOptions: SMTPTransport.Options & { family: 4 } = {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        family: 4,
-        auth: { user, pass: password },
-        connectionTimeout: 15_000,
-        greetingTimeout: 15_000,
-        socketTimeout: 30_000,
-      };
-      const transporter = nodemailer.createTransport(transportOptions);
-      await transporter.sendMail({ from: process.env.EMAIL_FROM, to: input.to, subject, text });
+      if (!tokenResponse.ok) throw new ServiceUnavailableException('Staff invitation email could not be delivered.');
+      const tokenPayload = (await tokenResponse.json()) as { access_token?: string };
+      if (!tokenPayload.access_token) throw new ServiceUnavailableException('Staff invitation email could not be delivered.');
+
+      const rawMessage = await new MailComposer({
+        from: `${process.env.EMAIL_FROM_NAME ?? 'RehabMIS'} <${from}>`, to: input.to, subject, text,
+      }).compile().build();
+      const raw = rawMessage.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      let sendResponse: Response;
+      try {
+        sendResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+          method: 'POST', headers: { Authorization: `Bearer ${tokenPayload.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ raw }), signal: AbortSignal.timeout(15_000),
+        });
+      } catch {
+        throw new ServiceUnavailableException('Staff invitation email could not be delivered.');
+      }
+      if (!sendResponse.ok) throw new ServiceUnavailableException('Staff invitation email could not be delivered.');
       return;
     }
     if (provider !== 'resend' || !process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {

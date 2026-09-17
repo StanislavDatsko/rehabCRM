@@ -2,14 +2,17 @@
 
 The API sends staff invitations through the `ConfiguredStaffMailer` adapter.
 Development and tests may use `EMAIL_PROVIDER=console`; production may use
-Gmail SMTP with a dedicated account and Google app password, or Resend.
+the Gmail API over HTTPS/443 or Resend. The legacy `gmail` SMTP provider and
+the SMTP variables are deprecated and are not used by `gmail-api`.
 
 ## Production setup
 
-1. For Gmail, enable 2-Step Verification, create an app password, and use a
-   dedicated account for invitations.
-2. Set `EMAIL_PROVIDER=gmail`, `GMAIL_SMTP_USER`, `GMAIL_SMTP_APP_PASSWORD`,
-   and `EMAIL_FROM` through the deployment secret manager. Secrets are never
+1. In Google Cloud, configure OAuth for the sender account with the scope
+   `https://www.googleapis.com/auth/gmail.send`; the refresh token belongs to
+   that sender account.
+2. Set `EMAIL_PROVIDER=gmail-api`, `EMAIL_FROM`, `EMAIL_FROM_NAME` (optional),
+   `GMAIL_API_CLIENT_ID`, `GMAIL_API_CLIENT_SECRET`, and
+   `GMAIL_API_REFRESH_TOKEN` in Railway secrets only. Secrets are never
    committed, logged, or returned by an API response. Resend remains available
    with `EMAIL_PROVIDER=resend` and `RESEND_API_KEY`.
 4. Set `WEB_PUBLIC_URL` to the canonical HTTPS application URL. Invitation

@@ -13,11 +13,12 @@ export const apiEnvSchema = z
     API_PORT: z.coerce.number().int().positive().default(3001),
     API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
-    EMAIL_PROVIDER: z.enum(['console', 'resend', 'gmail']).default('console'),
+    EMAIL_PROVIDER: z.enum(['console', 'resend', 'gmail-api']).default('console'),
     EMAIL_FROM: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
-    GMAIL_SMTP_USER: z.string().email().optional(),
-    GMAIL_SMTP_APP_PASSWORD: z.string().min(1).optional(),
+    GMAIL_API_CLIENT_ID: z.string().min(1).optional(),
+    GMAIL_API_CLIENT_SECRET: z.string().min(1).optional(),
+    GMAIL_API_REFRESH_TOKEN: z.string().min(1).optional(),
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -58,11 +59,13 @@ export const apiEnvSchema = z
       context.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
     if (env.NODE_ENV !== 'production')
       issue('NODE_ENV', 'staging/production deployments require NODE_ENV=production');
-    if (!['resend', 'gmail'].includes(env.EMAIL_PROVIDER)) issue('EMAIL_PROVIDER', 'production requires a configured email provider');
+    if (!['resend', 'gmail-api'].includes(env.EMAIL_PROVIDER)) issue('EMAIL_PROVIDER', 'production requires a configured email provider');
     if (env.EMAIL_PROVIDER === 'resend' && !env.EMAIL_FROM) issue('EMAIL_FROM', 'is required for Resend');
     if (env.EMAIL_PROVIDER === 'resend' && !env.RESEND_API_KEY) issue('RESEND_API_KEY', 'is required for Resend');
-    if (env.EMAIL_PROVIDER === 'gmail' && !env.GMAIL_SMTP_USER) issue('GMAIL_SMTP_USER', 'is required for Gmail SMTP');
-    if (env.EMAIL_PROVIDER === 'gmail' && !env.GMAIL_SMTP_APP_PASSWORD) issue('GMAIL_SMTP_APP_PASSWORD', 'is required for Gmail SMTP');
+    if (env.EMAIL_PROVIDER === 'gmail-api' && !env.EMAIL_FROM) issue('EMAIL_FROM', 'is required for Gmail API');
+    if (env.EMAIL_PROVIDER === 'gmail-api' && !env.GMAIL_API_CLIENT_ID) issue('GMAIL_API_CLIENT_ID', 'is required for Gmail API');
+    if (env.EMAIL_PROVIDER === 'gmail-api' && !env.GMAIL_API_CLIENT_SECRET) issue('GMAIL_API_CLIENT_SECRET', 'is required for Gmail API');
+    if (env.EMAIL_PROVIDER === 'gmail-api' && !env.GMAIL_API_REFRESH_TOKEN) issue('GMAIL_API_REFRESH_TOKEN', 'is required for Gmail API');
     for (const [name, url] of [
       ['API_PUBLIC_URL', env.API_PUBLIC_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],
