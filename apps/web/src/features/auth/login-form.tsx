@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@repo/ui/button';
 import { auth } from '../../lib/auth/client';
+import { safeReturnTo } from '../../lib/auth/safe-return-to';
 
 export function LoginForm({ returnTo }: { returnTo?: string } = {}) {
   const [error, setError] = useState<string | null>(null);
@@ -25,8 +26,7 @@ export function LoginForm({ returnTo }: { returnTo?: string } = {}) {
           setPending(false);
           return;
         }
-        const safe = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
-        window.location.assign(safe);
+        window.location.assign(safeReturnTo(returnTo));
       }}
     >
       <label className="block text-sm font-medium">

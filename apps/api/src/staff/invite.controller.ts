@@ -49,7 +49,12 @@ export class InviteController {
     return this.prisma.$transaction(async (tx) => {
       const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "staff_invitations" WHERE "tokenHash" = ${hash} FOR UPDATE`;
       const invite = locked[0] ? await tx.staffInvitation.findUnique({ where: { id: locked[0].id } }) : null;
-      if (!invite || invite.status !== 'PENDING' || invite.expiresAt <= new Date()) throw new ConflictException('This invitation is no longer valid.');
+      if (!invite) throw new ConflictException('This invitation is no longer valid.');
+      if (invite.status !== 'PENDING') throw new ConflictException('This invitation is no longer valid.');
+      if (invite.expiresAt <= new Date()) {
+        await tx.staffInvitation.update({ where: { id: invite.id }, data: { status: 'EXPIRED' } });
+        return { expired: true as const };
+      }
       if (claims.email!.trim().toLowerCase() !== invite.email.trim().toLowerCase()) throw new ConflictException('This invitation belongs to another email address.');
       const existing = await tx.user.findFirst({ where: { OR: [{ identityProvider: 'neon-auth', identityProviderSubject: claims.subject }, { identityProvider: 'neon-auth', email: invite.email }] } });
       if (existing) throw new ConflictException('This Neon Auth identity is already linked.');
@@ -59,6 +64,6 @@ export class InviteController {
       await tx.staffInvitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED', acceptedByUserId: user.id } });
       await writeAuditEvent(tx, { organizationId: invite.organizationId, actorUserId: user.id, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: invite.id, requestId: String(request.headers['x-request-id'] ?? 'unknown'), metadata: { changedFields: ['status', 'acceptedByUserId'] } });
       return { userId: user.id, membershipId: membership.id, status: 'ACCEPTED' as const };
-    });
+    }).then((result) => { if ('expired' in result) throw new ConflictException('This invitation is no longer valid.'); return result; });
   }
 }
