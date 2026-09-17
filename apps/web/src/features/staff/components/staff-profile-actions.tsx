@@ -134,7 +134,7 @@ export function StaffProfileActions({ staff, capabilities }: { staff: StaffRespo
                 Завершити всі сеанси
               </Button>
             </form> : null}
-            {capabilities.canResendSetup ? <form action={setupAction}>
+            {capabilities.canResendSetup && staff.setupStatus !== 'ACTIVE' ? <form action={setupAction}>
               <input type="hidden" name="staffId" value={staff.id} />
               <Button type="submit" variant="secondary" disabled={setupPending}>
                 Повторити налаштування
