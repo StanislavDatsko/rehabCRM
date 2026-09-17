@@ -47,7 +47,8 @@ export class InviteController {
     if (!claims?.subject || !claims.email) throw new UnauthorizedException('Neon Auth email is required.');
     const hash = this.hash(token);
     return this.prisma.$transaction(async (tx) => {
-      const invite = await tx.staffInvitation.findUnique({ where: { tokenHash: hash } });
+      const locked = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "staff_invitations" WHERE "tokenHash" = ${hash} FOR UPDATE`;
+      const invite = locked[0] ? await tx.staffInvitation.findUnique({ where: { id: locked[0].id } }) : null;
       if (!invite || invite.status !== 'PENDING' || invite.expiresAt <= new Date()) throw new ConflictException('This invitation is no longer valid.');
       if (claims.email!.trim().toLowerCase() !== invite.email.trim().toLowerCase()) throw new ConflictException('This invitation belongs to another email address.');
       const existing = await tx.user.findFirst({ where: { OR: [{ identityProvider: 'neon-auth', identityProviderSubject: claims.subject }, { identityProvider: 'neon-auth', email: invite.email }] } });

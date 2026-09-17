@@ -35,7 +35,7 @@ const staffInclude = Prisma.validator<Prisma.OrganizationMembershipInclude>()({
 });
 
 type StaffRow = Prisma.OrganizationMembershipGetPayload<{ include: typeof staffInclude }>;
-export type StaffInvitationResponse = { id: string; status: 'PENDING'; email: string; expiresAt: string; inviteToken: string };
+export type StaffInvitationResponse = { id: string; status: 'PENDING'; email: string; expiresAt: string; inviteToken?: string };
 
 const STAFF_AUDIT_ACTIONS = [
   'STAFF_CREATED',
@@ -117,7 +117,9 @@ export class StaffService {
       await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: created.id, requestId, metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] } });
       return created;
     });
-    return { id: invitation.id, status: 'PENDING', email: invitation.email, expiresAt: invitation.expiresAt.toISOString(), inviteToken: process.env.NODE_ENV === 'production' ? '' : token };
+    const response: StaffInvitationResponse = { id: invitation.id, status: 'PENDING', email: invitation.email, expiresAt: invitation.expiresAt.toISOString() };
+    if (process.env.DEPLOYMENT_ENV !== 'production') response.inviteToken = token;
+    return response;
   }
 
   async update(

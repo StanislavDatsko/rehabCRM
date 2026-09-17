@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@repo/ui/button';
 import { auth } from '../../lib/auth/client';
 
-export function LoginForm() {
+export function LoginForm({ returnTo }: { returnTo?: string } = {}) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -25,7 +25,8 @@ export function LoginForm() {
           setPending(false);
           return;
         }
-        window.location.assign('/');
+        const safe = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/';
+        window.location.assign(safe);
       }}
     >
       <label className="block text-sm font-medium">

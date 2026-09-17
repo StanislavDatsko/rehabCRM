@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const response = await fetch(`${process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL}/invite/${encodeURIComponent(token)}`, { cache: 'no-store' });
+  const response = await fetch(`${process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL}/api/v1/invite/${encodeURIComponent(token)}`, { cache: 'no-store' });
   if (!response.ok) notFound();
   const invitation = await response.json() as { email: string; firstName: string; lastName: string; organizationName: string; role: string; expiresAt: string };
   const { data: session } = await auth.getSession();
