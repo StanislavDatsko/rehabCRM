@@ -43,9 +43,9 @@ export function StaffForm() {
           </select>
         </div>
       </div>
-      <div className="rounded-xl border border-info/30 bg-info/5 p-4 text-sm text-text-secondary">
-        Пароль не створюється й не зберігається в RehabMIS. Працівник отримає захищені інструкції
-        від системи ідентифікації для підтвердження email і встановлення пароля.
+      <div className="rounded-xl border border-brand-lime/40 bg-brand-lime/10 p-4 text-sm text-text-secondary">
+        Пароль не створюється й не зберігається в RehabMIS. Працівник отримає захищене запрошення
+        на email і завершить реєстрацію самостійно.
       </div>
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>
