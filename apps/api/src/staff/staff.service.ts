@@ -20,7 +20,6 @@ import { IDENTITY_PROVIDER } from '../identity/dev-seed-ids';
 import {
   IDENTITY_PROVIDER_ADMIN,
   IdentityProviderAdminError,
-  STAFF_REQUIRED_ACTIONS,
   type IdentityProviderAdminPort,
 } from '../identity/identity-provider-admin.port';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
@@ -177,14 +176,6 @@ export class StaffService {
       });
     }
 
-    try {
-      await this.identities.triggerRequiredActions(subject, STAFF_REQUIRED_ACTIONS);
-    } catch {
-      await this.prisma.organizationMembership.update({
-        where: { id: membershipId },
-        data: { setupStatus: 'SETUP_ACTION_FAILED' },
-      });
-    }
     return this.getById(principal, membershipId);
   }
 
@@ -229,16 +220,6 @@ export class StaffService {
       });
     });
 
-    try {
-      await this.identities.updateStaffIdentity(current.user.identityProviderSubject, {
-        email: current.user.email,
-        firstName,
-        lastName,
-      });
-      await this.setIdentitySyncPending(membershipId, false);
-    } catch {
-      await this.setIdentitySyncPending(membershipId, true);
-    }
     return this.getById(principal, membershipId);
   }
 
@@ -305,13 +286,6 @@ export class StaffService {
     if (current.status !== 'DISABLED') {
       await this.changeStatus(principal, current, 'DISABLED', version, requestId);
     }
-    try {
-      await this.identities.setIdentityEnabled(current.user.identityProviderSubject, false);
-      await this.identities.terminateSessions(current.user.identityProviderSubject);
-      await this.setIdentitySyncPending(membershipId, false);
-    } catch {
-      await this.setIdentitySyncPending(membershipId, true);
-    }
     return this.getById(principal, membershipId);
   }
 
@@ -326,12 +300,6 @@ export class StaffService {
     if (current.status !== 'ACTIVE') {
       await this.changeStatus(principal, current, 'ACTIVE', version, requestId);
     }
-    try {
-      await this.identities.setIdentityEnabled(current.user.identityProviderSubject, true);
-      await this.setIdentitySyncPending(membershipId, false);
-    } catch {
-      await this.setIdentitySyncPending(membershipId, true);
-    }
     return this.getById(principal, membershipId);
   }
 
@@ -340,23 +308,9 @@ export class StaffService {
     membershipId: string,
     requestId: string,
   ): Promise<void> {
-    const current = await this.getRow(principal.organizationId, membershipId);
-    try {
-      await this.identities.terminateSessions(current.user.identityProviderSubject);
-    } catch (error) {
-      this.handleIdentityError(error, 'Unable to revoke staff sessions.');
-    }
-    await this.prisma.$transaction(async (tx) => {
-      await writeAuditEvent(tx, {
-        organizationId: principal.organizationId,
-        actorUserId: principal.userId,
-        action: 'STAFF_SESSIONS_REVOKED',
-        entityType: 'OrganizationMembership',
-        entityId: membershipId,
-        requestId,
-        metadata: { changedFields: [] },
-      });
-    });
+    void requestId;
+    await this.getRow(principal.organizationId, membershipId);
+    throw new ConflictException({ code: 'SESSION_REVOKE_NOT_SUPPORTED', message: 'Neon Auth session revocation requires an authenticated Neon admin session and is disabled.' });
   }
 
   async resendSetupActions(
@@ -365,34 +319,8 @@ export class StaffService {
     requestId: string,
   ): Promise<StaffResponse> {
     const current = await this.getRow(principal.organizationId, membershipId);
-    try {
-      await this.identities.triggerRequiredActions(
-        current.user.identityProviderSubject,
-        STAFF_REQUIRED_ACTIONS,
-      );
-    } catch (error) {
-      await this.prisma.organizationMembership.update({
-        where: { id: membershipId },
-        data: { setupStatus: 'SETUP_ACTION_FAILED' },
-      });
-      this.handleIdentityError(error, 'Unable to send account setup actions.');
-    }
-    await this.prisma.$transaction(async (tx) => {
-      await tx.organizationMembership.update({
-        where: { id: membershipId },
-        data: { setupStatus: 'PENDING_SETUP' },
-      });
-      await writeAuditEvent(tx, {
-        organizationId: principal.organizationId,
-        actorUserId: principal.userId,
-        action: 'STAFF_SETUP_ACTIONS_RESENT',
-        entityType: 'OrganizationMembership',
-        entityId: membershipId,
-        requestId,
-        metadata: { changedFields: ['setupStatus'] },
-      });
-    });
-    return this.getById(principal, membershipId);
+    void requestId;
+    throw new ConflictException({ code: 'STAFF_INVITATIONS_NOT_SUPPORTED', message: 'Neon Auth onboarding uses RehabMIS invitations and is not available through the legacy setup-action endpoint.' });
   }
 
   async history(
