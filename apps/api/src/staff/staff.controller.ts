@@ -35,7 +35,7 @@ import {
   type StaffVersionBody,
   type UpdateStaffBody,
 } from './staff.schemas';
-import { StaffService } from './staff.service';
+import { StaffService, type StaffInvitationResponse } from './staff.service';
 
 @ApiTags('staff')
 @ApiBearerAuth()
@@ -56,12 +56,12 @@ export class StaffController {
   @Post()
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @RequirePermissions(PERMISSIONS.STAFF_CREATE)
-  @ApiOperation({ summary: 'Provision staff identity and organization access' })
+  @ApiOperation({ summary: 'Create a staff invitation' })
   create(
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
     @Body(new ZodValidationPipe(createStaffBodySchema)) body: CreateStaffBody,
     @Headers('x-request-id') requestId?: string,
-  ): Promise<StaffResponse> {
+  ): Promise<StaffInvitationResponse> {
     return this.staff.create(principal, body, requestId ?? 'unknown');
   }
 

@@ -22,6 +22,12 @@ enum StaffSetupStatus {
   ACTIVE
   SETUP_ACTION_FAILED
 }
+enum StaffInvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
 
 enum PractitionerStatus {
   ACTIVE
@@ -329,6 +335,7 @@ model Organization {
   notifications               Notification[]
   clinicalAlerts              ClinicalAlert[]
   patientMedia                PatientMedia[]
+  staffInvitations            StaffInvitation[]
 
   @@map("organizations")
 }
@@ -377,11 +384,36 @@ model User {
   clinicalAlertsResolved              ClinicalAlert[]               @relation("ClinicalAlertResolvedBy")
   patientMediaUploaded                PatientMedia[]                 @relation("PatientMediaUploadedBy")
   patientMediaVoided                  PatientMedia[]                 @relation("PatientMediaVoidedBy")
+  createdStaffInvitations             StaffInvitation[]               @relation("StaffInvitationCreatedBy")
+  acceptedStaffInvitations            StaffInvitation[]               @relation("StaffInvitationAcceptedBy")
 
   @@unique([identityProvider, identityProviderSubject])
   @@unique([identityProvider, email])
   @@index([email])
   @@map("users")
+}
+
+model StaffInvitation {
+  id                String                @id @default(uuid()) @db.Uuid
+  organizationId    String                @db.Uuid
+  email             String
+  firstName         String                @db.VarChar(100)
+  lastName          String                @db.VarChar(100)
+  role              StaffRole
+  professionalTitle String?               @db.VarChar(150)
+  tokenHash         String                @unique
+  expiresAt         DateTime              @db.Timestamptz(3)
+  status            StaffInvitationStatus @default(PENDING)
+  createdByUserId   String                @db.Uuid
+  acceptedByUserId  String?               @db.Uuid
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy         User                   @relation("StaffInvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  acceptedBy        User?                  @relation("StaffInvitationAcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: Restrict)
+  @@index([organizationId, status])
+  @@index([email, status])
+  @@map("staff_invitations")
 }
 
 model OrganizationMembership {

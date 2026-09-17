@@ -2,19 +2,19 @@ import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { describe, expect, it } from 'vitest';
 import { verifyAccessToken } from './verify-access-token';
 
-const ISSUER = 'http://localhost:8080/realms/rehabcrm';
-const AUDIENCE = 'rehabcrm-api';
+const ISSUER = 'https://auth.example.test';
+const AUDIENCE = ISSUER;
 
 async function jwtContext() {
-  const pair = await generateKeyPair('RS256');
+  const pair = await generateKeyPair('EdDSA');
   const jwk = await exportJWK(pair.publicKey);
-  const jwks = createLocalJWKSet({ keys: [{ ...jwk, kid: 'k1', alg: 'RS256', use: 'sig' }] });
+  const jwks = createLocalJWKSet({ keys: [{ ...jwk, kid: 'k1', alg: 'EdDSA', use: 'sig' }] });
   return { privateKey: pair.privateKey, jwks };
 }
 
 async function sign(privateKey: CryptoKey, claims: { iss: string; aud: string; exp?: number }) {
   let builder = new SignJWT({})
-    .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
+    .setProtectedHeader({ alg: 'EdDSA', kid: 'k1' })
     .setSubject('user-1')
     .setIssuer(claims.iss)
     .setAudience(claims.aud)
@@ -28,7 +28,7 @@ async function sign(privateKey: CryptoKey, claims: { iss: string; aud: string; e
 }
 
 describe('verifyAccessToken', () => {
-  it('accepts a valid RS256 token', async () => {
+  it('accepts a valid EdDSA token', async () => {
     const { privateKey, jwks } = await jwtContext();
     const token = await sign(privateKey as CryptoKey, { iss: ISSUER, aud: AUDIENCE });
     await expect(verifyAccessToken(token, jwks, ISSUER, AUDIENCE)).resolves.toEqual({
@@ -49,7 +49,7 @@ describe('verifyAccessToken', () => {
   it('rejects the wrong issuer', async () => {
     const { privateKey, jwks } = await jwtContext();
     const token = await sign(privateKey as CryptoKey, {
-      iss: 'http://evil.example/realms/rehabcrm',
+      iss: 'https://evil.example',
       aud: AUDIENCE,
     });
     await expect(verifyAccessToken(token, jwks, ISSUER, AUDIENCE)).rejects.toThrow();
@@ -66,5 +66,11 @@ describe('verifyAccessToken', () => {
     const other = await jwtContext();
     const token = await sign(signer.privateKey as CryptoKey, { iss: ISSUER, aud: AUDIENCE });
     await expect(verifyAccessToken(token, other.jwks, ISSUER, AUDIENCE)).rejects.toThrow();
+  });
+
+  it('rejects a token without a subject', async () => {
+    const { privateKey, jwks } = await jwtContext();
+    const token = await new SignJWT({}).setProtectedHeader({ alg: 'EdDSA', kid: 'k1' }).setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt().setExpirationTime('5m').sign(privateKey);
+    await expect(verifyAccessToken(token, jwks, ISSUER, AUDIENCE)).rejects.toThrow();
   });
 });

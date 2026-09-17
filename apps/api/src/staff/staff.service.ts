@@ -16,7 +16,6 @@ import {
 } from '@repo/contracts';
 import type { AuthenticatedPrincipal } from '../common/auth/principal';
 import { writeAuditEvent } from '../common/audit/write-audit';
-import { IDENTITY_PROVIDER } from '../identity/dev-seed-ids';
 import {
   IDENTITY_PROVIDER_ADMIN,
   IdentityProviderAdminError,
@@ -29,12 +28,14 @@ import type {
   ListStaffQuery,
   UpdateStaffBody,
 } from './staff.schemas';
+import { createHash, randomBytes } from 'node:crypto';
 
 const staffInclude = Prisma.validator<Prisma.OrganizationMembershipInclude>()({
   user: { include: { practitioners: true } },
 });
 
 type StaffRow = Prisma.OrganizationMembershipGetPayload<{ include: typeof staffInclude }>;
+export type StaffInvitationResponse = { id: string; status: 'PENDING'; email: string; expiresAt: string; inviteToken: string };
 
 const STAFF_AUDIT_ACTIONS = [
   'STAFF_CREATED',
@@ -103,80 +104,15 @@ export class StaffService {
     principal: AuthenticatedPrincipal,
     body: CreateStaffBody,
     requestId: string,
-  ): Promise<StaffResponse> {
-    const duplicate = await this.prisma.user.findUnique({
-      where: {
-        identityProvider_email: {
-          identityProvider: IDENTITY_PROVIDER,
-          email: body.email,
-        },
-      },
-      select: { id: true },
-    });
-    if (duplicate) this.throwEmailConflict();
-
-    let subject: string;
-    try {
-      ({ subject } = await this.identities.createStaffIdentity(body));
-    } catch (error) {
-      this.handleIdentityError(error, 'Unable to provision the staff identity.');
-    }
-
-    let membershipId: string;
-    try {
-      membershipId = await this.prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({
-          data: {
-            identityProvider: IDENTITY_PROVIDER,
-            identityProviderSubject: subject,
-            email: body.email,
-            firstName: body.firstName,
-            lastName: body.lastName,
-            displayName: `${body.firstName} ${body.lastName}`,
-          },
-        });
-        const membership = await tx.organizationMembership.create({
-          data: {
-            organizationId: principal.organizationId,
-            userId: user.id,
-            role: body.role,
-            setupStatus: 'PENDING_SETUP',
-          },
-        });
-        if (body.role === 'REHABILITATION_SPECIALIST') {
-          await tx.practitioner.create({
-            data: {
-              organizationId: principal.organizationId,
-              userId: user.id,
-              professionalTitle: body.professionalTitle ?? null,
-            },
-          });
-        }
-        await writeAuditEvent(tx, {
-          organizationId: principal.organizationId,
-          actorUserId: principal.userId,
-          action: 'STAFF_CREATED',
-          entityType: 'OrganizationMembership',
-          entityId: membership.id,
-          requestId,
-          metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] },
-        });
-        return membership.id;
-      });
-    } catch (error) {
-      try {
-        await this.identities.setIdentityEnabled(subject, false);
-      } catch {
-        this.logger.error({ operation: 'compensate_staff_provisioning', outcome: 'failed' });
-      }
-      if (this.isUniqueConstraint(error)) this.throwEmailConflict();
-      throw new ServiceUnavailableException({
-        code: API_ERROR_CODES.STAFF_PROVISIONING_FAILED,
-        message: 'Staff provisioning did not complete. The external identity was disabled.',
-      });
-    }
-
-    return this.getById(principal, membershipId);
+  ): Promise<StaffInvitationResponse> {
+    const existing = await this.prisma.staffInvitation.findFirst({ where: { organizationId: principal.organizationId, email: body.email, status: 'PENDING' } });
+    if (existing) throw new ConflictException('A pending staff invitation already exists.');
+    const token = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const invitation = await this.prisma.staffInvitation.create({ data: { organizationId: principal.organizationId, email: body.email, firstName: body.firstName, lastName: body.lastName, role: body.role, professionalTitle: body.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId } });
+    await writeAuditEvent(this.prisma, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: invitation.id, requestId, metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] } });
+    return { id: invitation.id, status: 'PENDING', email: invitation.email, expiresAt: invitation.expiresAt.toISOString(), inviteToken: process.env.NODE_ENV === 'production' ? '' : token };
   }
 
   async update(
@@ -318,7 +254,6 @@ export class StaffService {
     membershipId: string,
     requestId: string,
   ): Promise<StaffResponse> {
-    const current = await this.getRow(principal.organizationId, membershipId);
     void requestId;
     throw new ConflictException({ code: 'STAFF_INVITATIONS_NOT_SUPPORTED', message: 'Neon Auth onboarding uses RehabMIS invitations and is not available through the legacy setup-action endpoint.' });
   }
