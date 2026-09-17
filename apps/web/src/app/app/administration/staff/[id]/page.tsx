@@ -16,12 +16,12 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
     const [staff, history] = await Promise.all([getStaff(id), getStaffHistory(id)]);
     return (
       <div className="space-y-6">
-        <div>
-          <a href="/app/administration/staff" className="text-sm text-info underline">
+        <div className="rc-atmosphere rounded-3xl p-6 text-white shadow-brand">
+          <a href="/app/administration/staff" className="text-sm text-white/75 underline">
             ← До списку персоналу
           </a>
           <h1 className="mt-3 font-serif text-3xl">{staff.displayName}</h1>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-1 text-sm text-white/75">
             {staff.email} · {staffRoleLabel(staff.role)}
           </p>
         </div>
