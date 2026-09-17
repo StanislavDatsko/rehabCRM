@@ -1,16 +1,17 @@
 # Staff invitation email operations
 
 The API sends staff invitations through the `ConfiguredStaffMailer` adapter.
-Development and tests may use `EMAIL_PROVIDER=console`; production must use
-Resend.
+Development and tests may use `EMAIL_PROVIDER=console`; production may use
+Gmail SMTP with a dedicated account and Google app password, or Resend.
 
 ## Production setup
 
-1. Verify the sending domain in Resend and choose a sender address on that
-   domain.
-2. Set `EMAIL_PROVIDER=resend` and `EMAIL_FROM` to that verified address.
-3. Set `RESEND_API_KEY` through the deployment secret manager. It is never
-   committed, logged, or returned by an API response.
+1. For Gmail, enable 2-Step Verification, create an app password, and use a
+   dedicated account for invitations.
+2. Set `EMAIL_PROVIDER=gmail`, `GMAIL_SMTP_USER`, `GMAIL_SMTP_APP_PASSWORD`,
+   and `EMAIL_FROM` through the deployment secret manager. Secrets are never
+   committed, logged, or returned by an API response. Resend remains available
+   with `EMAIL_PROVIDER=resend` and `RESEND_API_KEY`.
 4. Set `WEB_PUBLIC_URL` to the canonical HTTPS application URL. Invitation
    links are generated as `${WEB_PUBLIC_URL}/invite/{raw-token}`.
 5. Deploy the API and send a controlled test invitation. Confirm the email,
