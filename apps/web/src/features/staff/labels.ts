@@ -4,7 +4,6 @@ export function staffRoleLabel(role: StaffRole): string {
   return {
     PATIENT: 'Пацієнт',
     ORGANIZATION_ADMIN: 'Адміністратор організації',
-    RECEPTIONIST: 'Реєстратор',
     REHABILITATION_SPECIALIST: 'Фахівець з реабілітації',
     SYSTEM_ADMIN: 'Системний адміністратор',
   }[role];

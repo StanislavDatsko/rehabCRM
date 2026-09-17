@@ -2,7 +2,7 @@
   --brand-plum: #9932cc;
   --brand-violet: #8a2be2;
   --brand-lime: #9acd32;
-  --color-background: #f7f5fb;
+  --color-background: #f3effb;
   --color-surface: #ffffff;
   --color-surface-muted: #f0edf7;
   --color-border: #e2ddec;
@@ -18,7 +18,7 @@
   --radius-lg: 1.25rem;
   --shadow-sm: 0 1px 2px rgb(48 26 72 / 0.05);
   --shadow-md: 0 12px 30px rgb(65 35 94 / 0.08);
-  --shadow-brand: 0 12px 28px rgb(138 43 226 / 0.2);
+  --shadow-brand: 0 16px 38px rgb(77 31 126 / 0.28);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;

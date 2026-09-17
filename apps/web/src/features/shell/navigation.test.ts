@@ -8,7 +8,7 @@ const receptionist: CurrentUserResponse = {
   email: 'receptionist@rehabcrm.local',
   displayName: 'Olena Reception Demo',
   organization: { id: 'org', name: 'Demo' },
-  role: 'RECEPTIONIST',
+  role: 'REHABILITATION_SPECIALIST',
   permissions: [PERMISSIONS.PATIENT_READ_ADMIN, PERMISSIONS.APPOINTMENT_READ],
 };
 

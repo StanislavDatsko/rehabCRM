@@ -20,7 +20,7 @@ function row(overrides: Record<string, unknown> = {}) {
     id: 'membership-1',
     organizationId: 'org-a',
     userId: 'staff-user',
-    role: 'RECEPTIONIST',
+    role: 'REHABILITATION_SPECIALIST',
     status: 'ACTIVE',
     setupStatus: 'ACTIVE',
     identitySyncPending: false,
@@ -80,15 +80,21 @@ function createIdentityMock() {
   };
 }
 
+function createMailerMock() {
+  return { sendInvitation: vi.fn().mockResolvedValue(undefined) };
+}
+
 describe('StaffService', () => {
   let prisma: ReturnType<typeof createPrismaMock>;
   let identities: ReturnType<typeof createIdentityMock>;
+  let mailer: ReturnType<typeof createMailerMock>;
   let service: StaffService;
 
   beforeEach(() => {
     prisma = createPrismaMock();
     identities = createIdentityMock();
-    service = new StaffService(prisma as never, identities);
+    mailer = createMailerMock();
+    service = new StaffService(prisma as never, identities, mailer);
   });
 
   it('conceals a cross-organization membership as 404', async () => {
@@ -105,7 +111,7 @@ describe('StaffService', () => {
 
   it('creates a hashed invitation without provisioning an identity', async () => {
     prisma.staffInvitation.findFirst.mockResolvedValue(null);
-    prisma.staffInvitation.create.mockResolvedValue({ id: 'invite-1', email: 'new@example.com', expiresAt: new Date('2026-01-08'), status: 'PENDING' });
+    prisma.staffInvitation.create.mockResolvedValue({ id: 'invite-1', email: 'new@example.com', firstName: 'New', role: 'REHABILITATION_SPECIALIST', organization: { name: 'Org A' }, expiresAt: new Date('2026-01-08'), status: 'PENDING' });
     prisma.auditEvent.create.mockResolvedValue({ id: 'audit' });
     const result = await service.create(
       principal,
@@ -113,7 +119,7 @@ describe('StaffService', () => {
         email: 'new@example.com',
         firstName: 'New',
         lastName: 'User',
-        role: 'RECEPTIONIST',
+        role: 'REHABILITATION_SPECIALIST',
         professionalTitle: null,
       },
       'request-1',
@@ -148,7 +154,7 @@ describe('StaffService', () => {
       service.changeRole(
         principal,
         'admin-target',
-        { role: 'RECEPTIONIST', version: 1 },
+        { role: 'REHABILITATION_SPECIALIST', version: 1 },
         'request-role',
       ),
     ).rejects.toBeInstanceOf(ConflictException);
@@ -177,7 +183,7 @@ describe('StaffService', () => {
         email: 'new@example.com',
         firstName: 'New',
         lastName: 'User',
-        role: 'RECEPTIONIST',
+        role: 'REHABILITATION_SPECIALIST',
         professionalTitle: null,
       },
       'request-email',
@@ -193,7 +199,7 @@ describe('StaffService', () => {
   it('retains and disables the practitioner when changing away from specialist', async () => {
     prisma.organizationMembership.findFirst
       .mockResolvedValueOnce(row({ role: 'REHABILITATION_SPECIALIST' }))
-      .mockResolvedValueOnce(row({ role: 'RECEPTIONIST', version: 2 }));
+      .mockResolvedValueOnce(row({ role: 'REHABILITATION_SPECIALIST', version: 2 }));
     prisma.organizationMembership.updateMany.mockResolvedValue({ count: 1 });
     prisma.practitioner.updateMany.mockResolvedValue({ count: 1 });
     prisma.auditEvent.create.mockResolvedValue({ id: 'audit' });
@@ -201,7 +207,7 @@ describe('StaffService', () => {
     await service.changeRole(
       principal,
       'membership-1',
-      { role: 'RECEPTIONIST', version: 1 },
+      { role: 'ORGANIZATION_ADMIN', version: 1 },
       'request-4',
     );
 

@@ -68,10 +68,10 @@ export default async function PatientsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="rc-atmosphere -mx-2 flex flex-col gap-4 rounded-3xl p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-serif text-3xl text-text-primary">{t('patientsTitle')}</h1>
-          <p className="mt-1 text-sm text-text-secondary">{t('patientsSubtitle')}</p>
+          <h1 className="font-serif text-3xl">{t('patientsTitle')}</h1>
+          <p className="mt-1 text-sm text-white/75">{t('patientsSubtitle')}</p>
           {list ? (
             <p className="mt-2 text-sm text-text-secondary">
               {t('patientsTotal')}: {list.total}

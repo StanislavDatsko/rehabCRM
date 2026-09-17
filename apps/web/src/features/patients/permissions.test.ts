@@ -12,7 +12,7 @@ const base: CurrentUserResponse = {
   email: 'a@rehabcrm.local',
   displayName: 'Demo',
   organization: { id: 'org', name: 'Demo' },
-  role: 'RECEPTIONIST',
+  role: 'REHABILITATION_SPECIALIST',
   permissions: [],
 };
 

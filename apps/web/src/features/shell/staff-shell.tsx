@@ -7,8 +7,6 @@ import { canSeeNavItem, initials, staffNav } from './navigation';
 
 function roleLabel(role: CurrentUserResponse['role']): string {
   switch (role) {
-    case 'RECEPTIONIST':
-      return t('roleReceptionist');
     case 'REHABILITATION_SPECIALIST':
       return t('roleSpecialist');
     case 'ORGANIZATION_ADMIN':
@@ -25,15 +23,15 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="flex w-72 flex-col border-r border-border bg-surface">
-        <div className="border-b border-border px-6 py-6">
+      <aside className="rc-atmosphere hidden w-72 flex-col border-r border-white/10 text-white md:flex">
+        <div className="border-b border-white/10 px-6 py-6">
           <div className="flex items-center gap-3">
             <div className="rc-gradient-brand flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold text-white shadow-brand">
               R
             </div>
             <div>
-              <p className="font-serif text-xl text-text-primary">{t('productName')}</p>
-              <p className="mt-0.5 text-xs text-text-secondary">{user.organization.name}</p>
+              <p className="font-serif text-xl text-white">{t('productName')}</p>
+              <p className="mt-0.5 text-xs text-white/60">{user.organization.name}</p>
             </div>
           </div>
         </div>
@@ -46,8 +44,8 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
                   aria-disabled={!item.enabled}
                   className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
                     item.enabled
-                      ? 'text-text-primary hover:bg-surface-muted hover:text-info'
-                      : 'cursor-not-allowed text-text-secondary'
+                      ? 'text-white/80 hover:bg-white/10 hover:text-brand-lime'
+                      : 'cursor-not-allowed text-white/40'
                   }`}
                 >
                   {t(item.labelKey)}
@@ -57,7 +55,7 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
             ))}
           </ul>
         </nav>
-        <div className="border-t border-border px-4 py-4">
+        <div className="border-t border-white/10 px-4 py-4">
           <div className="flex items-center gap-3">
             <div
               aria-hidden="true"
@@ -66,8 +64,8 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
               {initials(user.displayName)}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-text-primary">{user.displayName}</p>
-              <p className="truncate text-xs text-text-secondary">{roleLabel(user.role)}</p>
+              <p className="truncate text-sm font-medium text-white">{user.displayName}</p>
+              <p className="truncate text-xs text-white/60">{roleLabel(user.role)}</p>
             </div>
           </div>
           <form action={logoutStaff} className="mt-4">
@@ -77,9 +75,13 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
           </form>
         </div>
       </aside>
-      <div className="flex-1 bg-background">
+      <div className="rc-mobile-shell flex-1 bg-background">
         <header className="flex items-center justify-between border-b border-border bg-surface/90 px-8 py-5 backdrop-blur">
-          <div>
+          <div className="flex items-center gap-4">
+            <div className="rc-gradient-brand flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white md:hidden">R</div>
+            <nav aria-label={t('mainNav')} className="flex max-w-[70vw] gap-2 overflow-x-auto md:hidden">
+              {visibleNav.filter((item) => item.enabled).slice(0, 4).map((item) => <a key={item.id} href={item.href} className="whitespace-nowrap rounded-full bg-surface-muted px-3 py-1.5 text-xs font-medium text-text-primary">{t(item.labelKey)}</a>)}
+            </nav>
             <p className="rc-kicker">Clinical workspace</p>
             <p className="mt-1 text-sm text-text-secondary">{user.organization.name}</p>
           </div>

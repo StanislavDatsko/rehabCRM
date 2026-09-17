@@ -29,13 +29,15 @@ import type {
   UpdateStaffBody,
 } from './staff.schemas';
 import { createHash, randomBytes } from 'node:crypto';
+import { STAFF_MAILER, type StaffMailer } from './staff-mailer';
 
 const staffInclude = {
   user: { include: { practitioners: true } },
 } satisfies Prisma.OrganizationMembershipInclude;
 
 type StaffRow = Prisma.OrganizationMembershipGetPayload<{ include: typeof staffInclude }>;
-export type StaffInvitationResponse = { id: string; status: 'PENDING'; email: string; expiresAt: string; inviteToken?: string };
+export type StaffInvitationResponse = { id: string; status: 'PENDING' | 'DELIVERY_FAILED'; email: string; expiresAt: string; inviteToken?: string };
+export type StaffInvitationListItem = { id: string; email: string; firstName: string; lastName: string; role: StaffRole; status: string; expiresAt: string; createdAt: string };
 
 const STAFF_AUDIT_ACTIONS = [
   'STAFF_CREATED',
@@ -55,6 +57,8 @@ export class StaffService {
     private readonly prisma: PrismaService,
     @Inject(IDENTITY_PROVIDER_ADMIN)
     private readonly identities: IdentityProviderAdminPort,
+    @Inject(STAFF_MAILER)
+    private readonly mailer: StaffMailer,
   ) {}
 
   async list(principal: AuthenticatedPrincipal, query: ListStaffQuery): Promise<StaffListResponse> {
@@ -96,6 +100,11 @@ export class StaffService {
     };
   }
 
+  async listInvitations(principal: AuthenticatedPrincipal): Promise<StaffInvitationListItem[]> {
+    const invitations = await this.prisma.staffInvitation.findMany({ where: { organizationId: principal.organizationId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 100 });
+    return invitations.map((invitation) => ({ id: invitation.id, email: invitation.email, firstName: invitation.firstName, lastName: invitation.lastName, role: invitation.role, status: invitation.status, expiresAt: invitation.expiresAt.toISOString(), createdAt: invitation.createdAt.toISOString() }));
+  }
+
   async getById(principal: AuthenticatedPrincipal, membershipId: string): Promise<StaffResponse> {
     return this.map(await this.getRow(principal.organizationId, membershipId));
   }
@@ -113,11 +122,19 @@ export class StaffService {
       await tx.staffInvitation.updateMany({ where: { organizationId: principal.organizationId, email: normalizedEmail, status: 'PENDING', expiresAt: { lte: new Date() } }, data: { status: 'EXPIRED' } });
       const existing = await tx.staffInvitation.findFirst({ where: { organizationId: principal.organizationId, email: normalizedEmail, status: 'PENDING' } });
       if (existing) throw new ConflictException('A pending staff invitation already exists.');
-      const created = await tx.staffInvitation.create({ data: { organizationId: principal.organizationId, email: normalizedEmail, firstName: body.firstName, lastName: body.lastName, role: body.role, professionalTitle: body.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId } });
+      const created = await tx.staffInvitation.create({ data: { organizationId: principal.organizationId, email: normalizedEmail, firstName: body.firstName, lastName: body.lastName, role: body.role, professionalTitle: body.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId }, include: { organization: { select: { name: true } } } });
       await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: created.id, requestId, metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] } });
       return created;
     });
-    const response: StaffInvitationResponse = { id: invitation.id, status: 'PENDING', email: invitation.email, expiresAt: invitation.expiresAt.toISOString() };
+    let status: StaffInvitationResponse['status'] = 'PENDING';
+    try {
+      await this.mailer.sendInvitation({ to: invitation.email, organizationName: invitation.organization.name, firstName: invitation.firstName, role: invitation.role, token, expiresAt: invitation.expiresAt });
+    } catch (error) {
+      status = 'DELIVERY_FAILED';
+      await this.prisma.staffInvitation.update({ where: { id: invitation.id }, data: { status: 'DELIVERY_FAILED' } });
+      this.logger.error(`Staff invitation delivery failed for ${invitation.id}`, error instanceof Error ? error.stack : undefined);
+    }
+    const response: StaffInvitationResponse = { id: invitation.id, status, email: invitation.email, expiresAt: invitation.expiresAt.toISOString() };
     if (process.env.DEPLOYMENT_ENV !== 'production') response.inviteToken = token;
     return response;
   }
@@ -164,6 +181,26 @@ export class StaffService {
     });
 
     return this.getById(principal, membershipId);
+  }
+
+  async resendInvitation(principal: AuthenticatedPrincipal, membershipId: string, requestId: string): Promise<StaffInvitationResponse> {
+    const current = await this.getRow(principal.organizationId, membershipId);
+    if (current.role === 'SYSTEM_ADMIN') throw new ConflictException({ code: 'STAFF_SYSTEM_ADMIN_INVITATION_IMMUTABLE', message: 'System administrator invitations cannot be resent here.' });
+    const token = randomBytes(32).toString('base64url');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const invitation = await this.prisma.$transaction(async (tx) => {
+      await tx.staffInvitation.updateMany({ where: { organizationId: principal.organizationId, email: current.user.email, status: 'PENDING' }, data: { status: 'REVOKED' } });
+      const created = await tx.staffInvitation.create({ data: { organizationId: principal.organizationId, email: current.user.email, firstName: current.user.firstName ?? current.user.displayName, lastName: current.user.lastName ?? '', role: current.role, professionalTitle: current.user.practitioners[0]?.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId }, include: { organization: { select: { name: true } } } });
+      await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_SETUP_ACTIONS_RESENT', entityType: 'OrganizationMembership', entityId: membershipId, requestId, metadata: { changedFields: ['invitation'] } });
+      return created;
+    });
+    let status: StaffInvitationResponse['status'] = 'PENDING';
+    try { await this.mailer.sendInvitation({ to: invitation.email, organizationName: invitation.organization.name, firstName: invitation.firstName, role: invitation.role, token, expiresAt }); }
+    catch (error) { status = 'DELIVERY_FAILED'; await this.prisma.staffInvitation.update({ where: { id: invitation.id }, data: { status: 'DELIVERY_FAILED' } }); this.logger.error(`Staff invitation delivery failed for ${invitation.id}`, error instanceof Error ? error.stack : undefined); }
+    const response: StaffInvitationResponse = { id: invitation.id, status, email: invitation.email, expiresAt: invitation.expiresAt.toISOString() };
+    if (process.env.DEPLOYMENT_ENV !== 'production') response.inviteToken = token;
+    return response;
   }
 
   async changeRole(

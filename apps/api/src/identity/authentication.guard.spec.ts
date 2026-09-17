@@ -138,8 +138,8 @@ describe('PermissionsGuard', () => {
     expect(guard.canActivate(context as never)).toBe(true);
   });
 
-  it('forbids a receptionist without clinical_note.read', () => {
-    const receptionist = principal('RECEPTIONIST', []);
+  it('forbids a specialist without clinical_note.read', () => {
+    const receptionist = principal('REHABILITATION_SPECIALIST', []);
     const { context, reflector } = httpContext({
       required: [PERMISSIONS.CLINICAL_NOTE_READ],
       principal: receptionist,

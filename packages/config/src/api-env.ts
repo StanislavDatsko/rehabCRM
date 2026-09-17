@@ -13,6 +13,9 @@ export const apiEnvSchema = z
     API_PORT: z.coerce.number().int().positive().default(3001),
     API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
+    EMAIL_PROVIDER: z.enum(['console', 'resend']).default('console'),
+    EMAIL_FROM: z.string().min(1).optional(),
+    RESEND_API_KEY: z.string().min(1).optional(),
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -53,6 +56,9 @@ export const apiEnvSchema = z
       context.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
     if (env.NODE_ENV !== 'production')
       issue('NODE_ENV', 'staging/production deployments require NODE_ENV=production');
+    if (env.EMAIL_PROVIDER !== 'resend') issue('EMAIL_PROVIDER', 'production requires the Resend email provider');
+    if (env.EMAIL_PROVIDER === 'resend' && !env.EMAIL_FROM) issue('EMAIL_FROM', 'is required for Resend');
+    if (env.EMAIL_PROVIDER === 'resend' && !env.RESEND_API_KEY) issue('RESEND_API_KEY', 'is required for Resend');
     for (const [name, url] of [
       ['API_PUBLIC_URL', env.API_PUBLIC_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],

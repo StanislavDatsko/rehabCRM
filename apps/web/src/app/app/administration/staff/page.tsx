@@ -1,12 +1,12 @@
 import type { CurrentUserResponse, StaffRole } from '@repo/contracts';
-import { listStaff } from '../../../../features/staff/api/staff-api';
+import { listStaff, listStaffInvitations } from '../../../../features/staff/api/staff-api';
 import { staffErrorMessage, staffRoleLabel } from '../../../../features/staff/labels';
 import { canCreateStaff, canReadStaff } from '../../../../features/staff/permissions';
 import { ServerApiError, serverApiFetch } from '../../../../lib/api/server-api-client';
 
 export const dynamic = 'force-dynamic';
 
-const roles: StaffRole[] = ['ORGANIZATION_ADMIN', 'RECEPTIONIST', 'REHABILITATION_SPECIALIST'];
+const roles: StaffRole[] = ['ORGANIZATION_ADMIN', 'REHABILITATION_SPECIALIST'];
 
 export default async function StaffPage({
   searchParams,
@@ -23,16 +23,16 @@ export default async function StaffPage({
     ? (one('status') as 'ACTIVE' | 'DISABLED')
     : undefined;
   try {
-    const list = await listStaff({
+    const [list, invitations] = await Promise.all([listStaff({
       page,
       pageSize: 25,
       search: one('search') || undefined,
       role,
       status,
-    });
+    }), listStaffInvitations()]);
     return (
       <div className="space-y-6">
-        <div className="rc-gradient-brand flex flex-col gap-4 rounded-[1.25rem] p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
+        <div className="rc-atmosphere flex flex-col gap-4 rounded-3xl p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="rc-kicker text-white/75">Організація</p>
             <h1 className="mt-1 font-serif text-3xl">Персонал</h1>
@@ -143,6 +143,7 @@ export default async function StaffPage({
             </table>
           </div>
         )}
+        {invitations.length > 0 ? <section className="rc-card p-5"><div className="flex items-baseline justify-between"><div><p className="rc-kicker">Onboarding</p><h2 className="mt-1 font-serif text-2xl">Запрошення</h2></div><span className="text-sm text-text-secondary">{invitations.length}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{invitations.map((invitation) => <div key={invitation.id} className="rounded-xl border border-border bg-surface-muted p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-text-primary">{invitation.firstName} {invitation.lastName}</p><p className="text-sm text-text-secondary">{invitation.email}</p></div><span className="rounded-full bg-brand-lime/20 px-2.5 py-1 text-xs font-semibold text-success">{invitation.status}</span></div><p className="mt-3 text-xs text-text-secondary">Дійсне до {new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(new Date(invitation.expiresAt))}</p></div>)}</div></section> : null}
         {list.totalPages > 1 ? (
           <nav aria-label="Сторінки персоналу" className="flex gap-3 text-sm">
             <a className="underline" href={`?page=${Math.max(1, page - 1)}`}>

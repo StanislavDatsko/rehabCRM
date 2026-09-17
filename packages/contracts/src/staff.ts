@@ -2,7 +2,6 @@ import type { StaffRole } from './permissions';
 
 export const ASSIGNABLE_STAFF_ROLES = [
   'ORGANIZATION_ADMIN',
-  'RECEPTIONIST',
   'REHABILITATION_SPECIALIST',
 ] as const;
 

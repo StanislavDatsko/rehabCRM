@@ -27,6 +27,7 @@ enum StaffInvitationStatus {
   ACCEPTED
   EXPIRED
   REVOKED
+  DELIVERY_FAILED
 }
 
 enum PractitionerStatus {
@@ -37,7 +38,6 @@ enum PractitionerStatus {
 enum StaffRole {
   SYSTEM_ADMIN
   ORGANIZATION_ADMIN
-  RECEPTIONIST
   REHABILITATION_SPECIALIST
   PATIENT
 }

@@ -35,7 +35,7 @@ import {
   type StaffVersionBody,
   type UpdateStaffBody,
 } from './staff.schemas';
-import { StaffService, type StaffInvitationResponse } from './staff.service';
+import { StaffService, type StaffInvitationResponse, type StaffInvitationListItem } from './staff.service';
 
 @ApiTags('staff')
 @ApiBearerAuth()
@@ -63,6 +63,13 @@ export class StaffController {
     @Headers('x-request-id') requestId?: string,
   ): Promise<StaffInvitationResponse> {
     return this.staff.create(principal, body, requestId ?? 'unknown');
+  }
+
+  @Get('invitations')
+  @RequirePermissions(PERMISSIONS.STAFF_READ)
+  @ApiOperation({ summary: 'List organization staff invitations' })
+  listInvitations(@CurrentPrincipal() principal: AuthenticatedPrincipal): Promise<StaffInvitationListItem[]> {
+    return this.staff.listInvitations(principal);
   }
 
   @Get(':id')
@@ -149,6 +156,18 @@ export class StaffController {
     @Headers('x-request-id') requestId?: string,
   ): Promise<StaffResponse> {
     return this.staff.resendSetupActions(principal, id, requestId ?? 'unknown');
+  }
+
+  @Post(':id/invitation/resend')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @RequirePermissions(PERMISSIONS.STAFF_UPDATE)
+  @ApiOperation({ summary: 'Resend a staff invitation email' })
+  resendInvitation(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<StaffInvitationResponse> {
+    return this.staff.resendInvitation(principal, id, requestId ?? 'unknown');
   }
 
   @Get(':id/history')

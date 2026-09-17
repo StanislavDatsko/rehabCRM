@@ -9,7 +9,7 @@ describe('patient portal navigation boundary', () => {
 
   it('routes patients separately while preserving staff routing', () => {
     expect(routeForRole('PATIENT')).toBe('/patient');
-    for (const role of ['REHABILITATION_SPECIALIST', 'RECEPTIONIST', 'ORGANIZATION_ADMIN', 'SYSTEM_ADMIN']) {
+    for (const role of ['REHABILITATION_SPECIALIST', 'ORGANIZATION_ADMIN', 'SYSTEM_ADMIN']) {
       expect(routeForRole(role)).toBe('/app');
     }
   });

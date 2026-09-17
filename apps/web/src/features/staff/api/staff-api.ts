@@ -24,6 +24,7 @@ export type CreateStaffInput = {
   role: AssignableStaffRole;
   professionalTitle?: string | null;
 };
+export type StaffInvitationListItem = { id: string; email: string; firstName: string; lastName: string; role: StaffRole; status: string; expiresAt: string; createdAt: string };
 
 function jsonInit(method: string, body?: unknown): RequestInit {
   return {
@@ -44,6 +45,7 @@ export async function listStaff(query: StaffListQuery): Promise<StaffListRespons
   if (query.status) params.set('status', query.status);
   return serverApiFetch<StaffListResponse>(`/api/v1/staff?${params.toString()}`);
 }
+export const listStaffInvitations = () => serverApiFetch<StaffInvitationListItem[]>('/api/v1/staff/invitations');
 
 export const getStaff = (id: string) => serverApiFetch<StaffResponse>(`/api/v1/staff/${id}`);
 export const getStaffHistory = (id: string) =>
@@ -66,4 +68,4 @@ export const enableStaff = (id: string, version: number) =>
 export const revokeStaffSessions = (id: string) =>
   serverApiFetch<void>(`/api/v1/staff/${id}/sessions/revoke`, jsonInit('POST'));
 export const resendStaffSetup = (id: string) =>
-  serverApiFetch<StaffResponse>(`/api/v1/staff/${id}/setup-actions/resend`, jsonInit('POST'));
+  serverApiFetch<{ id: string; status: string }>(`/api/v1/staff/${id}/invitation/resend`, jsonInit('POST'));

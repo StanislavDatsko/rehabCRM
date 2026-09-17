@@ -2,7 +2,6 @@ import { expect, type Page } from '@playwright/test';
 
 const passwordByUser: Record<string, string | undefined> = {
   admin: process.env.E2E_ADMIN_PASSWORD ?? 'DevOnly!OrgAdmin1',
-  receptionist: process.env.E2E_RECEPTIONIST_PASSWORD ?? 'DevOnly!Receptionist1',
   specialist: process.env.E2E_SPECIALIST_PASSWORD ?? 'DevOnly!Specialist1',
   'other-specialist': process.env.E2E_OTHER_SPECIALIST_PASSWORD ?? 'DevOnly!OtherSpec1',
   patient: process.env.E2E_PATIENT_PASSWORD ?? 'DevOnly!Patient1',

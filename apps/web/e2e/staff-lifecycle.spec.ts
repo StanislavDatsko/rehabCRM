@@ -12,7 +12,7 @@ test('organization admin provisions, changes, revokes, disables, and re-enables 
   await page.getByLabel('Ім’я').fill('Phase');
   await page.getByLabel('Прізвище').fill('Nine');
   await page.getByLabel('Email').fill(uniqueEmail);
-  await page.getByLabel('Роль').selectOption('RECEPTIONIST');
+  await page.getByLabel('Роль').selectOption('REHABILITATION_SPECIALIST');
   await page.getByRole('button', { name: 'Створити працівника' }).click();
   await expect(page).toHaveURL(/\/app\/administration\/staff\/[0-9a-f-]+/);
   await expect(page.getByText(uniqueEmail)).toBeVisible();

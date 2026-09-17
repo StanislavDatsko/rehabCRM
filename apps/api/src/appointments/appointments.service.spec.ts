@@ -11,7 +11,7 @@ const principal: AuthenticatedPrincipal = {
   userId: 'user-a',
   organizationId: 'org-a',
   membershipId: 'mem-a',
-  role: 'RECEPTIONIST',
+  role: 'REHABILITATION_SPECIALIST',
   permissions: [],
   email: 'a@example.com',
   displayName: 'Alice',
