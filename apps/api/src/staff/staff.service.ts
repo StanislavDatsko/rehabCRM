@@ -173,6 +173,7 @@ export class StaffService {
     requestId: string,
   ): Promise<StaffResponse> {
     const current = await this.getRow(principal.organizationId, membershipId);
+    if (current.role === 'SYSTEM_ADMIN') throw new ConflictException({ code: 'STAFF_SYSTEM_ADMIN_ROLE_IMMUTABLE', message: 'System administrator roles are immutable here.' });
     if (current.role === body.role) return this.map(current);
     await this.prisma.$transaction(async (tx) => {
       if (current.role === 'ORGANIZATION_ADMIN' && body.role !== 'ORGANIZATION_ADMIN') {
@@ -219,6 +220,7 @@ export class StaffService {
     requestId: string,
   ): Promise<StaffResponse> {
     const current = await this.getRow(principal.organizationId, membershipId);
+    if (current.role === 'SYSTEM_ADMIN') throw new ConflictException({ code: 'STAFF_SYSTEM_ADMIN_ROLE_IMMUTABLE', message: 'System administrator access cannot be disabled here.' });
     if (current.userId === principal.userId) {
       throw new ConflictException({
         code: API_ERROR_CODES.STAFF_SELF_DISABLE_FORBIDDEN,

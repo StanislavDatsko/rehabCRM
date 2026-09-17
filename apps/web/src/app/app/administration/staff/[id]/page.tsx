@@ -2,7 +2,7 @@ import type { CurrentUserResponse } from '@repo/contracts';
 import { getStaff, getStaffHistory } from '../../../../../features/staff/api/staff-api';
 import { StaffProfileActions } from '../../../../../features/staff/components/staff-profile-actions';
 import { staffErrorMessage, staffRoleLabel } from '../../../../../features/staff/labels';
-import { canReadStaff } from '../../../../../features/staff/permissions';
+import { canReadStaff, canUpdateStaff, canChangeStaffRole, canDisableStaff, canEnableStaff, canRevokeStaffSessions } from '../../../../../features/staff/permissions';
 import { ServerApiError, serverApiFetch } from '../../../../../lib/api/server-api-client';
 
 export const dynamic = 'force-dynamic';
@@ -55,7 +55,7 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
             )}
           />
         </dl>
-        <StaffProfileActions staff={staff} />
+        <StaffProfileActions staff={staff} capabilities={{ canUpdate: canUpdateStaff(me), canChangeRole: canChangeStaffRole(me), canDisable: canDisableStaff(me), canEnable: canEnableStaff(me), canRevokeSessions: canRevokeStaffSessions(me), canResendSetup: canUpdateStaff(me) }} />
         <section className="rc-card p-5">
           <h2 className="font-serif text-lg">Історія доступу</h2>
           {history.length === 0 ? (

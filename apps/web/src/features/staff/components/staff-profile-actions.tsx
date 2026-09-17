@@ -37,7 +37,7 @@ function IdentityFields({ staff }: { staff: StaffResponse }) {
   );
 }
 
-export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
+export function StaffProfileActions({ staff, capabilities }: { staff: StaffResponse; capabilities: { canUpdate: boolean; canChangeRole: boolean; canDisable: boolean; canEnable: boolean; canRevokeSessions: boolean; canResendSetup: boolean } }) {
   const [profileState, profileAction, profilePending] = useActionState(updateStaffAction, initial);
   const [roleState, roleAction, rolePending] = useActionState(changeStaffRoleAction, initial);
   const lifecycleAction = staff.status === 'ACTIVE' ? disableStaffAction : enableStaffAction;
@@ -53,7 +53,7 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-2">
-      <form
+      {capabilities.canUpdate ? <form
         action={profileAction}
         className="rc-card rc-card-elevated space-y-4 p-5"
       >
@@ -77,10 +77,10 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
         <Button type="submit" disabled={profilePending}>
           Зберегти профіль
         </Button>
-      </form>
+      </form> : <section className="rc-card space-y-4 p-5"><h2 className="font-serif text-lg">Профіль</h2><p>{staff.firstName} {staff.lastName}</p><p className="text-sm text-text-secondary">Профіль доступний лише для читання.</p></section>}
 
       <div className="space-y-6">
-        <form
+        {capabilities.canChangeRole && staff.role !== 'SYSTEM_ADMIN' ? <form
           action={roleAction}
           className="rc-card space-y-3 p-5"
         >
@@ -105,7 +105,7 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
           <Button type="submit" disabled={rolePending}>
             Змінити роль
           </Button>
-        </form>
+        </form> : <section className="rc-card space-y-3 p-5"><h2 className="font-serif text-lg">Роль і клінічний профіль</h2><p>{staffRoleLabel(staff.role)}</p></section>}
 
         <section className="rc-card space-y-4 p-5">
           <h2 className="font-serif text-lg">Доступ і сеанси</h2>
@@ -122,24 +122,24 @@ export function StaffProfileActions({ staff }: { staff: StaffResponse }) {
           <Feedback state={sessionState} />
           <Feedback state={setupState} />
           <div className="flex flex-wrap gap-3">
-            <form action={lifecycleFormAction}>
+            {(staff.status === 'ACTIVE' ? capabilities.canDisable : capabilities.canEnable) ? <form action={lifecycleFormAction}>
               <IdentityFields staff={staff} />
               <Button type="submit" variant="secondary" disabled={lifecyclePending}>
                 {staff.status === 'ACTIVE' ? 'Вимкнути доступ' : 'Увімкнути доступ'}
               </Button>
-            </form>
-            <form action={sessionAction}>
+            </form> : null}
+            {capabilities.canRevokeSessions ? <form action={sessionAction}>
               <input type="hidden" name="staffId" value={staff.id} />
               <Button type="submit" variant="secondary" disabled={sessionPending}>
                 Завершити всі сеанси
               </Button>
-            </form>
-            <form action={setupAction}>
+            </form> : null}
+            {capabilities.canResendSetup ? <form action={setupAction}>
               <input type="hidden" name="staffId" value={staff.id} />
               <Button type="submit" variant="secondary" disabled={setupPending}>
                 Повторити налаштування
               </Button>
-            </form>
+            </form> : null}
           </div>
         </section>
       </div>
