@@ -10,6 +10,7 @@ async function main() {
     where: { identityProvider: 'keycloak' },
     select: { id: true, email: true, identityProviderSubject: true },
   });
+  const alreadyMigrated = await prisma.user.count({ where: { identityProvider: 'neon-auth' } });
   const tableRows = await prisma.$queryRaw<{ table_name: string | null }[]>`
     SELECT COALESCE(to_regclass('neon_auth."user"')::text, to_regclass('neon_auth.users_sync')::text) AS table_name
   `;
@@ -21,11 +22,10 @@ async function main() {
     const key = neonUser.email.trim().toLowerCase();
     byEmail.set(key, [...(byEmail.get(key) ?? []), neonUser]);
   }
-  const summary: Summary = { matched: 0, unmatched: 0, ambiguous: 0, alreadyMigrated: 0, updated: 0 };
+  const summary: Summary = { matched: 0, unmatched: 0, ambiguous: 0, alreadyMigrated, updated: 0 };
   const changes: { id: string; subject: string }[] = [];
 
   for (const user of legacy) {
-    if (user.identityProvider === 'neon-auth') { summary.alreadyMigrated++; continue; }
     const matches = byEmail.get(user.email.trim().toLowerCase()) ?? [];
     if (!matches.length) { summary.unmatched++; continue; }
     if (matches.length > 1) { summary.ambiguous++; continue; }

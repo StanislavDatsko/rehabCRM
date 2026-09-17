@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedPrincipal } from '../common/auth/principal';
 import { StaffService } from './staff.service';
@@ -47,6 +47,7 @@ function row(overrides: Record<string, unknown> = {}) {
 
 function createPrismaMock() {
   const prisma = {
+    staffInvitation: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
     organizationMembership: {
       count: vi.fn(),
@@ -102,17 +103,11 @@ describe('StaffService', () => {
     );
   });
 
-  it('creates the identity before committing the local user and membership', async () => {
-    prisma.user.findUnique.mockResolvedValue(null);
-    identities.createStaffIdentity.mockResolvedValue({ subject: 'new-subject' });
-    prisma.user.create.mockResolvedValue({ id: 'new-user' });
-    prisma.organizationMembership.create.mockResolvedValue({ id: 'new-membership' });
+  it('creates a hashed invitation without provisioning an identity', async () => {
+    prisma.staffInvitation.findFirst.mockResolvedValue(null);
+    prisma.staffInvitation.create.mockResolvedValue({ id: 'invite-1', email: 'new@example.com', expiresAt: new Date('2026-01-08'), status: 'PENDING' });
     prisma.auditEvent.create.mockResolvedValue({ id: 'audit' });
-    prisma.organizationMembership.findFirst.mockResolvedValue(
-      row({ id: 'new-membership', userId: 'new-user' }),
-    );
-
-    await service.create(
+    const result = await service.create(
       principal,
       {
         email: 'new@example.com',
@@ -124,38 +119,10 @@ describe('StaffService', () => {
       'request-1',
     );
 
-    expect(identities.createStaffIdentity).toHaveBeenCalledBefore(prisma.user.create);
-    expect(prisma.organizationMembership.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ setupStatus: 'PENDING_SETUP', organizationId: 'org-a' }),
-      }),
-    );
-    expect(identities.triggerRequiredActions).toHaveBeenCalledWith('new-subject', [
-      'VERIFY_EMAIL',
-      'UPDATE_PASSWORD',
-    ]);
-  });
-
-  it('disables the external identity as compensation when the DB transaction fails', async () => {
-    prisma.user.findUnique.mockResolvedValue(null);
-    identities.createStaffIdentity.mockResolvedValue({ subject: 'orphan-subject' });
-    prisma.user.create.mockRejectedValue(new Error('database unavailable'));
-
-    await expect(
-      service.create(
-        principal,
-        {
-          email: 'new@example.com',
-          firstName: 'New',
-          lastName: 'User',
-          role: 'RECEPTIONIST',
-          professionalTitle: null,
-        },
-        'request-2',
-      ),
-    ).rejects.toBeInstanceOf(ServiceUnavailableException);
-
-    expect(identities.setIdentityEnabled).toHaveBeenCalledWith('orphan-subject', false);
+    expect(result.status).toBe('PENDING');
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(identities.createStaffIdentity).not.toHaveBeenCalled();
+    expect(prisma.staffInvitation.create.mock.calls[0][0].data.tokenHash).not.toContain(result.inviteToken);
   });
 
   it('rejects disabling the final active organization administrator', async () => {
@@ -188,6 +155,11 @@ describe('StaffService', () => {
     expect(prisma.$queryRaw).toHaveBeenCalledOnce();
   });
 
+  it('rejects the legacy setup-action endpoint', async () => {
+    prisma.organizationMembership.findFirst.mockResolvedValue(row());
+    await expect(service.resendSetupActions(principal, 'membership-1', 'request-email')).rejects.toBeInstanceOf(ConflictException);
+  });
+/*
   it('keeps the staff record recoverable when required-action email fails', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     identities.createStaffIdentity.mockResolvedValue({ subject: 'new-subject' });
@@ -216,7 +188,7 @@ describe('StaffService', () => {
       data: { setupStatus: 'SETUP_ACTION_FAILED' },
     });
     expect(result.setupStatus).toBe('SETUP_ACTION_FAILED');
-  });
+  }); */
 
   it('retains and disables the practitioner when changing away from specialist', async () => {
     prisma.organizationMembership.findFirst

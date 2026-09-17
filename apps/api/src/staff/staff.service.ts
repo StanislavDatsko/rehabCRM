@@ -105,13 +105,18 @@ export class StaffService {
     body: CreateStaffBody,
     requestId: string,
   ): Promise<StaffInvitationResponse> {
-    const existing = await this.prisma.staffInvitation.findFirst({ where: { organizationId: principal.organizationId, email: body.email, status: 'PENDING' } });
-    if (existing) throw new ConflictException('A pending staff invitation already exists.');
+    const normalizedEmail = body.email.trim().toLowerCase();
     const token = randomBytes(32).toString('base64url');
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const invitation = await this.prisma.staffInvitation.create({ data: { organizationId: principal.organizationId, email: body.email, firstName: body.firstName, lastName: body.lastName, role: body.role, professionalTitle: body.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId } });
-    await writeAuditEvent(this.prisma, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: invitation.id, requestId, metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] } });
+    const invitation = await this.prisma.$transaction(async (tx) => {
+      await tx.staffInvitation.updateMany({ where: { organizationId: principal.organizationId, email: normalizedEmail, status: 'PENDING', expiresAt: { lte: new Date() } }, data: { status: 'EXPIRED' } });
+      const existing = await tx.staffInvitation.findFirst({ where: { organizationId: principal.organizationId, email: normalizedEmail, status: 'PENDING' } });
+      if (existing) throw new ConflictException('A pending staff invitation already exists.');
+      const created = await tx.staffInvitation.create({ data: { organizationId: principal.organizationId, email: normalizedEmail, firstName: body.firstName, lastName: body.lastName, role: body.role, professionalTitle: body.professionalTitle ?? null, tokenHash, expiresAt, createdByUserId: principal.userId } });
+      await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: created.id, requestId, metadata: { changedFields: ['email', 'firstName', 'lastName', 'role'] } });
+      return created;
+    });
     return { id: invitation.id, status: 'PENDING', email: invitation.email, expiresAt: invitation.expiresAt.toISOString(), inviteToken: process.env.NODE_ENV === 'production' ? '' : token };
   }
 

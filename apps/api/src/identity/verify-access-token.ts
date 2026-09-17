@@ -15,5 +15,5 @@ export async function verifyAccessToken(
   if (typeof payload.sub !== 'string' || payload.sub.length === 0) {
     throw new Error('Token subject is missing');
   }
-  return { subject: payload.sub };
+  return { subject: payload.sub, ...(typeof payload.email === 'string' ? { email: payload.email } : {}) };
 }

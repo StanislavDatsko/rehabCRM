@@ -1,5 +1,6 @@
 export type VerifiedAccessToken = {
   subject: string;
+  email?: string;
 };
 
 export const TOKEN_VERIFIER = Symbol('TOKEN_VERIFIER');

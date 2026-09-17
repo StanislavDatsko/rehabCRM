@@ -23,3 +23,4 @@ CREATE TABLE "staff_invitations" (
 );
 CREATE INDEX "staff_invitations_organizationId_status_idx" ON "staff_invitations"("organizationId", "status");
 CREATE INDEX "staff_invitations_email_status_idx" ON "staff_invitations"("email", "status");
+CREATE UNIQUE INDEX "staff_invitations_pending_org_email_key" ON "staff_invitations"("organizationId", lower(trim("email"))) WHERE "status" = 'PENDING';
