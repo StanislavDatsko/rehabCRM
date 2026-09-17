@@ -68,14 +68,15 @@ export async function createStaffAction(
   if (!body.email || !body.firstName || !body.lastName || !body.role) {
     return { error: staffErrorMessage('VALIDATION_FAILED'), success: null };
   }
-  let createdId: string;
+  let delivery = '';
   try {
-    createdId = (await createStaff({ ...body, role: body.role })).id;
+    const invitation = await createStaff({ ...body, role: body.role });
+    delivery = invitation.status === 'DELIVERY_FAILED' ? '&delivery=failed' : '';
   } catch (error) {
     return apiError(error);
   }
   revalidatePath('/app/administration/staff');
-  redirect(`/app/administration/staff/${createdId}?created=1`);
+  redirect(`/app/administration/staff?created=1${delivery}`);
 }
 
 export async function updateStaffAction(

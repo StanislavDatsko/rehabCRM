@@ -25,6 +25,7 @@ export type CreateStaffInput = {
   professionalTitle?: string | null;
 };
 export type StaffInvitationListItem = { id: string; email: string; firstName: string; lastName: string; role: StaffRole; status: string; expiresAt: string; createdAt: string };
+export type StaffInvitationResponse = { id: string; status: 'PENDING' | 'DELIVERY_FAILED'; email: string; expiresAt: string; inviteToken?: string };
 
 function jsonInit(method: string, body?: unknown): RequestInit {
   return {
@@ -51,7 +52,7 @@ export const getStaff = (id: string) => serverApiFetch<StaffResponse>(`/api/v1/s
 export const getStaffHistory = (id: string) =>
   serverApiFetch<StaffHistoryItem[]>(`/api/v1/staff/${id}/history`);
 export const createStaff = (body: CreateStaffInput) =>
-  serverApiFetch<StaffResponse>('/api/v1/staff', jsonInit('POST', body));
+  serverApiFetch<StaffInvitationResponse>('/api/v1/staff', jsonInit('POST', body));
 export const updateStaff = (
   id: string,
   body: { firstName: string; lastName: string; professionalTitle: string | null; version: number },

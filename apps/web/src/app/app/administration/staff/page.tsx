@@ -34,6 +34,7 @@ export default async function StaffPage({
   const status = ['ACTIVE', 'DISABLED'].includes(one('status'))
     ? (one('status') as 'ACTIVE' | 'DISABLED')
     : undefined;
+  const createdNotice = one('created') === '1' ? (one('delivery') === 'failed' ? 'Працівника створено, але email-запрошення не доставлено. Перевірте налаштування пошти.' : 'Запрошення працівнику створено та надіслано.') : null;
   try {
     const [list, invitations] = await Promise.all([listStaff({
       page,
@@ -44,6 +45,7 @@ export default async function StaffPage({
     }), listStaffInvitations()]);
     return (
       <div className="space-y-6">
+        {createdNotice ? <p role="status" className="rounded-xl border border-brand-lime/40 bg-brand-lime/10 p-4 text-sm text-text-primary">{createdNotice}</p> : null}
         <div className="rc-atmosphere flex flex-col gap-4 rounded-3xl p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="rc-kicker text-white/75">Організація</p>
