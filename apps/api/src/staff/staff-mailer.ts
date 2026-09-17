@@ -1,5 +1,6 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 export const STAFF_MAILER = Symbol('STAFF_MAILER');
 
@@ -40,12 +41,17 @@ export class ConfiguredStaffMailer implements StaffMailer {
       if (!user || !password || !process.env.EMAIL_FROM) {
         throw new ServiceUnavailableException('Gmail SMTP provider is not configured.');
       }
-      const transporter = nodemailer.createTransport({
+      const transportOptions: SMTPTransport.Options & { family: 4 } = {
         host: 'smtp.gmail.com',
         port: 465,
         secure: true,
+        family: 4,
         auth: { user, pass: password },
-      });
+        connectionTimeout: 15_000,
+        greetingTimeout: 15_000,
+        socketTimeout: 30_000,
+      };
+      const transporter = nodemailer.createTransport(transportOptions);
       await transporter.sendMail({ from: process.env.EMAIL_FROM, to: input.to, subject, text });
       return;
     }
