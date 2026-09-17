@@ -33,8 +33,8 @@ export class InviteController {
     const invite = await this.prisma.staffInvitation.findUnique({ where: { tokenHash: this.hash(token) }, include: { organization: { select: { name: true } } } });
     if (!invite) throw new NotFoundException('Invalid invitation.');
     if (invite.status !== 'PENDING' || invite.expiresAt <= new Date()) {
-      if (invite.status === 'PENDING') await this.prisma.staffInvitation.update({ where: { id: invite.id }, data: { status: 'EXPIRED' } });
-      throw new ConflictException('This invitation is no longer valid.');
+      if (invite.status === 'PENDING') { await this.prisma.staffInvitation.update({ where: { id: invite.id }, data: { status: 'EXPIRED' } }); return { status: 'EXPIRED' as const, email: invite.email, organizationName: invite.organization.name, expiresAt: invite.expiresAt.toISOString() }; }
+      return { status: invite.status, email: invite.email, organizationName: invite.organization.name, expiresAt: invite.expiresAt.toISOString() };
     }
     return { email: invite.email, firstName: invite.firstName, lastName: invite.lastName, organizationName: invite.organization.name, role: invite.role, expiresAt: invite.expiresAt.toISOString(), status: invite.status };
   }

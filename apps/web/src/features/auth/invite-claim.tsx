@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { auth } from '../../lib/auth/client';
 
 type Invitation = {
+  status?: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   organizationName: string;
-  role: string;
+  role?: string;
   expiresAt: string;
 };
 
