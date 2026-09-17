@@ -35,7 +35,7 @@ OrganizationMembership
   id
   userId
   organizationId
-  role                      // v1: SYSTEM_ADMIN | ORGANIZATION_ADMIN | RECEPTIONIST | REHABILITATION_SPECIALIST
+  role                      // v1: SYSTEM_ADMIN | ORGANIZATION_ADMIN | REHABILITATION_SPECIALIST
   createdAt, updatedAt
 
 Practitioner

@@ -26,7 +26,7 @@ const body = JSON.stringify({
 export default function () {
   const response = http.post(`${__ENV.API_BASE_URL}/api/v1/appointments`, body, {
     headers: {
-      Authorization: `Bearer ${__ENV.RECEPTIONIST_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${__ENV.ADMIN_ACCESS_TOKEN}`,
       'content-type': 'application/json',
       'x-request-id': `k6-overlap-${__VU}`,
     },

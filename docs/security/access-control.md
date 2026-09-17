@@ -16,9 +16,8 @@ Authorization is enforced in **`apps/api`**. Frontend checks are UX only.
 
 | Role | Intent |
 | --- | --- |
-| `SYSTEM_ADMIN` | Platform operations; not a substitute for clinical access. Patient PHI still requires an org-scoped grant (see open questions). |
-| `ORGANIZATION_ADMIN` | Staff, locations, org settings, user disable; not automatic full-chart access. |
-| `RECEPTIONIST` | Registration, contact, calendar, appointment workflow. |
+| `SYSTEM_ADMIN` | Platform operations plus organization-scoped clinical and administration permissions. |
+| `ORGANIZATION_ADMIN` | Staff, locations, org settings, user disable and clinical permissions. |
 | `REHABILITATION_SPECIALIST` | Primary clinical user: plans, notes, assessments, anatomy annotations. |
 
 Future roles (`DOCTOR`, `PHYSICAL_THERAPIST`, `OCCUPATIONAL_THERAPIST`, `AUDITOR`) are **not** implemented until a workflow needs them. Prefer new **permissions** over new roles.

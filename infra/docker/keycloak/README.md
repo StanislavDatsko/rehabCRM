@@ -29,7 +29,6 @@ Development staff (fictional, **never production**):
 
 | Username | Email | Password | RehabCRM role |
 | --- | --- | --- | --- |
-| receptionist | receptionist@rehabcrm.local | DevOnly!Receptionist1 | RECEPTIONIST |
 | admin | admin@rehabcrm.local | DevOnly!OrgAdmin1 | ORGANIZATION_ADMIN |
 | specialist | specialist@rehabcrm.local | DevOnly!Specialist1 | REHABILITATION_SPECIALIST |
 | disabled-user | disabled-user@rehabcrm.local | DevOnly!DisabledUser1 | User DISABLED |

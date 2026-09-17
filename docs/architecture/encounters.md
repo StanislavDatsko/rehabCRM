@@ -106,11 +106,10 @@ Org-scoped lookup: cross-org UUID → **404** (`ENCOUNTER_NOT_FOUND`).
 | Role | Start | Complete | Read |
 | --- | --- | --- | --- |
 | `REHABILITATION_SPECIALIST` | Yes | Yes | Yes |
-| `ORGANIZATION_ADMIN` | No | No | Yes |
-| `RECEPTIONIST` | No | No | No |
-| `SYSTEM_ADMIN` | No | No | No |
+| `ORGANIZATION_ADMIN` | Yes | Yes | Yes |
+| `SYSTEM_ADMIN` | Yes | Yes | Yes |
 
-Org admin may **read** encounters for oversight but does not conduct visits in Phase 4.
+Administrators receive the same clinical permissions through role composition; domain-specific practitioner identity remains separate.
 
 ## 8. Audit
 
