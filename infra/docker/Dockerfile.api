@@ -12,7 +12,10 @@ COPY packages packages
 RUN pnpm install --filter @rehabcrm/api... --frozen-lockfile
 COPY . .
 RUN pnpm --filter @rehabcrm/api... build
-RUN pnpm --filter @rehabcrm/api deploy --prod /prod/api
+RUN pnpm --filter @rehabcrm/api deploy --prod /prod/api \
+  && if [ ! -f /prod/api/prisma/schema.prisma ]; then cp -R /app/apps/api/prisma /prod/api/prisma; fi \
+  && cd /prod/api \
+  && ./node_modules/.bin/prisma generate --schema=./prisma/schema.prisma
 
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app

@@ -30,9 +30,9 @@ import type {
 } from './staff.schemas';
 import { createHash, randomBytes } from 'node:crypto';
 
-const staffInclude = Prisma.validator<Prisma.OrganizationMembershipInclude>()({
+const staffInclude = {
   user: { include: { practitioners: true } },
-});
+} satisfies Prisma.OrganizationMembershipInclude;
 
 type StaffRow = Prisma.OrganizationMembershipGetPayload<{ include: typeof staffInclude }>;
 export type StaffInvitationResponse = { id: string; status: 'PENDING'; email: string; expiresAt: string; inviteToken?: string };
