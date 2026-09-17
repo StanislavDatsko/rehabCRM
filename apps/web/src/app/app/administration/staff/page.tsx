@@ -8,6 +8,18 @@ export const dynamic = 'force-dynamic';
 
 const roles: StaffRole[] = ['ORGANIZATION_ADMIN', 'REHABILITATION_SPECIALIST'];
 
+function invitationStatus(status: string) {
+  const labels: Record<string, string> = { PENDING: 'Очікує прийняття', ACCEPTED: 'Прийнято', EXPIRED: 'Прострочене', DELIVERY_FAILED: 'Не доставлено', REVOKED: 'Відкликане' };
+  return labels[status] ?? status;
+}
+
+function invitationStatusClass(status: string) {
+  if (status === 'ACCEPTED') return 'bg-emerald-100 text-emerald-800';
+  if (status === 'EXPIRED' || status === 'REVOKED') return 'bg-slate-100 text-slate-700';
+  if (status === 'DELIVERY_FAILED') return 'bg-red-100 text-red-800';
+  return 'bg-brand-lime/20 text-success';
+}
+
 export default async function StaffPage({
   searchParams,
 }: {
@@ -143,7 +155,7 @@ export default async function StaffPage({
             </table>
           </div>
         )}
-        {invitations.length > 0 ? <section className="rc-card p-5"><div className="flex items-baseline justify-between"><div><p className="rc-kicker">Onboarding</p><h2 className="mt-1 font-serif text-2xl">Запрошення</h2></div><span className="text-sm text-text-secondary">{invitations.length}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{invitations.map((invitation) => <div key={invitation.id} className="rounded-xl border border-border bg-surface-muted p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-text-primary">{invitation.firstName} {invitation.lastName}</p><p className="text-sm text-text-secondary">{invitation.email}</p></div><span className="rounded-full bg-brand-lime/20 px-2.5 py-1 text-xs font-semibold text-success">{invitation.status}</span></div><p className="mt-3 text-xs text-text-secondary">Дійсне до {new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(new Date(invitation.expiresAt))}</p></div>)}</div></section> : null}
+        {invitations.length > 0 ? <section className="rc-card p-5"><div className="flex items-baseline justify-between"><div><p className="rc-kicker">Onboarding</p><h2 className="mt-1 font-serif text-2xl">Запрошення</h2></div><span className="text-sm text-text-secondary">{invitations.length}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{invitations.map((invitation) => <div key={invitation.id} className="rounded-xl border border-border bg-surface-muted p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-text-primary">{invitation.firstName} {invitation.lastName}</p><p className="text-sm text-text-secondary">{invitation.email}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${invitationStatusClass(invitation.status)}`}>{invitationStatus(invitation.status)}</span></div><p className="mt-3 text-xs text-text-secondary">Дійсне до {new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(new Date(invitation.expiresAt))}</p></div>)}</div></section> : null}
         {list.totalPages > 1 ? (
           <nav aria-label="Сторінки персоналу" className="flex gap-3 text-sm">
             <a className="underline" href={`?page=${Math.max(1, page - 1)}`}>
