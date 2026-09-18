@@ -44,7 +44,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const raw = exception.getResponse();
       const rawObject =
         typeof raw === 'object' && raw !== null
-          ? (raw as { code?: unknown; message?: unknown; details?: unknown })
+          ? (raw as { code?: unknown; message?: unknown; details?: unknown; fields?: unknown })
           : null;
       const fallback =
         typeof raw === 'string'
@@ -60,6 +60,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message: publicMessageForError(status, fallback),
         requestId,
         ...(rawObject?.details !== undefined ? { details: rawObject.details } : {}),
+        ...(rawObject?.fields && typeof rawObject.fields === 'object' ? { fields: rawObject.fields as Record<string, string> } : {}),
       };
       response.status(status).json(body);
       return;

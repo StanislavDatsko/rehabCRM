@@ -25,7 +25,14 @@ import {
 
 export type PatientFormState = {
   error: string | null;
+  fieldErrors?: Record<string, string>;
+  values?: Record<string, string>;
 };
+
+const formFields = ['firstName', 'lastName', 'middleName', 'dateOfBirth', 'sex', 'phone', 'email', 'addressLine1', 'addressLine2', 'city', 'region', 'postalCode', 'countryCode', 'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship', 'responsiblePractitionerId'];
+function submittedValues(formData: FormData): Record<string, string> {
+  return Object.fromEntries(formFields.map((field) => [field, String(formData.get(field) ?? '')]));
+}
 
 function emptyToNull(value: FormDataEntryValue | null): string | null {
   if (typeof value !== 'string') {
@@ -89,11 +96,11 @@ function bodyFromFormData(formData: FormData): CreatePatientBody {
   };
 }
 
-function errorState(error: unknown): PatientFormState {
+function errorState(error: unknown, values: Record<string, string>): PatientFormState {
   if (error instanceof ServerApiError) {
-    return { error: mapApiErrorToMessage(error.body?.code) };
+    return { error: mapApiErrorToMessage(error.body?.code), fieldErrors: error.body?.fields, values };
   }
-  return { error: mapApiErrorToMessage(undefined) };
+  return { error: mapApiErrorToMessage(undefined), values };
 }
 
 export async function createPatientAction(
@@ -109,8 +116,9 @@ export async function createPatientAction(
   }
 
   const body = bodyFromFormData(formData);
+  const values = submittedValues(formData);
   if (!body.firstName || !body.lastName) {
-    return { error: mapApiErrorToMessage('VALIDATION_FAILED') };
+    return { error: mapApiErrorToMessage('VALIDATION_FAILED'), values };
   }
 
   let createdId: string;
@@ -121,7 +129,7 @@ export async function createPatientAction(
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
     }
-    return errorState(error);
+    return errorState(error, values);
   }
 
   revalidatePath('/app/patients');
@@ -148,8 +156,9 @@ export async function updatePatientAction(
   }
 
   const body = bodyFromFormData(formData);
+  const values = submittedValues(formData);
   if (!body.firstName || !body.lastName) {
-    return { error: mapApiErrorToMessage('VALIDATION_FAILED') };
+    return { error: mapApiErrorToMessage('VALIDATION_FAILED'), values };
   }
 
   try {
@@ -158,7 +167,7 @@ export async function updatePatientAction(
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
     }
-    return errorState(error);
+    return errorState(error, values);
   }
 
   revalidatePath('/app/patients');
@@ -192,7 +201,7 @@ export async function changePatientStatusAction(
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
     }
-    return errorState(error);
+    return errorState(error, {});
   }
 
   revalidatePath('/app/patients');

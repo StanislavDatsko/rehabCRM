@@ -21,6 +21,10 @@ function Field({
   defaultValue,
   type = 'text',
   autoComplete,
+  error,
+  maxLength,
+  max,
+  help,
 }: {
   id: string;
   name: string;
@@ -29,6 +33,10 @@ function Field({
   defaultValue?: string | null;
   type?: string;
   autoComplete?: string;
+  error?: string;
+  maxLength?: number;
+  max?: string;
+  help?: string;
 }) {
   return (
     <div>
@@ -47,8 +55,14 @@ function Field({
         required={required}
         defaultValue={defaultValue ?? ''}
         autoComplete={autoComplete}
+        maxLength={maxLength}
+        max={max}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : help ? `${id}-help` : undefined}
         className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
       />
+      {help ? <p id={`${id}-help`} className="mt-1 text-xs text-text-secondary">{help}</p> : null}
+      {error ? <p id={`${id}-error`} className="mt-1 text-xs text-danger">{error}</p> : null}
     </div>
   );
 }
@@ -78,6 +92,17 @@ export function PatientForm({
   }, [dirty, pending]);
 
   const currentPractitionerId = patient?.responsiblePractitioner?.id ?? '';
+  const values = state.values ?? {};
+  const fieldErrors = state.fieldErrors ?? {};
+  const value = (name: string, fallback?: string | null) => values[name] ?? fallback ?? '';
+  const errorFor = (name: string) => {
+    const messages: Record<string, string> = {
+      firstName: 'Вкажіть ім’я.', lastName: 'Вкажіть прізвище.', dateOfBirth: 'Вкажіть коректну дату народження, не пізніше сьогодні.',
+      email: 'Вкажіть коректну email-адресу.', 'address.countryCode': 'Код країни має складатися максимум із 2 символів, наприклад UA.', responsiblePractitionerId: 'Оберіть коректного відповідального фахівця.',
+    };
+    return fieldErrors[name] ? messages[name] ?? 'Перевірте значення цього поля.' : undefined;
+  };
+  const today = new Date().toISOString().slice(0, 10);
   const selectable = practitioners.filter(
     (p) => p.status === 'ACTIVE' || p.id === currentPractitionerId,
   );
@@ -85,6 +110,7 @@ export function PatientForm({
   return (
     <form
       action={formAction}
+      key={state.values ? JSON.stringify(state.values) : 'patient-form'}
       className="space-y-8"
       onChange={() => setDirty(true)}
       onSubmit={() => setDirty(false)}
@@ -110,7 +136,7 @@ export function PatientForm({
             name="lastName"
             label={t('patientFieldLastName')}
             required
-            defaultValue={patient?.lastName}
+            defaultValue={value('lastName', patient?.lastName)} maxLength={100} error={errorFor('lastName')}
             autoComplete="family-name"
           />
           <Field
@@ -118,14 +144,14 @@ export function PatientForm({
             name="firstName"
             label={t('patientFieldFirstName')}
             required
-            defaultValue={patient?.firstName}
+            defaultValue={value('firstName', patient?.firstName)} maxLength={100} error={errorFor('firstName')}
             autoComplete="given-name"
           />
           <Field
             id="middleName"
             name="middleName"
             label={t('patientFieldMiddleName')}
-            defaultValue={patient?.middleName}
+            defaultValue={value('middleName', patient?.middleName)} maxLength={100} error={errorFor('middleName')}
             autoComplete="additional-name"
           />
           <Field
@@ -133,7 +159,7 @@ export function PatientForm({
             name="dateOfBirth"
             label={t('patientFieldDob')}
             type="date"
-            defaultValue={patient?.dateOfBirth}
+            defaultValue={value('dateOfBirth', patient?.dateOfBirth)} max={today} error={errorFor('dateOfBirth')}
           />
           <div>
             <label htmlFor="sex" className="block text-xs font-medium text-text-secondary">
@@ -142,7 +168,7 @@ export function PatientForm({
             <select
               id="sex"
               name="sex"
-              defaultValue={patient?.sex ?? ''}
+              defaultValue={value('sex', patient?.sex)} aria-invalid={Boolean(errorFor('sex'))}
               className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             >
               <option value="">{t('patientSexNone')}</option>
@@ -175,7 +201,7 @@ export function PatientForm({
             name="phone"
             label={t('patientFieldPhone')}
             type="tel"
-            defaultValue={patient?.phone}
+            defaultValue={value('phone', patient?.phone)} maxLength={50} error={errorFor('phone')}
             autoComplete="tel"
           />
           <Field
@@ -183,7 +209,7 @@ export function PatientForm({
             name="email"
             label={t('patientFieldEmail')}
             type="email"
-            defaultValue={patient?.email}
+            defaultValue={value('email', patient?.email)} maxLength={254} error={errorFor('email')}
             autoComplete="email"
           />
         </div>
@@ -196,37 +222,37 @@ export function PatientForm({
             id="addressLine1"
             name="addressLine1"
             label={t('patientFieldAddressLine1')}
-            defaultValue={patient?.address.line1}
+            defaultValue={value('addressLine1', patient?.address.line1)} maxLength={200} error={errorFor('address.line1')}
           />
           <Field
             id="addressLine2"
             name="addressLine2"
             label={t('patientFieldAddressLine2')}
-            defaultValue={patient?.address.line2}
+            defaultValue={value('addressLine2', patient?.address.line2)} maxLength={200} error={errorFor('address.line2')}
           />
           <Field
             id="city"
             name="city"
             label={t('patientFieldCity')}
-            defaultValue={patient?.address.city}
+            defaultValue={value('city', patient?.address.city)} maxLength={100} error={errorFor('address.city')}
           />
           <Field
             id="region"
             name="region"
             label={t('patientFieldRegion')}
-            defaultValue={patient?.address.region}
+            defaultValue={value('region', patient?.address.region)} maxLength={100} error={errorFor('address.region')}
           />
           <Field
             id="postalCode"
             name="postalCode"
             label={t('patientFieldPostalCode')}
-            defaultValue={patient?.address.postalCode}
+            defaultValue={value('postalCode', patient?.address.postalCode)} maxLength={20} error={errorFor('address.postalCode')}
           />
           <Field
             id="countryCode"
             name="countryCode"
             label={t('patientFieldCountryCode')}
-            defaultValue={patient?.address.countryCode}
+            defaultValue={value('countryCode', patient?.address.countryCode).toUpperCase()} maxLength={2} error={errorFor('address.countryCode')} help="Дволітерний код країни, наприклад UA"
           />
         </div>
       </section>
@@ -238,20 +264,20 @@ export function PatientForm({
             id="emergencyContactName"
             name="emergencyContactName"
             label={t('patientFieldEmergencyName')}
-            defaultValue={patient?.emergencyContact?.name}
+            defaultValue={value('emergencyContactName', patient?.emergencyContact?.name)} error={errorFor('emergencyContact.name')}
           />
           <Field
             id="emergencyContactPhone"
             name="emergencyContactPhone"
             label={t('patientFieldEmergencyPhone')}
             type="tel"
-            defaultValue={patient?.emergencyContact?.phone}
+            defaultValue={value('emergencyContactPhone', patient?.emergencyContact?.phone)} maxLength={50} error={errorFor('emergencyContact.phone')}
           />
           <Field
             id="emergencyContactRelationship"
             name="emergencyContactRelationship"
             label={t('patientFieldEmergencyRelationship')}
-            defaultValue={patient?.emergencyContact?.relationship}
+            defaultValue={value('emergencyContactRelationship', patient?.emergencyContact?.relationship)} maxLength={100} error={errorFor('emergencyContact.relationship')}
           />
         </div>
       </section>
@@ -268,7 +294,7 @@ export function PatientForm({
           <select
             id="responsiblePractitionerId"
             name="responsiblePractitionerId"
-            defaultValue={currentPractitionerId}
+            defaultValue={value('responsiblePractitionerId', currentPractitionerId)} aria-invalid={Boolean(errorFor('responsiblePractitionerId'))}
             className="mt-1 w-full max-w-lg rounded-md border border-border bg-background px-3 py-2 text-sm"
           >
             <option value="">{t('patientsUnassigned')}</option>

@@ -76,6 +76,7 @@ export type ApiErrorBody = {
   message: string;
   requestId: string;
   details?: unknown;
+  fields?: Record<string, string>;
 };
 
 export type PaginationQuery = {
