@@ -60,7 +60,7 @@ export class InviteController {
       if (existing) throw new ConflictException('This Neon Auth identity is already linked.');
       const user = await tx.user.create({ data: { identityProvider: 'neon-auth', identityProviderSubject: claims.subject, email: invite.email, firstName: invite.firstName, lastName: invite.lastName, displayName: `${invite.firstName} ${invite.lastName}` } });
       const membership = await tx.organizationMembership.create({ data: { organizationId: invite.organizationId, userId: user.id, role: invite.role, setupStatus: 'ACTIVE' } });
-      if (invite.role === 'REHABILITATION_SPECIALIST') await tx.practitioner.create({ data: { organizationId: invite.organizationId, userId: user.id, professionalTitle: invite.professionalTitle } });
+      if (invite.role === 'REHABILITATION_SPECIALIST' || invite.role === 'ORGANIZATION_ADMIN') await tx.practitioner.create({ data: { organizationId: invite.organizationId, userId: user.id, professionalTitle: invite.professionalTitle } });
       await tx.staffInvitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED', acceptedByUserId: user.id } });
       await writeAuditEvent(tx, { organizationId: invite.organizationId, actorUserId: user.id, action: 'STAFF_CREATED', entityType: 'StaffInvitation', entityId: invite.id, requestId: String(request.headers['x-request-id'] ?? 'unknown'), metadata: { changedFields: ['status', 'acceptedByUserId'] } });
       return { userId: user.id, membershipId: membership.id, status: 'ACCEPTED' as const };

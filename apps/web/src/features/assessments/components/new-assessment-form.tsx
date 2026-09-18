@@ -22,7 +22,7 @@ export function NewAssessmentForm({
         </p>
         <h1 className="mt-1 font-serif text-3xl">Нове оцінювання</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Оберіть конфігурований шаблон. Це не автоматична діагностика і не призначення лікування.
+          За потреби оберіть конфігурований шаблон або створіть порожню чернетку. Це не автоматична діагностика і не призначення лікування.
         </p>
       </header>
       {error ? (
@@ -40,16 +40,16 @@ export function NewAssessmentForm({
           Шаблон оцінювання
           <select
             name="templateId"
-            required
             className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2"
           >
-            <option value="">Оберіть шаблон</option>
+            <option value="">Без шаблону — порожня чернетка</option>
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
                 {template.name} · редакція {template.revision}
               </option>
             ))}
           </select>
+          {!templates.length ? <span className="mt-1 block text-xs font-normal text-text-secondary">Шаблони ще не налаштовані. Ви все одно можете створити порожню чернетку оцінювання.</span> : null}
         </label>
         <label className="block text-sm font-medium">
           Назва (необов’язково)
