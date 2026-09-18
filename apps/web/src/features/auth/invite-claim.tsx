@@ -19,9 +19,14 @@ export function InviteClaim({ token, invitation, signedInEmail }: { token: strin
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const claim = async (accessToken: string) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invite/${encodeURIComponent(token)}/claim`, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` } });
-    if (!response.ok) throw new Error(response.status === 409 ? 'Запрошення вже використане, прострочене або належить іншій адресі.' : 'Не вдалося активувати запрошення.');
+  const claim = async () => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const response = await fetch(`/api/invite/${encodeURIComponent(token)}/claim`, { method: 'POST', credentials: 'same-origin' });
+      if (response.ok) return;
+      if (response.status === 409) throw new Error('Запрошення вже використане, прострочене або належить іншій адресі.');
+      if (response.status !== 401 || attempt === 2) throw new Error('Не вдалося активувати запрошення.');
+      await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 250 : 500));
+    }
   };
   async function submit() {
     setPending(true); setError(null);
@@ -33,11 +38,8 @@ export function InviteClaim({ token, invitation, signedInEmail }: { token: strin
           : await auth.signIn.email({ email: invitation.email, password });
         if (result.error) throw new Error('Не вдалося виконати вхід або створити обліковий запис.');
       }
-      const session = await auth.getSession();
-      const tokenResult = await auth.token();
-      if (!session.data?.user || !tokenResult.data?.token) throw new Error('Сеанс Neon Auth не створено.');
-      if (session.data.user.email.trim().toLowerCase() !== invitation.email.trim().toLowerCase()) throw new Error(`Ви увійшли як ${session.data.user.email}. Це запрошення призначене для ${invitation.email}.`);
-      await claim(tokenResult.data.token);
+      if (signedInEmail && signedInEmail.trim().toLowerCase() !== invitation.email.trim().toLowerCase()) throw new Error(`Ви увійшли як ${signedInEmail}. Це запрошення призначене для ${invitation.email}.`);
+      await claim();
       window.location.assign('/');
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Не вдалося активувати запрошення.'); setPending(false); }
   }
