@@ -196,12 +196,13 @@ describe('StaffService', () => {
     expect(result.setupStatus).toBe('SETUP_ACTION_FAILED');
   }); */
 
-  it('retains and disables the practitioner when changing away from specialist', async () => {
+  it('keeps the practitioner active when changing specialist to organization admin', async () => {
     prisma.organizationMembership.findFirst
       .mockResolvedValueOnce(row({ role: 'REHABILITATION_SPECIALIST' }))
       .mockResolvedValueOnce(row({ role: 'REHABILITATION_SPECIALIST', version: 2 }));
     prisma.organizationMembership.updateMany.mockResolvedValue({ count: 1 });
     prisma.practitioner.updateMany.mockResolvedValue({ count: 1 });
+    prisma.practitioner.upsert.mockResolvedValue({ id: 'practitioner-1', status: 'ACTIVE' });
     prisma.auditEvent.create.mockResolvedValue({ id: 'audit' });
 
     await service.changeRole(
@@ -211,10 +212,12 @@ describe('StaffService', () => {
       'request-4',
     );
 
-    expect(prisma.practitioner.updateMany).toHaveBeenCalledWith({
-      where: { organizationId: 'org-a', userId: 'staff-user' },
-      data: { status: 'DISABLED' },
+    expect(prisma.practitioner.upsert).toHaveBeenCalledWith({
+      where: { organizationId_userId: { organizationId: 'org-a', userId: 'staff-user' } },
+      create: { organizationId: 'org-a', userId: 'staff-user' },
+      update: { status: 'ACTIVE' },
     });
+    expect(prisma.practitioner.updateMany).not.toHaveBeenCalled();
   });
 
   it('returns a version conflict rather than overwriting a concurrent update', async () => {

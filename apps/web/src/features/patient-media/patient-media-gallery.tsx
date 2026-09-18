@@ -72,6 +72,7 @@ export function PatientMediaGallery({
     let completed = 0;
     const failedUploadIds = new Set<string>();
     for (const file of Array.from(files)) {
+      let stage: 'initiate' | 'put' | 'complete' | 'access' = 'initiate';
       try {
         const kind = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
         const start = await fetch(`/api/patient-media/${patientId}/uploads`, {
@@ -90,12 +91,14 @@ export function PatientMediaGallery({
           uploadUrl: string;
           requiredHeaders: Record<string, string>;
         };
+        stage = 'put';
         const put = await fetch(intent.uploadUrl, {
           method: 'PUT',
           headers: intent.requiredHeaders,
           body: file,
         });
         if (!put.ok) throw new Error('put');
+        stage = 'complete';
         const done = await fetch(`/api/patient-media/${patientId}/${intent.mediaId}/complete`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -103,6 +106,7 @@ export function PatientMediaGallery({
         });
         if (!done.ok) throw new Error('complete');
         const ready = (await done.json()) as { id: string };
+        stage = 'access';
         const access = await fetch(`/api/patient-media/${patientId}/${ready.id}/access`);
         if (!access.ok) throw new Error('access');
         const accessData = (await access.json()) as { url: string };
@@ -129,7 +133,8 @@ export function PatientMediaGallery({
         setLocalPreviews((current) =>
           current.map((preview) => (preview.id === localId ? { ...preview, status: 'failed' } : preview)),
         );
-        setMessage(`${file.name}: не вдалося завантажити.`);
+        const messages = { initiate: 'Не вдалося підготувати завантаження.', put: 'Не вдалося передати файл у сховище.', complete: 'Файл передано, але сервер не зміг завершити завантаження.', access: 'Файл збережено, але передогляд недоступний.' };
+        setMessage(`${file.name}: ${messages[stage]}`);
         continue;
       }
     }

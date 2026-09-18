@@ -2,12 +2,16 @@ import { ConflictException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { InviteController } from './invite.controller';
 
-const invite = { id: 'invite-1', status: 'PENDING', expiresAt: new Date('2020-01-01'), email: 'person@example.com', organizationId: 'org-1' };
+const invite = { id: 'invite-1', status: 'PENDING', expiresAt: new Date('2020-01-01'), email: 'person@example.com', organizationId: 'org-1', firstName: 'Person', lastName: 'Example', role: 'REHABILITATION_SPECIALIST', professionalTitle: null };
 const claims = { subject: 'neon-subject', email: 'person@example.com' };
 
 function setup(invitation = invite) {
   const prisma = {
     staffInvitation: { findUnique: vi.fn().mockResolvedValue(invitation), update: vi.fn().mockResolvedValue(invitation) },
+    user: { findFirst: vi.fn().mockResolvedValue(null), create: vi.fn().mockResolvedValue({ id: 'user-1' }) },
+    organizationMembership: { create: vi.fn().mockResolvedValue({ id: 'membership-1' }) },
+    practitioner: { create: vi.fn().mockResolvedValue({ id: 'practitioner-1' }) },
+    auditEvent: { create: vi.fn().mockResolvedValue({ id: 'audit-1' }) },
     $queryRaw: vi.fn().mockResolvedValue([{ id: invitation.id }]),
     $transaction: vi.fn(async (callback: (tx: typeof prisma) => unknown) => callback(prisma)),
   };
@@ -65,5 +69,16 @@ describe('InviteController claim security', () => {
     expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
     expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
     expect(status).toBe('ACCEPTED');
+  });
+
+  it.each([
+    ['REHABILITATION_SPECIALIST', true],
+    ['ORGANIZATION_ADMIN', true],
+    ['SYSTEM_ADMIN', false],
+  ])('practitioner policy for %s is %s', async (role, shouldCreate) => {
+    const { controller, prisma } = setup({ ...invite, expiresAt: new Date('2099-01-01'), role });
+    await controller.claim('raw-token', { neonClaims: claims, headers: {} } as never);
+    if (shouldCreate) expect(prisma.practitioner.create).toHaveBeenCalledWith({ data: { organizationId: 'org-1', userId: 'user-1', professionalTitle: null } });
+    else expect(prisma.practitioner.create).not.toHaveBeenCalled();
   });
 });

@@ -220,7 +220,7 @@ export class StaffService {
       await this.assertVersion(tx, principal.organizationId, membershipId, body.version, {
         role: body.role,
       });
-      if (body.role === 'REHABILITATION_SPECIALIST') {
+      if (body.role === 'REHABILITATION_SPECIALIST' || body.role === 'ORGANIZATION_ADMIN') {
         await tx.practitioner.upsert({
           where: {
             organizationId_userId: {

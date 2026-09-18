@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:bootstrap-reference": "tsx prisma/bootstrap-reference.ts",
     "anatomy:import": "tsx scripts/import-anatomy-models.ts",
     "anatomy:human-atlas:import": "tsx scripts/import-human-atlas.ts",
     "anatomy:human-atlas:mappings": "tsx scripts/generate-human-atlas-mapping.ts",

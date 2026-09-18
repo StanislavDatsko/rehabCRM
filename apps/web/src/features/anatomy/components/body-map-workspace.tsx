@@ -161,7 +161,7 @@ export function BodyMapWorkspace({
           Back to patient
         </a>
       </header>
-      <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] min-[1800px]:grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="rc-card space-y-4 p-5">
           <section>
             <h2 className="font-medium">Layers</h2>
@@ -357,7 +357,7 @@ export function BodyMapWorkspace({
             </div>
           ) : null}
         </main>
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:col-span-2 min-[1800px]:col-span-1">
           <StructureInspector
             structure={selectedStructure}
             context={context}
