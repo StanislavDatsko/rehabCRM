@@ -85,14 +85,20 @@ export type AnatomicalModelResponse = {
   activeVersion: AnatomicalModelVersionResponse | null;
 };
 
+/** Finite XYZ triple in the local space of one versioned mesh. */
+export type Vec3 = [number, number, number];
+
 export type SurfaceAnchor = {
   stableMeshKey: string;
   primitiveIndex: number;
   triangleIndex: number;
-  barycentric: [number, number, number];
-  localPosition: [number, number, number];
-  localNormal: [number, number, number] | null;
+  barycentric: Vec3;
+  localPosition: Vec3;
+  localNormal: Vec3 | null;
 };
+
+/** Longest free-text comment accepted for a body annotation note. */
+export const BODY_ANNOTATION_NOTE_MAX_LENGTH = 3000;
 
 export type BodyAnnotationHistoryItem = {
   id: string;

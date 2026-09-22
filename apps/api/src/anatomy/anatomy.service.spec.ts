@@ -361,3 +361,154 @@ describe('AnatomyService annotation commands', () => {
     expect(prisma.auditEvent.create.mock.calls[0]?.[0].data.metadata).not.toHaveProperty('reason');
   });
 });
+
+describe('AnatomyService point notes', () => {
+  const pointNote = {
+    structureId: 'structure-1',
+    modelVersionId: 'version-1',
+    mappingId: 'mapping-1',
+    type: 'OTHER' as const,
+    severity: null,
+    colorHex: null,
+    title: null,
+    note: 'Біль при максимальному згинанні плеча',
+    anchor,
+  };
+
+  it('creates a point note on the isolated surface and keeps the comment out of audit', async () => {
+    const prisma = commandPrisma();
+    prisma.anatomicalModelStructureMapping.findUnique.mockResolvedValue(activeMapping);
+    prisma.bodyAnnotation.create.mockResolvedValue({ id: 'annotation-9' });
+    prisma.bodyAnnotation.findFirst.mockResolvedValue(
+      annotationRow({ id: 'annotation-9', type: 'OTHER', severity: null, title: null, note: pointNote.note }),
+    );
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(service.create(principal, 'patient-1', pointNote, 'req')).resolves.toMatchObject({
+      id: 'annotation-9',
+      type: 'OTHER',
+      note: pointNote.note,
+      anchor: { stableMeshKey: anchor.stableMeshKey, localPosition: anchor.localPosition },
+    });
+    expect(prisma.bodyAnnotation.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          organizationId: 'org-1',
+          patientId: 'patient-1',
+          structureId: 'structure-1',
+          note: pointNote.note,
+          localPositionX: 0.1,
+          localPositionY: 0.2,
+          localPositionZ: 0.3,
+          localNormalZ: 1,
+        }),
+      }),
+    );
+    const audit = prisma.auditEvent.create.mock.calls[0]?.[0].data;
+    expect(audit).toMatchObject({ action: 'BODY_ANNOTATION_CREATED', entityType: 'BodyAnnotation' });
+    expect(audit.metadata).not.toHaveProperty('note');
+    expect(audit.metadata).not.toHaveProperty('title');
+  });
+
+  it('refuses to create a point note for a patient of another organization', async () => {
+    const prisma = commandPrisma();
+    prisma.patient.findFirst.mockResolvedValue(null);
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(
+      service.create(principal, 'foreign-patient', pointNote, 'req'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.patient.findFirst).toHaveBeenCalledWith({
+      where: { id: 'foreign-patient', organizationId: 'org-1' },
+      select: { id: true },
+    });
+    expect(prisma.bodyAnnotation.create).not.toHaveBeenCalled();
+    expect(prisma.auditEvent.create).not.toHaveBeenCalled();
+  });
+
+  it('never trusts an organization supplied by the client', async () => {
+    const prisma = commandPrisma();
+    prisma.anatomicalModelStructureMapping.findUnique.mockResolvedValue(activeMapping);
+    prisma.bodyAnnotation.create.mockResolvedValue({ id: 'annotation-9' });
+    prisma.bodyAnnotation.findFirst.mockResolvedValue(annotationRow({ id: 'annotation-9' }));
+    const service = new AnatomyService(prisma as never, {} as never);
+    await service.create(
+      { ...principal, organizationId: 'org-1' },
+      'patient-1',
+      { ...pointNote, organizationId: 'org-2' } as never,
+      'req',
+    );
+    expect(prisma.bodyAnnotation.create.mock.calls[0]?.[0].data.organizationId).toBe('org-1');
+  });
+
+  it('conceals another organization patient annotation on read and void', async () => {
+    const prisma = commandPrisma();
+    prisma.bodyAnnotation.findFirst.mockResolvedValue(null);
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(service.getAnnotation(principal, 'annotation-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    await expect(
+      service.void(principal, 'annotation-1', { version: 1, reason: 'Видалено з body map' }, 'req'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(prisma.bodyAnnotation.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'annotation-1', organizationId: 'org-1' } }),
+    );
+    expect(prisma.bodyAnnotation.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('voids a point note through the shared lifecycle and audits the transition only', async () => {
+    const prisma = commandPrisma();
+    prisma.bodyAnnotation.findFirst
+      .mockResolvedValueOnce(annotationRow({ type: 'OTHER', note: 'Коментар' }))
+      .mockResolvedValueOnce(
+        annotationRow({
+          type: 'OTHER',
+          note: 'Коментар',
+          status: 'VOIDED',
+          version: 2,
+          voidedAt: new Date('2026-09-22T09:00:00.000Z'),
+          voidReason: 'Видалено з body map',
+        }),
+      );
+    prisma.bodyAnnotation.updateMany.mockResolvedValue({ count: 1 });
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(
+      service.void(principal, 'annotation-1', { version: 1, reason: 'Видалено з body map' }, 'req'),
+    ).resolves.toMatchObject({ status: 'VOIDED', version: 2 });
+    expect(prisma.bodyAnnotation.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'annotation-1', organizationId: 'org-1', version: 1, status: 'ACTIVE' },
+      }),
+    );
+    const audit = prisma.auditEvent.create.mock.calls[0]?.[0].data;
+    expect(audit).toMatchObject({
+      action: 'BODY_ANNOTATION_VOIDED',
+      entityId: 'annotation-1',
+      metadata: { patientId: 'patient-1', fromStatus: 'ACTIVE', toStatus: 'VOIDED' },
+    });
+    expect(audit.metadata).not.toHaveProperty('note');
+  });
+
+  it('lists only the isolated structure when the client filters by structure', async () => {
+    const prisma = {
+      patient: { findFirst: vi.fn().mockResolvedValue({ id: 'patient-1' }) },
+      bodyAnnotation: { findMany: vi.fn().mockResolvedValue([annotationRow()]) },
+    };
+    const service = new AnatomyService(prisma as never, {} as never);
+    await expect(
+      service.listAnnotations(principal, 'patient-1', {
+        anatomicalStructureId: 'structure-1',
+        status: 'ACTIVE',
+      }),
+    ).resolves.toHaveLength(1);
+    expect(prisma.bodyAnnotation.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org-1',
+          patientId: 'patient-1',
+          structureId: 'structure-1',
+          status: 'ACTIVE',
+        }),
+      }),
+    );
+  });
+});
