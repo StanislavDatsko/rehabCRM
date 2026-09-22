@@ -3,7 +3,6 @@ import { getMeasurementHistory } from '../../../../features/assessments/api/asse
 import { getPlan, listExercises } from '../../../../features/rehabilitation/api/rehabilitation-api';
 import { PlanWorkspace } from '../../../../features/rehabilitation/components/plan-workspace';
 import {
-  canActivatePlan,
   canCancelPlan,
   canCompletePlan,
   canEditPlan,
@@ -49,7 +48,6 @@ export default async function RehabilitationPlanPage({
       flash={flash.saved ?? flash.created ?? flash.command}
       capabilities={{
         edit: canEditPlan(me),
-        activate: canActivatePlan(me),
         pause: canPausePlan(me),
         complete: canCompletePlan(me),
         cancel: canCancelPlan(me),

@@ -69,6 +69,7 @@ function createPrismaMock() {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
       updateMany: vi.fn(),
     },
     rehabilitationPlanRevision: { update: vi.fn(), create: vi.fn() },

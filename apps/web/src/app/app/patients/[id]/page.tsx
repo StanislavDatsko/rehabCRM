@@ -43,6 +43,7 @@ import { canCreatePlan, canReadPlans } from '../../../../features/rehabilitation
 import { getPatientBodyMap } from '../../../../features/anatomy/api/anatomy-api';
 import { canReadBodyMap } from '../../../../features/anatomy/permissions';
 import { PatientMediaGallery } from '../../../../features/patient-media/patient-media-gallery';
+import { VisitMediaGallery } from '../../../../features/patient-media/visit-media-gallery';
 import {
   canReadClinicalReports,
   canReadProgress,
@@ -215,19 +216,12 @@ export default async function PatientProfilePage({
       {me.permissions.includes('patient_media.read') ? (
         <section id="visit-media" className="patient-workspace-section">
           <details className="ui-surface overflow-hidden" open>
-            <summary className="cursor-pointer px-5 py-4 font-sans text-lg text-text-primary">Медіа з візитів · {visitMedia.total} записів</summary>
-            <div className="space-y-5 border-t border-border p-5">
-              {!visitMediaGroups.length ? <p className="text-sm text-text-secondary">Медіа з візитів ще не додано.</p> : null}
-              {visitMediaGroups.map((group) => (
-                <div key={group.encounterId} className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm font-semibold text-text-primary">
-                    <span className="h-px flex-1 bg-border" />
-                    <span>{group.startedAt ? new Date(group.startedAt).toLocaleDateString('uk-UA', { dateStyle: 'long', timeZone: schedulingTimezone }) : 'Дата візиту не вказана'}</span>
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
-                  <PatientMediaGallery patientId={id} encounterId={group.encounterId} initialItems={group.items} initialTotal={group.items.length} title="Медіа візиту" description="Фото та відео тренування" />
-                </div>
-              ))}
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 font-sans text-lg text-text-primary [&::-webkit-details-marker]:hidden">
+              <span>Медіа з візитів</span>
+              <span className="text-sm font-normal text-text-secondary">{visitMedia.total} записів</span>
+            </summary>
+            <div className="border-t border-border">
+              <VisitMediaGallery patientId={id} groups={visitMediaGroups} total={visitMedia.total} />
             </div>
           </details>
         </section>

@@ -69,7 +69,7 @@ async function bootstrap(): Promise<void> {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  await app.listen(env.API_PORT);
+  await app.listen(env.API_PORT, '0.0.0.0');
 }
 
 void bootstrap();

@@ -172,7 +172,13 @@ export class RehabilitationService {
           startDate: this.date(body.startDate),
           expectedEndDate: body.expectedEndDate ? this.date(body.expectedEndDate) : null,
           createdByUserId: principal.userId,
+          status: 'PUBLISHED',
+          effectiveFrom: new Date(),
         },
+      });
+      await tx.rehabilitationPlan.update({
+        where: { id: planId },
+        data: { status: 'ACTIVE', currentRevisionId: revisionId },
       });
       await this.audit(tx, principal, planId, requestId, 'REHABILITATION_PLAN_CREATED', {
         patientId,
@@ -879,12 +885,8 @@ export class RehabilitationService {
   }
 
   private assertCompleteEnough(revision: PlanWithContent['revisions'][number]): void {
-    if (revision.goals.length === 0 && revision.prescriptions.length === 0) {
-      throw new BadRequestException({
-        code: 'REHABILITATION_PLAN_INCOMPLETE',
-        message: 'Add at least one goal or exercise prescription before activation/publication.',
-      });
-    }
+    // A plan may be activated with only its title, description and dates.
+    // Goals and exercise prescriptions are optional clinical details.
   }
 
   private async versionedPlanUpdate(

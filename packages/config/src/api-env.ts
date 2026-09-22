@@ -96,5 +96,8 @@ export const apiEnvSchema = z
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
 
 export function parseApiEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
-  return apiEnvSchema.parse(source);
+  return apiEnvSchema.parse({
+    ...source,
+    API_PORT: source.API_PORT ?? source.PORT,
+  });
 }

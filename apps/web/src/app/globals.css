@@ -83,6 +83,12 @@
 .encounter-exercises__exercise-choice > span { padding-bottom:12px; color:var(--color-text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:.12em; }
 .encounter-exercises__submit span { font-size:20px; }
 .encounter-exercises__history { padding:22px 24px 24px; }
+.encounter-exercises__history-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; list-style:none; color:var(--color-text-primary); font-size:15px; font-weight:700; }
+.encounter-exercises__history-summary::-webkit-details-marker { display:none; }
+.encounter-exercises__history-summary::after { content:''; width:10px; height:10px; flex:0 0 10px; border-right:2px solid var(--color-text-secondary); border-bottom:2px solid var(--color-text-secondary); transform:rotate(45deg) translateY(-2px); transition:transform .2s ease; }
+.encounter-exercises__history:not([open]) .encounter-exercises__history-summary::after { transform:rotate(-45deg) translateY(2px); }
+.encounter-exercises__history-summary span:last-of-type { margin-left:auto; color:var(--color-text-secondary); font-size:12px; font-weight:400; }
+.encounter-exercises__history-content { margin-top:14px; }
 .encounter-exercises__history-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; }
 .encounter-exercises__history h3 { margin:0; color:var(--color-text-primary); font-size:15px; }
 .encounter-exercises__date-divider { display:flex; align-items:center; gap:12px; margin:18px 0 2px; color:var(--color-text-secondary); font-size:12px; font-weight:700; text-transform:capitalize; }
@@ -530,6 +536,291 @@ table tbody tr:hover {
   }
 }
 
+/* Mobile safety net: keep workspace surfaces inside the viewport. */
+@media (max-width: 767px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .workspace-content { min-width: 0; padding: 18px 12px 28px; }
+  .workspace-header { min-width: 0; gap: 8px; padding-inline: 12px; }
+  .workspace-header > * { min-width: 0; }
+  .workspace-search { min-width: 0; max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ui-page-header, .patient-identity, .encounter-exercises__history-head { min-width: 0; }
+  .ui-page-header > *, .patient-identity > *, .encounter-exercises__history-head > * { min-width: 0; max-width: 100%; }
+  .ui-surface, .ui-filter-bar, .patient-details, .exercise-modal, .media-viewer { max-width: 100%; }
+  img, video, canvas, iframe { max-width: 100%; }
+  input, select, textarea, button { max-width: 100%; }
+  .patient-identity-facts { gap: 12px; }
+  .patient-section-nav { margin-inline: -12px; padding-inline: 12px; }
+  .encounter-exercises__history-head { align-items: stretch; flex-direction: column; }
+  .encounter-exercises__history select { width: 100%; min-width: 0; }
+  .media-viewer { margin: 12px; }
+  .media-viewer-content { min-height: 180px; padding: 12px; }
+
+  /* Keep the full week visible without creating a page-level horizontal scroll. */
+  .calendar-mobile .rbc-time-view { min-width: 0; overflow-x: hidden; }
+  .calendar-mobile .rbc-time-header-content,
+  .calendar-mobile .rbc-time-content { min-width: 0; width: 100%; }
+  .calendar-mobile .rbc-header,
+  .calendar-mobile .rbc-day-bg { min-width: 0; }
+  .calendar-mobile .rbc-header { overflow: hidden; padding-inline: 2px; font-size: .54rem; letter-spacing: 0; text-overflow: ellipsis; }
+  .calendar-mobile .rbc-time-gutter,
+  .calendar-mobile .rbc-time-header-gutter { width: 42px; flex-basis: 42px; }
+  .calendar-mobile .rbc-label { padding-inline: 3px; font-size: .58rem; }
+  .calendar-mobile .rbc-day-slot .rbc-event { left: 1px !important; right: 1px !important; padding: 4px 3px; }
+  .calendar-mobile .calendar-event-patient { font-size: .59rem; }
+  .calendar-mobile .calendar-event-time { font-size: .54rem; }
+}
+
+/* Shared mobile layout contract: every page keeps content inside the viewport,
+   while dense clinical views remain horizontally scrollable where needed. */
+@media (max-width: 767px) {
+  .ui-page-header {
+    align-items: stretch;
+    gap: 14px;
+    padding-bottom: 4px;
+  }
+
+  .ui-page-header > div:last-child {
+    width: 100%;
+  }
+
+  .ui-page-header > div:last-child > * {
+    flex: 1 1 auto;
+    min-width: min(0, 100%);
+  }
+
+  .ui-page-title {
+    overflow-wrap: anywhere;
+    font-size: clamp(1.35rem, 7vw, 1.75rem);
+  }
+
+  .rc-btn {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .ui-form-actions {
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .ui-form-actions > form,
+  .ui-form-actions > form > .flex,
+  .ui-form-actions > .rc-btn,
+  .ui-form-actions > form > .rc-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ui-form-actions > form > .flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ui-form-actions input,
+  .ui-form-actions select,
+  .ui-form-actions textarea,
+  .ui-form-actions .rc-btn {
+    width: 100%;
+  }
+
+  .ui-filter-bar,
+  .ui-surface {
+    padding: 16px;
+  }
+
+  .overview-grid,
+  .overview-grid-bottom,
+  .patient-details,
+  .patient-identity-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .overview-schedule,
+  .overview-patients {
+    padding: 16px;
+  }
+
+  .overview-appointment {
+    align-items: flex-start;
+    gap: 8px 10px;
+  }
+
+  .overview-appointment > :last-child {
+    margin-left: auto;
+  }
+
+  .patient-identity {
+    gap: 16px;
+  }
+
+  .patient-identity-facts {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .patient-navigation {
+    margin-top: 12px;
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+
+  .clinical-section-index {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .clinical-action-bar {
+    bottom: 8px;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .clinical-action-bar > * {
+    width: 100%;
+  }
+
+  .plan-editor-section details summary {
+    overflow-wrap: anywhere;
+  }
+
+  .plan-editor > button[type='submit'] {
+    position: sticky;
+    bottom: 8px;
+    width: 100%;
+  }
+
+  .exercise-modal-backdrop {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .exercise-modal {
+    max-height: 94dvh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .exercise-modal > form {
+    max-height: calc(94dvh - 78px);
+    padding: 16px;
+  }
+
+  .encounter-exercises__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .encounter-exercises__count {
+    width: 100%;
+    height: auto;
+    min-height: 58px;
+  }
+
+  .encounter-exercises__exercise-choice,
+  .encounter-exercises__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .encounter-exercises__exercise-choice > span {
+    text-align: left;
+  }
+
+  .media-viewer {
+    width: calc(100vw - 24px);
+  }
+
+  .media-viewer-content {
+    min-height: 160px;
+  }
+
+  .workspace-mobile-dialog {
+    margin: 0;
+    width: min(340px, calc(100vw - 16px));
+    height: 100dvh;
+    border-radius: 0 16px 16px 0;
+  }
+
+  .workspace-mobile-dialog .workspace-navigation {
+    gap: 2px;
+    padding: 0 12px;
+  }
+
+  .workspace-mobile-dialog .workspace-nav-group {
+    display: grid;
+    gap: 2px;
+  }
+
+  .workspace-mobile-dialog .workspace-nav-link {
+    min-height: 46px;
+  }
+
+  .ui-table-container {
+    margin-inline: -1px;
+    max-width: calc(100vw - 24px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ui-data-table {
+    min-width: 620px;
+  }
+
+  .ui-data-table th,
+  .ui-data-table td {
+    padding-inline: 10px;
+  }
+
+  .atlas-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .atlas-stage {
+    height: min(78dvh, 560px);
+  }
+
+  .atlas-browser {
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .workspace-sidebar {
+    padding-inline: 14px;
+    gap: 10px;
+  }
+
+  .workspace-brand {
+    padding-right: 12px;
+  }
+
+  .workspace-nav-link {
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+
+  .workspace-account > div,
+  .workspace-logout {
+    display: none;
+  }
+
+  .workspace-account {
+    padding-left: 8px;
+  }
+
+  .workspace-header,
+  .workspace-content {
+    padding-inline: 20px;
+  }
+}
+
 .rc-scheduling-calendar .rbc-calendar {
   font-family: var(--font-ui), system-ui, sans-serif;
   color: var(--color-text-primary);
@@ -771,4 +1062,35 @@ table tbody tr:hover {
 @media (prefers-reduced-motion: reduce) {
   .pa-card, .pa-dialog, .pa-toast, .pa-backdrop, .pa-marker--draft .pa-marker-core { animation: none; }
   .pa-marker-core { transition: none; }
+}
+
+@media (max-width: 767px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .workspace-content { min-width: 0; padding: 18px 12px 28px; }
+  .workspace-header { min-width: 0; gap: 8px; padding-inline: 12px; }
+  .workspace-header > * { min-width: 0; }
+  .workspace-search { min-width: 0; max-width: 48vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ui-page-header, .patient-identity, .encounter-exercises__history-head { min-width: 0; }
+  .ui-page-header > *, .patient-identity > *, .encounter-exercises__history-head > * { min-width: 0; max-width: 100%; }
+  .ui-surface, .ui-filter-bar, .patient-details, .exercise-modal, .media-viewer { max-width: 100%; }
+  img, video, canvas, iframe { max-width: 100%; }
+  input, select, textarea, button { max-width: 100%; }
+  .patient-identity-facts { gap: 12px; }
+  .patient-section-nav { margin-inline: -12px; padding-inline: 12px; }
+  .encounter-exercises__history-head { align-items: stretch; flex-direction: column; }
+  .encounter-exercises__history select { width: 100%; min-width: 0; }
+  .media-viewer { margin: 12px; }
+  .media-viewer-content { min-height: 180px; padding: 12px; }
+  .calendar-mobile .rbc-time-view { min-width: 0; overflow-x: hidden; }
+  .calendar-mobile .rbc-time-header-content,
+  .calendar-mobile .rbc-time-content { min-width: 0; width: 100%; }
+  .calendar-mobile .rbc-header,
+  .calendar-mobile .rbc-day-bg { min-width: 0; }
+  .calendar-mobile .rbc-header { overflow: hidden; padding-inline: 2px; font-size: .54rem; letter-spacing: 0; text-overflow: ellipsis; }
+  .calendar-mobile .rbc-time-gutter,
+  .calendar-mobile .rbc-time-header-gutter { width: 42px; flex-basis: 42px; }
+  .calendar-mobile .rbc-label { padding-inline: 3px; font-size: .58rem; }
+  .calendar-mobile .rbc-day-slot .rbc-event { left: 1px !important; right: 1px !important; padding: 4px 3px; }
+  .calendar-mobile .calendar-event-patient { font-size: .59rem; }
+  .calendar-mobile .calendar-event-time { font-size: .54rem; }
 }

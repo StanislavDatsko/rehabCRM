@@ -13,10 +13,12 @@ export function RehabilitationPlansSection({
   patientId,
   plans,
   canCreate,
+  patientName,
 }: {
   patientId: string;
   plans: RehabilitationPlanListItem[];
   canCreate: boolean;
+  patientName?: string;
 }) {
   const open = plans.filter((plan) => ['DRAFT', 'ACTIVE', 'PAUSED'].includes(plan.status));
   const previous = plans.filter((plan) => ['COMPLETED', 'CANCELLED'].includes(plan.status));
@@ -24,7 +26,7 @@ export function RehabilitationPlansSection({
     <section className="ui-surface p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-sans text-xl text-text-primary">Плани реабілітації</h2>
+          <h2 className="font-sans text-xl text-text-primary">Плани реабілітації{patientName ? ` · ${patientName}` : ''}</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Цілі, етапи та індивідуальні призначення вправ.
           </p>
@@ -45,7 +47,12 @@ export function RehabilitationPlansSection({
       ) : (
         <div className="mt-5 space-y-5">
           <PlanGroup title="Поточні" items={open} />
-          {previous.length ? <PlanGroup title="Попередні" items={previous} /> : null}
+          {previous.length ? <details className="mt-5 rounded-xl border border-border bg-surface-muted/20" open={false}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-text-primary [&::-webkit-details-marker]:hidden">
+              <span>Історія планів реабілітації</span><span className="text-xs font-normal text-text-secondary">{previous.length}</span>
+            </summary>
+            <div className="border-t border-border p-4"><PlanGroup title="Завершені та скасовані" items={previous} /></div>
+          </details> : null}
         </div>
       )}
     </section>

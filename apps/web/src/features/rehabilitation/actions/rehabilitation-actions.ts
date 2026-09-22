@@ -73,30 +73,28 @@ export async function createPlanAction(
   form: FormData,
 ): Promise<RehabilitationFormState> {
   const me = await userOrRedirect();
-  if (me === 'denied' || !canCreatePlan(me))
+  if (me === 'denied' || !canCreatePlan(me) || !canActivatePlan(me))
     return { error: rehabilitationErrorMessage('FORBIDDEN') };
   const patientId = text(form.get('patientId'));
   const title = text(form.get('title'));
   const startDate = text(form.get('startDate'));
   if (!patientId || !title || !startDate)
     return { error: rehabilitationErrorMessage('VALIDATION_FAILED') };
-  let id: string;
+  let created: { id: string; version: number };
   try {
-    id = (
-      await createPlan(patientId, {
+    created = await createPlan(patientId, {
         title,
         description: text(form.get('description')),
         startDate,
         expectedEndDate: text(form.get('expectedEndDate')),
-      })
-    ).id;
+      });
   } catch (error) {
     return errorState(error);
   }
   revalidatePath(`/app/patients/${patientId}`);
   const baseline = text(form.get('baselineMeasurementId'));
   redirect(
-    `/app/rehabilitation-plans/${id}?created=1${baseline ? `&baseline=${encodeURIComponent(baseline)}` : ''}`,
+    `/app/rehabilitation-plans/${created.id}?created=1${baseline ? `&baseline=${encodeURIComponent(baseline)}` : ''}`,
   );
 }
 

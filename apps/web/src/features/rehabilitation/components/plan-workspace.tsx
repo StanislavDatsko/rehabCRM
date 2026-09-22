@@ -30,7 +30,6 @@ const valueLabel = (point: MeasurementHistoryPoint) =>
 
 export type PlanCapabilities = {
   edit: boolean;
-  activate: boolean;
   pause: boolean;
   complete: boolean;
   cancel: boolean;
@@ -122,13 +121,11 @@ function Lifecycle({
 }) {
   const [state, action, pending] = useActionState(planLifecycleAction, initial);
   const command =
-    plan.status === 'DRAFT' && capabilities.activate
-      ? 'activate'
-      : plan.status === 'ACTIVE' && capabilities.pause
-        ? 'pause'
-        : plan.status === 'PAUSED' && capabilities.pause
-          ? 'resume'
-          : null;
+    plan.status === 'ACTIVE' && capabilities.pause
+      ? 'pause'
+      : plan.status === 'PAUSED' && capabilities.pause
+        ? 'resume'
+        : null;
   return (
     <section className="ui-form-actions static flex-wrap items-end border-y-0 py-4">
       {command ? (
@@ -137,11 +134,9 @@ function Lifecycle({
           <input type="hidden" name="version" value={plan.version} />
           <input type="hidden" name="command" value={command} />
           <button disabled={pending} className="rc-btn rc-btn-secondary">
-            {command === 'activate'
-              ? 'Активувати'
-              : command === 'pause'
-                ? 'Призупинити'
-                : 'Відновити'}
+            {command === 'pause'
+              ? 'Призупинити'
+              : 'Відновити'}
           </button>
         </form>
       ) : null}
@@ -218,62 +213,6 @@ function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionR
           {formatDate(revision.startDate)} — {formatDate(revision.expectedEndDate)}
         </p>
       </div>
-      {revision.goals.length ? (
-        <div>
-          <h3 className="font-medium">Цілі та прогрес</h3>
-          <div className="mt-2 grid gap-3 lg:grid-cols-2">
-            {revision.goals.map((goal) => (
-              <article key={goal.id} className="plan-goal">
-                <div className="flex justify-between gap-2">
-                  <strong>{goal.title}</strong>
-                  <StatusPill tone={goal.status === 'ACHIEVED' ? 'success' : 'neutral'}>{goal.status}</StatusPill>
-                </div>
-                {goal.baseline ? (
-                  <p className="mt-2 text-sm">
-                    Вихідне: {goal.baseline.value} {goal.baseline.unit ?? ''}
-                  </p>
-                ) : null}
-                {goal.current ? (
-                  <p className="text-sm">
-                    Поточне: {goal.current.value} {goal.current.unit ?? ''}{' '}
-                    <span className="text-text-secondary">
-                      ({formatDate(goal.current.performedAt)})
-                    </span>
-                  </p>
-                ) : null}
-                {goal.targetValue !== null ? (
-                  <p className="text-sm">
-                    Ціль: {goal.targetOperator} {goal.targetValue}
-                    {goal.targetValueUpper !== null ? `–${goal.targetValueUpper}` : ''}{' '}
-                    {goal.targetUnit ?? ''}
-                  </p>
-                ) : (
-                  <p className="text-sm text-text-secondary">Описова ціль</p>
-                )}
-                {goal.targetAppearsReached === true ? (
-                  <p className="mt-1 text-xs text-success">
-                    Поточне значення відповідає цільовому порогу; статус змінює фахівець.
-                  </p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      {revision.exercisePrescriptions.length ? (
-        <div>
-          <h3 className="font-medium">Призначені вправи</h3>
-          <div className="mt-2 grid gap-3 lg:grid-cols-2">
-            {revision.exercisePrescriptions.map((item) => (
-              <article key={item.id} className="plan-exercise">
-                <strong>{item.exercise.name}</strong>
-                <p className="mt-1 text-sm text-text-secondary">{dosage(item)}</p>
-                {item.specialistNote ? <p className="mt-2 text-sm">{item.specialistNote}</p> : null}
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -411,6 +350,7 @@ function DraftEditor({
       <EditorSection
         title="Цілі"
         intro="Оберіть фактичне завершене вимірювання як вихідне або залиште ціль описовою."
+        hidden
       >
         {goals.map((goal, index) => (
           <details
@@ -550,6 +490,7 @@ function DraftEditor({
       <EditorSection
         title="Етапи"
         intro="Етапи необовʼязкові та допомагають групувати призначення."
+        hidden
       >
         {phases.map((phase, index) => (
           <details
@@ -608,6 +549,7 @@ function DraftEditor({
       <EditorSection
         title="Призначення вправ"
         intro="Виберіть вправу та вкажіть щонайменше один параметр дозування."
+        hidden
       >
         {prescriptions.map((item, index) => (
           <details
@@ -753,13 +695,15 @@ function EditorSection({
   title,
   intro,
   children,
+  hidden = false,
 }: {
   title: string;
   intro: string;
   children: React.ReactNode;
+  hidden?: boolean;
 }) {
   return (
-    <section className="plan-editor-section">
+    <section className={`plan-editor-section${hidden ? ' hidden' : ''}`}>
       <h3 className="text-base font-semibold tracking-tight">{title}</h3>
       <p className="mb-3 text-xs text-text-secondary">{intro}</p>
       <div className="space-y-3">{children}</div>

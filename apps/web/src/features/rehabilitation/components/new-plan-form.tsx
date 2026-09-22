@@ -24,7 +24,7 @@ export function NewPlanForm({
         <p className="text-xs uppercase tracking-wide text-text-secondary">{patientName}</p>
         <h1 className="mt-1 font-sans text-3xl">Новий план реабілітації</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Спочатку створюється чернетка. Додайте цілі або вправи перед активацією.
+          План одразу стане активним після створення.
         </p>
       </header>
       <section className="ui-surface grid gap-4 p-5 sm:grid-cols-2">
@@ -72,7 +72,7 @@ export function NewPlanForm({
       ) : null}
       <div className="ui-form-actions">
         <button disabled={pending} className="rc-btn rc-btn-primary">
-          {pending ? 'Створення…' : 'Створити чернетку'}
+          {pending ? 'Створення…' : 'Створити план'}
         </button>
         <a href={`/app/patients/${patientId}`} className="rc-btn rc-btn-ghost">
           Скасувати
