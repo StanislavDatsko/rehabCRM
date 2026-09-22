@@ -16,14 +16,9 @@ export class IdentityResolutionError extends Error {
 export class IdentityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async resolvePrincipal(subject: string): Promise<AuthenticatedPrincipal> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        identityProvider_identityProviderSubject: {
-          identityProvider: IDENTITY_PROVIDER,
-          identityProviderSubject: subject,
-        },
-      },
+  async resolvePrincipal(subject: string, userId?: string): Promise<AuthenticatedPrincipal> {
+    const user = await this.prisma.user.findFirst({
+      where: userId ? { id: userId } : { identityProviderSubject: subject, identityProvider: IDENTITY_PROVIDER },
       include: {
         memberships: {
           where: { status: 'ACTIVE' },

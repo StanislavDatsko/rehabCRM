@@ -271,6 +271,7 @@ export class AnatomyService {
           mappingId: body.mappingId,
           type: body.type,
           severity: body.severity ?? null,
+          colorHex: body.colorHex ?? null,
           title: body.title,
           note: body.note ?? null,
           stableMeshKey: body.anchor.stableMeshKey,

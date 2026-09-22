@@ -27,7 +27,7 @@ export default async function PatientBodyMapPage({
   if (!canReadBodyMap(me))
     return (
       <div className="rounded-md border border-danger/30 bg-danger/5 p-5">
-        <h1 className="font-serif text-2xl">Body map unavailable</h1>
+        <h1 className="font-sans text-2xl">Body map unavailable</h1>
         <p className="mt-2 text-sm">You do not have clinical anatomy permissions.</p>
       </div>
     );

@@ -1,5 +1,6 @@
 import { serverApiFetch } from '../../../lib/api/server-api-client';
 import { acknowledgeAlert, resolveAlert } from '../../../features/notifications/clinician-actions';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 type Alert = {
   id: string;
   patientId: string;
@@ -16,22 +17,14 @@ export default async function AlertsPage() {
   const alerts = await serverApiFetch<Alert[]>('/api/v1/clinical-alerts');
   return (
     <div className="space-y-6">
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="rc-kicker text-white/75">Клінічний контроль</p>
-        <h1 className="font-serif text-3xl">Пацієнти, що потребують уваги</h1>
-        <p className="mt-2 text-sm text-white/80">
-          Детерміновані сигнали для клінічного перегляду, не діагнози.
-        </p>
-      </header>
+      <PageHeader eyebrow="Клінічний контроль" title="Черга уваги" description="Детерміновані сигнали для клінічного перегляду, не діагнози." metadata={<span className="ui-count">{alerts.filter((item) => item.status !== 'RESOLVED').length} відкрито</span>} />
       {alerts.length ? (
         <div className="space-y-3">
           {alerts.map((a) => (
-            <article key={a.id} className="rc-card p-4">
+            <article key={a.id} className="ui-surface p-5 transition-colors hover:border-border-strong">
               <div className="flex flex-wrap justify-between gap-2">
                 <p className="font-medium">{a.title}</p>
-                <span className="text-sm">
-                  {a.severity} · {a.status}
-                </span>
+                <div className="flex flex-wrap gap-2"><StatusPill tone={a.severity === 'HIGH' ? 'danger' : a.severity === 'MEDIUM' ? 'warning' : 'neutral'}>{a.severity}</StatusPill><StatusPill tone={a.status === 'RESOLVED' ? 'success' : 'neutral'}>{a.status}</StatusPill></div>
               </div>
               <p className="mt-2 text-sm">{a.summary}</p>
               <div className="mt-3 flex flex-wrap gap-3">

@@ -2,9 +2,11 @@ import { t } from '../../../../i18n/messages';
 
 export default function EncounterLoading() {
   return (
-    <div className="space-y-4">
-      <h1 className="font-serif text-3xl text-text-primary">{t('encounterTitle')}</h1>
-      <p className="text-sm text-text-secondary">{t('encounterLoading')}</p>
+    <div className="space-y-5" role="status" aria-busy="true" aria-live="polite">
+      <div className="ui-skeleton h-9 w-72" />
+      <div className="ui-skeleton h-28 w-full" />
+      <div className="ui-skeleton h-96 w-full" />
+      <span className="sr-only">{t('encounterLoading')}</span>
     </div>
   );
 }

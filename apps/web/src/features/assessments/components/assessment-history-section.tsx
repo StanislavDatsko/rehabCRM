@@ -26,10 +26,10 @@ export function AssessmentHistorySection({
   };
 }) {
   return (
-    <section className="rc-card p-5">
+    <section className="ui-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-serif text-xl text-text-primary">Оцінювання</h2>
+          <h2 className="font-sans text-xl text-text-primary">Оцінювання</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Структуровані спостереження фахівця. Система не формує діагнозів.
           </p>

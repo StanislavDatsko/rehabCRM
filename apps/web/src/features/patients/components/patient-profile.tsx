@@ -1,5 +1,6 @@
 import type { PatientAdministrativeResponse } from '@repo/contracts';
-import { Button } from '@repo/ui/button';
+import type { ReactNode } from 'react';
+import { Avatar } from '@repo/ui/workspace';
 import { t } from '../../../i18n/messages';
 import { ageFromDateOfBirth, formatDateOfBirth } from '../age';
 import { patientSexLabel } from '../labels';
@@ -23,20 +24,20 @@ function formatInstant(iso: string): string {
 export function PatientProfileHeader({
   patient,
   canEdit,
+  actions,
 }: {
   patient: PatientAdministrativeResponse;
   canEdit: boolean;
+  actions?: ReactNode;
 }) {
   const dob = formatDateOfBirth(patient.dateOfBirth);
   const age = ageFromDateOfBirth(patient.dateOfBirth);
 
   return (
-    <header className="rc-card flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
+    <header className="patient-identity">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
-          {t('patientOverviewTab')}
-        </p>
-        <h1 className="mt-1 font-serif text-3xl text-text-primary">{patient.fullName}</h1>
+        <a href="/app/patients" className="mb-5 inline-flex text-xs text-text-secondary hover:text-info">← {t('patientBackToList')}</a>
+        <div className="flex items-center gap-4"><Avatar name={patient.fullName} size="lg" /><div><p className="rc-kicker">Картка пацієнта</p><h1 className="ui-page-title mt-1 break-words">{patient.fullName}</h1></div></div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <PatientStatusBadge status={patient.status} />
           {patient.internalReferenceNumber ? (
@@ -45,7 +46,7 @@ export function PatientProfileHeader({
             </span>
           ) : null}
         </div>
-        <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+        <dl className="patient-identity-facts">
           <div>
             <dt className="text-text-secondary">{t('patientFieldPhone')}</dt>
             <dd className="text-text-primary">{valueOrDash(patient.phone)}</dd>
@@ -70,16 +71,10 @@ export function PatientProfileHeader({
           </div>
         </dl>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <a href="/app/patients">
-          <Button type="button" variant="secondary">
-            {t('patientBackToList')}
-          </Button>
-        </a>
+      <div className="flex flex-wrap justify-end gap-2">
+        {actions}
         {canEdit ? (
-          <a href={`/app/patients/${patient.id}/edit`}>
-            <Button type="button">{t('patientsEdit')}</Button>
-          </a>
+          <a className="rc-btn rc-btn-secondary inline-flex items-center" href={`/app/patients/${patient.id}/edit`}>{t('patientsEdit')}</a>
         ) : null}
       </div>
     </header>
@@ -97,9 +92,9 @@ export function PatientProfileDetails({ patient }: { patient: PatientAdministrat
   ].filter(Boolean);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rc-card p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionBasics')}</h2>
+    <div className="patient-details">
+      <section>
+        <h2 className="text-base font-semibold tracking-tight text-text-primary">{t('patientSectionBasics')}</h2>
         <dl className="mt-4 space-y-3 text-sm">
           <div>
             <dt className="text-text-secondary">{t('patientFieldSex')}</dt>
@@ -112,15 +107,15 @@ export function PatientProfileDetails({ patient }: { patient: PatientAdministrat
         </dl>
       </section>
 
-      <section className="rc-card p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAddress')}</h2>
+      <section>
+        <h2 className="text-base font-semibold tracking-tight text-text-primary">{t('patientSectionAddress')}</h2>
         <p className="mt-4 text-sm text-text-primary">
           {addressParts.length > 0 ? addressParts.join(', ') : t('patientNoValue')}
         </p>
       </section>
 
-      <section className="rc-card p-6 lg:col-span-2">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionEmergency')}</h2>
+      <section className="lg:col-span-2">
+        <h2 className="text-base font-semibold tracking-tight text-text-primary">{t('patientSectionEmergency')}</h2>
         {patient.emergencyContact ? (
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <div>

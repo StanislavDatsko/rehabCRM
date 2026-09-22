@@ -1,4 +1,5 @@
 import { serverApiFetch } from '../../../lib/api/server-api-client';
+import { PageHeader } from '@repo/ui/workspace';
 export default async function PatientProgressPage() {
   const [data, monitoring] = await Promise.all([
     serverApiFetch<{
@@ -17,14 +18,8 @@ export default async function PatientProgressPage() {
   ]);
   return (
     <div className="space-y-8">
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="rc-kicker text-white/75">Відновлення</p>
-        <h1 className="mt-1 text-3xl font-semibold">Мій прогрес</h1>
-        <p className="mt-2 text-sm text-white/80">
-          Спостерігайте за ключовими змінами у власному темпі.
-        </p>
-      </header>
-      <section className="rc-card p-5">
+      <PageHeader eyebrow="Відновлення" title="Мій прогрес" description="Спостерігайте за ключовими змінами у власному темпі." />
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Вимірювання</h2>
         {data.measurements.length ? (
           <div className="mt-3" role="table">
@@ -38,7 +33,7 @@ export default async function PatientProgressPage() {
           <p className="mt-3 text-text-secondary">Вимірювань поки немає.</p>
         )}
       </section>
-      <section className="rc-card p-5">
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Мої щоденні звіти</h2>
         {monitoring.dailyReports.length ? (
           <div className="mt-3 space-y-2">
@@ -56,7 +51,7 @@ export default async function PatientProgressPage() {
           <p className="mt-3 text-text-secondary">Щоденних звітів поки немає.</p>
         )}
       </section>
-      <section>
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Виконання вправ</h2>
         {monitoring.exerciseCompletions.length ? (
           <div className="mt-3 space-y-2">

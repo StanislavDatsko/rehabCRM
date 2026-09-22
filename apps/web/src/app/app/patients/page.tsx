@@ -1,5 +1,5 @@
 import type { CurrentUserResponse } from '@repo/contracts';
-import { Button } from '@repo/ui/button';
+import { PageHeader } from '@repo/ui/workspace';
 import {
   listPatients,
   listResponsiblePractitioners,
@@ -33,7 +33,7 @@ export default async function PatientsPage({
   if (!canReadPatients(me)) {
     return (
       <>
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientsTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('patientsTitle')}</h1>
         <div className="mt-6">
           <PatientsForbiddenState />
         </div>
@@ -68,22 +68,7 @@ export default async function PatientsPage({
 
   return (
     <div className="space-y-6">
-      <div className="rc-atmosphere -mx-2 flex flex-col gap-4 rounded-3xl p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-serif text-3xl">{t('patientsTitle')}</h1>
-          <p className="mt-1 text-sm text-white/75">{t('patientsSubtitle')}</p>
-          {list ? (
-            <p className="mt-2 text-sm text-text-secondary">
-              {t('patientsTotal')}: {list.total}
-            </p>
-          ) : null}
-        </div>
-        {canCreate ? (
-          <a href="/app/patients/new">
-            <Button type="button">{t('patientsCreate')}</Button>
-          </a>
-        ) : null}
-      </div>
+      <PageHeader eyebrow="Клінічна практика" title={t('patientsTitle')} description={t('patientsSubtitle')} metadata={list ? <span className="ui-count" aria-label={`${t('patientsTotal')}: ${list.total}`}>{list.total}</span> : null} actions={canCreate ? <a className="rc-btn rc-btn-primary inline-flex items-center gap-2" href="/app/patients/new"><span aria-hidden="true">+</span>{t('patientsCreate')}</a> : null} />
 
       <PatientListFilters query={query} practitioners={practitioners} />
 

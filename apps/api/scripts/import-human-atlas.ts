@@ -58,11 +58,29 @@ async function main(): Promise<void> {
     const structures = await prisma.anatomicalStructure.findMany({ where: { code: { in: reviewed.mappings.map((item) => item.structureCode) }, active: true }, select: { id: true, code: true } });
     const structureByCode = new Map(structures.map((item) => [item.code, item.id]));
     const partById = new Map(manifest.parts.map((part) => [part.id, part]));
-    const clinicalMappings = reviewed.mappings.map((item) => {
-      const part = partById.get(item.sourcePartId);
-      const structureId = structureByCode.get(item.structureCode);
-      if (!part || part.conceptId !== item.conceptId || !structureId) throw new Error(`Unresolvable reviewed mapping ${item.sourcePartId} -> ${item.structureCode}`);
-      return { modelVersionId: version.id, structureId, sourcePartId: part.id, nodeName: part.id, meshName: part.name, primitiveIndex: 0, stableMeshKey: part.id, confidence: item.confidence };
+    const reviewedByPart = new Map(reviewed.mappings.map((item) => [item.sourcePartId, item]));
+    for (const part of manifest.parts) {
+      const reviewedMapping = reviewedByPart.get(part.id);
+      if (reviewedMapping) {
+        const structureId = structureByCode.get(reviewedMapping.structureCode);
+        if (part.conceptId !== reviewedMapping.conceptId || !structureId) throw new Error(`Unresolvable reviewed mapping ${part.id} -> ${reviewedMapping.structureCode}`);
+        continue;
+      }
+      const code = `human_atlas.${part.id.toLowerCase()}`;
+      const structure = await prisma.anatomicalStructure.upsert({
+        where: { code },
+        update: { canonicalName: part.name, displayNameEn: part.name, active: true },
+        create: { code, canonicalName: part.name, displayNameEn: part.name, category: 'OTHER', laterality: 'NOT_APPLICABLE' },
+        select: { id: true },
+      });
+      structureByCode.set(code, structure.id);
+    }
+    const clinicalMappings = manifest.parts.map((part) => {
+      const reviewedMapping = reviewedByPart.get(part.id);
+      const structureCode = reviewedMapping?.structureCode ?? `human_atlas.${part.id.toLowerCase()}`;
+      const structureId = structureByCode.get(structureCode);
+      if (!structureId) throw new Error(`Unresolvable Human Atlas mapping ${part.id} -> ${structureCode}`);
+      return { modelVersionId: version.id, structureId, sourcePartId: part.id, nodeName: part.id, meshName: part.name, primitiveIndex: 0, stableMeshKey: part.id, confidence: reviewedMapping?.confidence ?? 'EXACT' as const, reviewerNote: reviewedMapping ? 'Reviewed mapping to the RehabMIS clinical vocabulary.' : 'Exact source-part identity mapping; no cross-source clinical synonym asserted.' };
     });
     await prisma.anatomicalModelStructureMapping.createMany({ data: clinicalMappings });
     console.log(`Activated ${model.code} v${version.version}: ${manifest.parts.length} source parts.`);

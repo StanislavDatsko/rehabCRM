@@ -29,7 +29,7 @@ function row(overrides: Record<string, unknown> = {}) {
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     user: {
       id: 'staff-user',
-      identityProvider: 'neon-auth',
+      identityProvider: 'local',
       identityProviderSubject: 'staff-subject',
       email: 'staff@example.com',
       firstName: 'Staff',
@@ -70,31 +70,19 @@ function createPrismaMock() {
   return prisma;
 }
 
-function createIdentityMock() {
-  return {
-    createStaffIdentity: vi.fn(),
-    updateStaffIdentity: vi.fn(),
-    setIdentityEnabled: vi.fn(),
-    triggerRequiredActions: vi.fn(),
-    terminateSessions: vi.fn(),
-  };
-}
-
 function createMailerMock() {
   return { sendInvitation: vi.fn().mockResolvedValue(undefined) };
 }
 
 describe('StaffService', () => {
   let prisma: ReturnType<typeof createPrismaMock>;
-  let identities: ReturnType<typeof createIdentityMock>;
   let mailer: ReturnType<typeof createMailerMock>;
   let service: StaffService;
 
   beforeEach(() => {
     prisma = createPrismaMock();
-    identities = createIdentityMock();
     mailer = createMailerMock();
-    service = new StaffService(prisma as never, identities, mailer);
+    service = new StaffService(prisma as never, mailer);
   });
 
   it('conceals a cross-organization membership as 404', async () => {
@@ -127,7 +115,6 @@ describe('StaffService', () => {
 
     expect(result.status).toBe('PENDING');
     expect(prisma.user.create).not.toHaveBeenCalled();
-    expect(identities.createStaffIdentity).not.toHaveBeenCalled();
     expect(prisma.staffInvitation.create.mock.calls[0][0].data.tokenHash).not.toContain(result.inviteToken);
   });
 
@@ -141,7 +128,6 @@ describe('StaffService', () => {
       ConflictException,
     );
     expect(prisma.organizationMembership.updateMany).not.toHaveBeenCalled();
-    expect(identities.setIdentityEnabled).not.toHaveBeenCalled();
   });
 
   it('rejects changing the final active administrator to another role', async () => {

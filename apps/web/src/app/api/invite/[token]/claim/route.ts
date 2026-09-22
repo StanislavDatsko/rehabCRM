@@ -1,22 +1,23 @@
 import { parseWebEnv } from '@repo/config/web-env';
-import { getAccessToken } from '@/lib/auth/access-token';
 
-export async function POST(_request: Request, context: { params: Promise<{ token: string }> }) {
-  const { token } = await context.params;
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    return Response.json({ code: 'UNAUTHENTICATED', message: 'Authentication is required.' }, { status: 401 });
+export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
+  if (request.headers.get('origin') !== new URL(request.url).origin) {
+    return Response.json({ message: 'Invalid origin.' }, { status: 403 });
   }
-
+  const { token } = await context.params;
   const env = parseWebEnv();
   const response = await fetch(`${env.API_INTERNAL_URL}/api/v1/invite/${encodeURIComponent(token)}/claim`, {
     method: 'POST',
-    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: await request.text(),
     cache: 'no-store',
   });
   const body = await response.arrayBuffer();
-  return new Response(body.byteLength ? body : null, {
+  const result = new Response(body.byteLength ? body : null, {
     status: response.status,
     headers: response.headers.get('content-type') ? { 'content-type': response.headers.get('content-type')! } : undefined,
   });
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie) result.headers.set('set-cookie', setCookie);
+  return result;
 }

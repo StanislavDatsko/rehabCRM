@@ -24,7 +24,7 @@ export function PatientListFilters({
   practitioners: ResponsiblePractitionerResponse[];
 }) {
   return (
-    <form method="get" action="/app/patients" className="rc-card p-5">
+    <form method="get" action="/app/patients" className="ui-filter-bar">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <label htmlFor="patient-search" className="block text-xs font-medium text-text-secondary">
@@ -112,11 +112,7 @@ export function PatientListFilters({
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button type="submit">{t('patientsApplyFilters')}</Button>
-        <a href="/app/patients" className="inline-flex">
-          <Button type="button" variant="secondary">
-            {t('patientsResetFilters')}
-          </Button>
-        </a>
+        <a href="/app/patients" className="rc-btn rc-btn-ghost inline-flex items-center">{t('patientsResetFilters')}</a>
       </div>
     </form>
   );

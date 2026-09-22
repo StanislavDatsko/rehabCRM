@@ -2,7 +2,7 @@
 
 import type { ResponsiblePractitionerResponse, SchedulingCatalogResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
-import { useActionState, useEffect, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { t } from '../../../i18n/messages';
 import {
   createAppointmentAction,
@@ -17,12 +17,16 @@ export function AppointmentCreateForm({
   practitioners,
   timezone,
   prefillPatientId,
+  initialDate,
+  initialStartTime,
   onClose,
 }: {
   catalog: SchedulingCatalogResponse;
   practitioners: ResponsiblePractitionerResponse[];
   timezone: string;
   prefillPatientId: string;
+  initialDate?: string;
+  initialStartTime?: string;
   onClose: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createAppointmentAction, initialState);
@@ -32,6 +36,16 @@ export function AppointmentCreateForm({
   const [selectedTypeId, setSelectedTypeId] = useState('');
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('60');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const selectedLocation = useMemo(
     () => catalog.locations.find((location) => location.id === selectedLocationId) ?? null,
@@ -63,14 +77,18 @@ export function AppointmentCreateForm({
     <div
       role="dialog"
       aria-modal="true"
+      aria-label="Створення нового прийому"
       aria-labelledby="appointment-create-title"
+      aria-describedby="appointment-create-description"
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
     >
-      <div className="rc-card rc-card-elevated max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+      <div className="ui-surface max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
         <div className="flex items-start justify-between gap-4">
-          <h2 id="appointment-create-title" className="font-serif text-2xl text-text-primary">
+          <h2 id="appointment-create-title" className="font-sans text-2xl text-text-primary">
             {t('appointmentCreateTitle')}
           </h2>
+          <p id="appointment-create-description" className="sr-only">Створення нового прийому для пацієнта.</p>
           <button type="button" className="text-sm text-text-secondary underline" onClick={onClose}>
             {t('appointmentClose')}
           </button>
@@ -89,6 +107,7 @@ export function AppointmentCreateForm({
             </label>
             <input
               id="patient-search"
+              ref={searchRef}
               type="search"
               value={patientQuery}
               onChange={(event) => setPatientQuery(event.target.value)}
@@ -165,6 +184,7 @@ export function AppointmentCreateForm({
                 name="date"
                 type="date"
                 required
+                defaultValue={initialDate}
                 className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
@@ -174,6 +194,7 @@ export function AppointmentCreateForm({
                 name="startTime"
                 type="time"
                 required
+                defaultValue={initialStartTime}
                 className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
@@ -239,7 +260,7 @@ export function AppointmentCreateForm({
 
           {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="ui-form-actions">
             <Button type="submit" disabled={pending || !selectedPatientId}>
               {t('appointmentSave')}
             </Button>

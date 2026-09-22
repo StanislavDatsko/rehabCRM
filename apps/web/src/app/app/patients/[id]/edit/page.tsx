@@ -1,5 +1,5 @@
 import type { CurrentUserResponse } from '@repo/contracts';
-import { Button } from '@repo/ui/button';
+import { PageHeader } from '@repo/ui/workspace';
 import {
   getPatient,
   listResponsiblePractitioners,
@@ -21,7 +21,7 @@ export default async function EditPatientPage({ params }: { params: Promise<{ id
   if (!canUpdatePatient(me)) {
     return (
       <>
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientEditTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('patientEditTitle')}</h1>
         <div className="mt-6">
           <PatientsForbiddenState />
         </div>
@@ -41,7 +41,7 @@ export default async function EditPatientPage({ params }: { params: Promise<{ id
         : mapApiErrorToMessage(undefined);
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientEditTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('patientEditTitle')}</h1>
         <PatientsErrorState message={message} />
         <a href="/app/patients" className="text-sm text-info underline">
           {t('patientBackToList')}
@@ -54,17 +54,7 @@ export default async function EditPatientPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-serif text-3xl text-text-primary">{t('patientEditTitle')}</h1>
-          <p className="mt-1 text-sm text-text-secondary">{patient.fullName}</p>
-        </div>
-        <a href={`/app/patients/${patient.id}`}>
-          <Button type="button" variant="secondary">
-            {t('patientBackToProfile')}
-          </Button>
-        </a>
-      </div>
+      <PageHeader eyebrow="Картка пацієнта" title={t('patientEditTitle')} description={patient.fullName} actions={<a className="rc-btn rc-btn-secondary" href={`/app/patients/${patient.id}`}>{t('patientBackToProfile')}</a>} />
       <PatientForm
         mode="edit"
         patient={patient}

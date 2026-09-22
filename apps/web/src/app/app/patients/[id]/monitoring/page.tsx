@@ -1,4 +1,5 @@
 import { serverApiFetch } from '../../../../../lib/api/server-api-client';
+import { PageHeader } from '@repo/ui/workspace';
 
 export const dynamic = 'force-dynamic';
 type Report = {
@@ -25,14 +26,8 @@ export default async function PatientMonitoringPage({
   const data = await serverApiFetch<Monitoring>(`/api/v1/patients/${id}/monitoring?days=30`);
   return (
     <div className="space-y-6">
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="rc-kicker text-white/75">Пацієнтський моніторинг</p>
-        <h1 className="font-serif text-3xl">Дані, внесені пацієнтом</h1>
-        <p className="mt-2 text-sm text-white/80">
-          Фактичні звіти та виконання вправ без автоматичних висновків.
-        </p>
-      </header>
-      <section className="rc-card rc-card-elevated p-4" aria-label="Підсумок моніторингу">
+      <PageHeader eyebrow="Пацієнтський моніторинг" title="Дані, внесені пацієнтом" description="Фактичні звіти та виконання вправ без автоматичних висновків." />
+      <section className="ui-filter-bar" aria-label="Підсумок моніторингу">
         <p>
           Виконано вправ: {data.exerciseSummary.completedExerciseCount} з{' '}
           {data.exerciseSummary.recordedExerciseCount} записаних.
@@ -44,7 +39,7 @@ export default async function PatientMonitoringPage({
           <p className="mt-2 text-sm">Пропущені дні: {data.missingReportDays.join(', ')}</p>
         ) : null}
       </section>
-      <section className="rc-card p-5">
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Динаміка симптомів</h2>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -75,7 +70,7 @@ export default async function PatientMonitoringPage({
           <p className="mt-3 text-text-secondary">Даних поки немає.</p>
         ) : null}
       </section>
-      <section className="rc-card p-5">
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Останні коментарі</h2>
         {data.dailyReports
           .filter((r) => r.comment)
@@ -94,7 +89,7 @@ export default async function PatientMonitoringPage({
           <p className="mt-3 text-text-secondary">Коментарів поки немає.</p>
         ) : null}
       </section>
-      <section className="rc-card p-5">
+      <section className="ui-filter-bar">
         <h2 className="text-xl font-semibold">Виконання вправ</h2>
         {data.exerciseCompletions.length ? (
           <div className="mt-3 space-y-2">

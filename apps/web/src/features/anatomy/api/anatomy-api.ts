@@ -29,6 +29,7 @@ export function createBodyAnnotation(
     severity: number | null;
     title: string | null;
     note: string | null;
+    colorHex: string | null;
     anchor: SurfaceAnchor;
   },
 ): Promise<BodyAnnotationResponse> {
@@ -43,6 +44,7 @@ export function updateBodyAnnotation(
     severity: number | null;
     title: string | null;
     note: string | null;
+    colorHex: string | null;
   },
 ): Promise<BodyAnnotationResponse> {
   return serverApiFetch(`/api/v1/body-annotations/${id}`, json('PATCH', body));

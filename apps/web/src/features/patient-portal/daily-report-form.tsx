@@ -5,7 +5,7 @@ const initial: DailyReportFormState = { error: null };
 export function DailyReportForm() {
   const [state, action, pending] = useActionState(submitDailyReport, initial);
   return (
-    <form action={action} className="rc-card rc-card-elevated mt-8 max-w-xl space-y-6 p-6">
+    <form action={action} className="ui-surface mt-8 max-w-xl space-y-6 p-6">
       {[
         ['painScore', 'Рівень болю'],
         ['fatigueLevel', 'Рівень втоми'],

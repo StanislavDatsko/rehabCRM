@@ -24,11 +24,13 @@ import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import {
   cancelPlanBodySchema,
   createPlanBodySchema,
+  createExerciseBodySchema,
   exerciseListQuerySchema,
   planVersionCommandSchema,
   updatePlanBodySchema,
   type CancelPlanBody,
   type CreatePlanBody,
+  type CreateExerciseBody,
   type ExerciseListQuery,
   type PlanVersionCommand,
   type UpdatePlanBody,
@@ -48,6 +50,12 @@ export class RehabilitationController {
     @Query(new ZodValidationPipe(exerciseListQuerySchema)) query: ExerciseListQuery,
   ): Promise<ExerciseLibraryResponse> {
     return this.rehabilitation.listExercises(principal, query);
+  }
+
+  @Post('exercises')
+  @RequirePermissions(PERMISSIONS.EXERCISE_MANAGE)
+  createExercise(@CurrentPrincipal() principal: AuthenticatedPrincipal, @Body(new ZodValidationPipe(createExerciseBodySchema)) body: CreateExerciseBody): Promise<ExerciseDetailResponse> {
+    return this.rehabilitation.createExercise(principal, body);
   }
 
   @Get('exercises/:id')

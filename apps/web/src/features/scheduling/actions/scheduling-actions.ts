@@ -206,7 +206,7 @@ export async function rescheduleAppointmentAction(
 
 async function runStatusCommand(
   formData: FormData,
-  command: 'confirm' | 'check-in' | 'cancel' | 'no-show' | 'start-encounter',
+  command: 'confirm' | 'confirm-and-start' | 'check-in' | 'cancel' | 'no-show' | 'start-encounter',
 ): Promise<SchedulingFormState> {
   const me = await loadCurrentUser();
   if (me === 'unauthenticated') {
@@ -234,10 +234,18 @@ async function runStatusCommand(
   if (command === 'start-encounter' && !canStartEncounter(me)) {
     return { error: mapSchedulingErrorToMessage('FORBIDDEN') };
   }
+  if (command === 'confirm-and-start' && (!canChangeAppointmentStatus(me) || !canStartEncounter(me))) {
+    return { error: mapSchedulingErrorToMessage('FORBIDDEN') };
+  }
 
   try {
     if (command === 'confirm') {
       await confirmAppointment(id, { version });
+    } else if (command === 'confirm-and-start') {
+      const confirmed = await confirmAppointment(id, { version });
+      const encounter = await startEncounterForAppointment(id, { version: confirmed.version });
+      revalidateSchedulingPaths(id, encounter.id);
+      redirect(`/app/encounters/${encounter.id}`);
     } else if (command === 'check-in') {
       await checkInAppointment(id, { version });
     } else if (command === 'cancel') {
@@ -268,6 +276,13 @@ export async function confirmAppointmentAction(
   formData: FormData,
 ): Promise<SchedulingFormState> {
   return runStatusCommand(formData, 'confirm');
+}
+
+export async function confirmAndStartEncounterAction(
+  _prev: SchedulingFormState,
+  formData: FormData,
+): Promise<SchedulingFormState> {
+  return runStatusCommand(formData, 'confirm-and-start');
 }
 
 export async function checkInAppointmentAction(

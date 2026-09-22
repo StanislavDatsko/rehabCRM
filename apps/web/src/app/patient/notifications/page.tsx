@@ -1,5 +1,6 @@
 import { serverApiFetch } from '../../../lib/api/server-api-client';
 import { dismissNotification, markNotificationRead } from '../../../features/notifications/actions';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 type Item = {
   id: string;
   title: string;
@@ -13,24 +14,17 @@ export default async function PatientNotificationsPage() {
   const items = await serverApiFetch<Item[]>('/api/v1/patient-portal/notifications');
   return (
     <div className="space-y-6">
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="rc-kicker text-white/75">Комунікація</p>
-        <h1 className="mt-1 text-3xl font-semibold">Сповіщення</h1>
-        <p className="mt-2 text-sm text-white/80">Ваші внутрішні сповіщення про реабілітацію.</p>
-      </header>
+      <PageHeader eyebrow="Комунікація" title="Сповіщення" description="Ваші внутрішні сповіщення про реабілітацію." />
       {items.length ? (
         <div className="space-y-3">
           {items.map((item) => (
             <article
               key={item.id}
-              className={`rc-card p-4 ${item.status === 'UNREAD' ? 'border-brand/40 bg-brand/5' : ''}`}
+              className={`ui-filter-bar p-4 ${item.status === 'UNREAD' ? 'border-info/40 bg-info/5' : ''}`}
             >
               <p className="font-medium">{item.title}</p>
               <p className="mt-1 text-sm">{item.message}</p>
-              <p className="mt-2 text-xs text-text-secondary">
-                {new Date(item.createdAt).toLocaleString('uk-UA')} ·{' '}
-                {item.status === 'UNREAD' ? 'нове' : 'прочитано'}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-text-secondary"><span>{new Date(item.createdAt).toLocaleString('uk-UA')}</span><StatusPill tone={item.status === 'UNREAD' ? 'info' : 'neutral'}>{item.status === 'UNREAD' ? 'Нове' : 'Прочитано'}</StatusPill></div>
               {item.status === 'UNREAD' ? (
                 <div className="mt-3 flex gap-3">
                   <form action={markNotificationRead}>

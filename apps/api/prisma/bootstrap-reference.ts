@@ -16,9 +16,9 @@ const templates = [
   ['a5100000-0000-4000-8000-000000000004', 'functional.general', 'Загальна функціональна оцінка', [1, 5, 6]],
 ] as const;
 const exercises = [
-  ['knee.quad-set', 'Ізометричне напруження квадрицепса', 'Активація квадрицепса.', 'STRENGTH', 'FOUNDATIONAL'],
-  ['knee.heel-slide', 'Ковзання пʼятою', 'Рух для згинання коліна.', 'MOBILITY', 'FOUNDATIONAL'],
-  ['hip.bridge', 'Сідничний місток', 'Зміцнення розгиначів кульшового суглоба.', 'STRENGTH', 'FOUNDATIONAL'],
+  ['b6000000-0000-4000-8000-000000000001', 'knee.quad-set', 'Ізометричне напруження квадрицепса', 'Активація квадрицепса.', 'STRENGTH', 'FOUNDATIONAL'],
+  ['b6000000-0000-4000-8000-000000000002', 'knee.heel-slide', 'Ковзання пʼятою', 'Рух для згинання коліна.', 'MOBILITY', 'FOUNDATIONAL'],
+  ['b6000000-0000-4000-8000-000000000003', 'hip.bridge', 'Сідничний місток', 'Зміцнення розгиначів кульшового суглоба.', 'STRENGTH', 'FOUNDATIONAL'],
 ] as const;
 
 async function main() {
@@ -32,8 +32,8 @@ async function main() {
       await prisma.assessmentTemplateItem.upsert({ where: { id: itemId }, update: { templateId: id, measurementDefinitionId: definitions[definitionIndex - 1]![0], displayOrder: order + 1, required: order < 3 }, create: { id: itemId, templateId: id, measurementDefinitionId: definitions[definitionIndex - 1]![0], displayOrder: order + 1, required: order < 3 } });
     }
   }
-  for (const [code, name, description, category, difficulty] of exercises) {
-    await prisma.exerciseDefinition.upsert({ where: { id: `b6000000-0000-4000-8000-${code.replace(/[^a-z]/g, '').padEnd(12, '0').slice(0, 12)}` }, update: { name, description, category, difficulty, active: true }, create: { id: `b6000000-0000-4000-8000-${code.replace(/[^a-z]/g, '').padEnd(12, '0').slice(0, 12)}`, organizationId: null, code, name, description, instructions: description, category, difficulty, anatomicalRegionCodes: ['knee'], lateralityApplicability: ['LEFT', 'RIGHT'], targetMuscleGroupCodes: [], equipment: [], supportedDosageKinds: ['SETS_REPETITIONS'], active: true } });
+  for (const [id, code, name, description, category, difficulty] of exercises) {
+    await prisma.exerciseDefinition.upsert({ where: { id }, update: { name, description, category, difficulty, active: true }, create: { id, organizationId: null, code, name, description, instructions: description, anatomicalRegionCodes: ['knee'], lateralityApplicability: ['LEFT', 'RIGHT'], targetMuscleGroupCodes: [], equipment: [], supportedDosageKinds: ['SETS_REPETITIONS'], category, difficulty, active: true } });
   }
 }
 

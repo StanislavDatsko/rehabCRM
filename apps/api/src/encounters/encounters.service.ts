@@ -9,6 +9,7 @@ import type { AuthenticatedPrincipal } from '../common/auth/principal';
 import { writeAuditEvent } from '../common/audit/write-audit';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { canTransitionAppointment } from '../appointments/appointment-transitions';
+import type { CreateEncounterExerciseLogBody } from './encounter.schemas';
 import {
   ENCOUNTER_INCLUDE,
   toEncounterResponse,
@@ -119,6 +120,41 @@ export class EncountersService {
     });
 
     return toEncounterResponse(updated);
+  }
+
+  async listExerciseLogs(principal: AuthenticatedPrincipal, id: string) {
+    await this.requireEncounter(principal.organizationId, id);
+    return this.prisma.encounterExerciseLog.findMany({
+      where: { organizationId: principal.organizationId, encounterId: id },
+      orderBy: { createdAt: 'asc' },
+      include: { exercise: { select: { id: true, code: true, name: true } }, createdBy: { select: { id: true, displayName: true } } },
+    });
+  }
+
+  async listPatientExerciseLogs(principal: AuthenticatedPrincipal, patientId: string) {
+    const patient = await this.prisma.patient.findFirst({ where: { id: patientId, organizationId: principal.organizationId }, select: { id: true } });
+    if (!patient) throw new NotFoundException({ code: 'PATIENT_NOT_FOUND', message: 'Patient was not found.' });
+    return this.prisma.encounterExerciseLog.findMany({ where: { organizationId: principal.organizationId, patientId }, orderBy: { createdAt: 'desc' }, include: { exercise: { select: { id: true, code: true, name: true } }, encounter: { select: { id: true, startedAt: true } }, createdBy: { select: { id: true, displayName: true } } } });
+  }
+
+  async createExerciseLog(
+    principal: AuthenticatedPrincipal,
+    id: string,
+    body: CreateEncounterExerciseLogBody,
+  ) {
+    const encounter = await this.requireEncounter(principal.organizationId, id);
+    if (encounter.status !== 'IN_PROGRESS') {
+      throw new BadRequestException({ code: 'ENCOUNTER_NOT_IN_PROGRESS', message: 'Exercise logs can only be added during an in-progress encounter.' });
+    }
+    const exercise = body.exerciseId ? await this.prisma.exerciseDefinition.findFirst({
+      where: { id: body.exerciseId, OR: [{ organizationId: null }, { organizationId: principal.organizationId }], active: true },
+      select: { id: true },
+    }) : null;
+    if (body.exerciseId && !exercise) throw new NotFoundException({ code: 'EXERCISE_NOT_FOUND', message: 'Exercise was not found.' });
+    return this.prisma.encounterExerciseLog.create({
+      data: { organizationId: principal.organizationId, encounterId: encounter.id, patientId: encounter.patient.id, createdByUserId: principal.userId, ...body, exerciseId: exercise?.id ?? null, exerciseName: exercise ? null : body.exerciseName },
+      include: { exercise: { select: { id: true, code: true, name: true } }, createdBy: { select: { id: true, displayName: true } } },
+    });
   }
 
   private async requireEncounter(

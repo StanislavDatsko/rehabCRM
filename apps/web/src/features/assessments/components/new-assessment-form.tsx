@@ -1,6 +1,7 @@
 import type { AssessmentTemplateResponse, PatientAdministrativeResponse } from '@repo/contracts';
 import { createAssessmentAction } from '../actions/assessment-actions';
 import { assessmentErrorMessage } from '../labels';
+import { PageHeader } from '@repo/ui/workspace';
 
 export function NewAssessmentForm({
   patient,
@@ -16,15 +17,7 @@ export function NewAssessmentForm({
   const error = assessmentErrorMessage(errorCode);
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
-          {patient.fullName}
-        </p>
-        <h1 className="mt-1 font-serif text-3xl">Нове оцінювання</h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          За потреби оберіть конфігурований шаблон або створіть порожню чернетку. Це не автоматична діагностика і не призначення лікування.
-        </p>
-      </header>
+      <PageHeader eyebrow={patient.fullName} title="Нове оцінювання" description="Оберіть конфігурований шаблон або створіть порожню чернетку. Це не автоматична діагностика і не призначення лікування." />
       {error ? (
         <div
           role="alert"
@@ -33,7 +26,7 @@ export function NewAssessmentForm({
           {error}
         </div>
       ) : null}
-      <form action={createAssessmentAction} className="rc-card rc-card-elevated space-y-5 p-5">
+      <form action={createAssessmentAction} className="ui-filter-bar space-y-5">
         <input type="hidden" name="patientId" value={patient.id} />
         {encounterId ? <input type="hidden" name="encounterId" value={encounterId} /> : null}
         <label className="block text-sm font-medium">
@@ -81,7 +74,7 @@ export function NewAssessmentForm({
         <div className="rounded-md bg-surface-muted p-3 text-xs text-text-secondary">
           Демонстраційні шаблони є конфігурованими прикладами та потребують затвердження клінікою.
         </div>
-        <div className="flex gap-3">
+        <div className="ui-form-actions">
           <button className="rc-btn rc-btn-primary" type="submit">
             Створити чернетку
           </button>

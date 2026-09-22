@@ -1,4 +1,5 @@
 import { Button } from '@repo/ui/button';
+import { EmptyState, ErrorState } from '@repo/ui/components';
 import { t } from '../../../i18n/messages';
 
 export function PatientsEmptyState({
@@ -8,40 +9,16 @@ export function PatientsEmptyState({
   filtered: boolean;
   canCreate: boolean;
 }) {
-  return (
-    <div className="rc-card border-dashed px-6 py-14 text-center">
-      <h2 className="font-serif text-xl text-text-primary">
-        {filtered ? t('patientsEmptyFilteredTitle') : t('patientsEmptyTitle')}
-      </h2>
-      <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">
-        {filtered ? t('patientsEmptyFilteredBody') : t('patientsEmptyBody')}
-      </p>
-      {!filtered && canCreate ? (
-        <div className="mt-6">
-          <a href="/app/patients/new">
-            <Button type="button">{t('patientsCreate')}</Button>
-          </a>
-        </div>
-      ) : null}
-    </div>
-  );
+  return <EmptyState title={filtered ? t('patientsEmptyFilteredTitle') : t('patientsEmptyTitle')} description={filtered ? t('patientsEmptyFilteredBody') : t('patientsEmptyBody')} action={!filtered && canCreate ? <a href="/app/patients/new"><Button type="button">{t('patientsCreate')}</Button></a> : undefined} />;
 }
 
 export function PatientsErrorState({ message }: { message: string }) {
-  return (
-    <div
-      role="alert"
-      className="rounded-xl border border-danger/30 bg-danger/10 px-5 py-6 text-sm text-danger shadow-sm"
-    >
-      <p className="font-semibold">{t('patientsErrorTitle')}</p>
-      <p className="mt-1">{message}</p>
-    </div>
-  );
+  return <ErrorState title={t('patientsErrorTitle')} description={message} />;
 }
 
 export function PatientsForbiddenState() {
   return (
-    <div role="alert" className="rc-card px-5 py-8 text-sm">
+    <div role="alert" className="ui-surface px-5 py-8 text-sm">
       <p className="text-text-primary">{t('patientsForbidden')}</p>
     </div>
   );

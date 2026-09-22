@@ -84,7 +84,7 @@ export async function listExercises(
 ): Promise<ExerciseLibraryResponse> {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(
-    ([key, value]) => value !== undefined && params.set(key, String(value)),
+    ([key, value]) => value !== undefined && value !== '' && params.set(key, String(value)),
   );
   return serverApiFetch(`/api/v1/exercises${params.size ? `?${params}` : ''}`);
 }

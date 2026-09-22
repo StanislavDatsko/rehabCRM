@@ -30,7 +30,7 @@ export function AnnotationEditor({
     initial,
   );
   return (
-    <div className="rc-card space-y-4 p-4">
+    <div className="ui-surface space-y-4 p-4">
       <div>
         <p className="text-xs uppercase tracking-wide text-text-secondary">Selected annotation</p>
         <h3 className="font-medium text-text-primary">
@@ -38,7 +38,7 @@ export function AnnotationEditor({
         </h3>
         <p className="text-sm text-text-secondary">
           {annotation.structure.name} · {annotation.status.toLowerCase()} ·{' '}
-          {new Date(annotation.createdAt).toLocaleString()}
+          {new Date(annotation.createdAt).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' })}
         </p>
       </div>
       {canEdit && annotation.status === 'ACTIVE' ? (
@@ -52,7 +52,7 @@ export function AnnotationEditor({
               name="title"
               defaultValue={annotation.title ?? ''}
               maxLength={200}
-              className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+              className="field mt-1 w-full"
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -61,7 +61,7 @@ export function AnnotationEditor({
               <select
                 name="type"
                 defaultValue={annotation.type}
-                className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+                className="field mt-1 w-full"
               >
                 {BODY_ANNOTATION_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -78,7 +78,7 @@ export function AnnotationEditor({
                 min={0}
                 max={10}
                 defaultValue={annotation.severity ?? ''}
-                className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+                className="field mt-1 w-full"
               />
             </label>
           </div>
@@ -89,7 +89,7 @@ export function AnnotationEditor({
               defaultValue={annotation.note ?? ''}
               maxLength={3000}
               rows={3}
-              className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+              className="field mt-1 w-full"
             />
           </label>
           {updateState.error ? (
@@ -97,7 +97,7 @@ export function AnnotationEditor({
               {updateState.error}
             </p>
           ) : null}
-          <button disabled={updating} className="rounded bg-info px-3 py-2 text-sm text-white">
+          <button disabled={updating} className="rc-btn rc-btn-primary">
             Save annotation
           </button>
         </form>
@@ -114,7 +114,7 @@ export function AnnotationEditor({
             <input
               name="reason"
               minLength={3}
-              className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+              className="field mt-1 w-full"
             />
           </label>
           <div className="flex gap-2">
@@ -151,7 +151,7 @@ export function AnnotationEditor({
         <ol className="mt-2 space-y-1 text-xs text-text-secondary">
           {annotation.history.map((item) => (
             <li key={item.id}>
-              {new Date(item.changedAt).toLocaleString()} · {item.fromStatus ?? 'CREATED'} →{' '}
+              {new Date(item.changedAt).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' })} · {item.fromStatus ?? 'CREATED'} →{' '}
               {item.toStatus} · {item.changedBy.displayName}
               {item.reason ? ` · ${item.reason}` : ''}
             </li>

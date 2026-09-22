@@ -22,12 +22,12 @@ export function NewPlanForm({
       <input type="hidden" name="baselineMeasurementId" value={baselineMeasurementId ?? ''} />
       <header>
         <p className="text-xs uppercase tracking-wide text-text-secondary">{patientName}</p>
-        <h1 className="mt-1 font-serif text-3xl">Новий план реабілітації</h1>
+        <h1 className="mt-1 font-sans text-3xl">Новий план реабілітації</h1>
         <p className="mt-2 text-sm text-text-secondary">
           Спочатку створюється чернетка. Додайте цілі або вправи перед активацією.
         </p>
       </header>
-      <section className="rc-card rc-card-elevated grid gap-4 p-5 sm:grid-cols-2">
+      <section className="ui-surface grid gap-4 p-5 sm:grid-cols-2">
         <label className="sm:col-span-2 text-sm">
           Назва
           <input
@@ -70,7 +70,7 @@ export function NewPlanForm({
           {state.error}
         </p>
       ) : null}
-      <div className="flex gap-3">
+      <div className="ui-form-actions">
         <button disabled={pending} className="rc-btn rc-btn-primary">
           {pending ? 'Створення…' : 'Створити чернетку'}
         </button>

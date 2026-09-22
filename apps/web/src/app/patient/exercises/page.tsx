@@ -1,5 +1,6 @@
 import { serverApiFetch } from '../../../lib/api/server-api-client';
 import { completeExercise } from '../../../features/patient-portal/exercise-actions';
+import { PageHeader } from '@repo/ui/workspace';
 type Exercise = {
   id: string;
   exerciseNameSnapshot: string;
@@ -16,17 +17,11 @@ export default async function PatientExercisesPage() {
   const exercises = await serverApiFetch<Exercise[]>('/api/v1/patient-portal/exercises/today');
   return (
     <>
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="rc-kicker text-white/75">Мій план</p>
-        <h1 className="mt-1 text-3xl font-semibold">Вправи на сьогодні</h1>
-        <p className="mt-2 text-sm text-white/80">
-          Невеликі послідовні кроки підтримують відновлення.
-        </p>
-      </header>
+      <PageHeader eyebrow="Мій план" title="Вправи на сьогодні" description="Невеликі послідовні кроки підтримують відновлення." />
       {exercises.length ? (
         <div className="mt-6 space-y-4">
           {exercises.map((e) => (
-            <article key={e.id} className="rc-card rc-card-elevated p-5">
+            <article key={e.id} className="ui-filter-bar">
               <h2 className="text-lg font-semibold">{e.exerciseNameSnapshot}</h2>
               <p className="mt-2 text-sm">
                 {e.sets ?? '—'} підходи · {e.repetitions ?? '—'} повторень
@@ -42,7 +37,7 @@ export default async function PatientExercisesPage() {
                 <input type="hidden" name="exercisePrescriptionId" value={e.id} />
                 <button
                   type="submit"
-                  className="rounded-md bg-text-primary px-4 py-2 text-sm text-white"
+                  className="rc-btn rc-btn-primary"
                 >
                   Позначити виконаною
                 </button>

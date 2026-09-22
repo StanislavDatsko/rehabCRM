@@ -3,7 +3,7 @@ import { Logger } from 'nestjs-pino';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { RequestMethod } from '@nestjs/common';
-import { json, urlencoded } from 'express';
+import { json, urlencoded, type Request, type Response, type NextFunction } from 'express';
 import helmet from 'helmet';
 import { parseApiEnv } from '@repo/config/api-env';
 import { AppModule } from './app.module';
@@ -25,6 +25,14 @@ async function bootstrap(): Promise<void> {
     }),
   );
   app.use(requestIdMiddleware);
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    const origin = request.headers.origin;
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && origin && origin !== new URL(env.WEB_PUBLIC_URL).origin) {
+      response.status(403).json({ message: 'Invalid origin.' });
+      return;
+    }
+    next();
+  });
   app.use(httpObservabilityMiddleware(app.get(MetricsService)));
   app.use(json({ limit: '1mb', type: 'application/json' }));
   app.use(urlencoded({ extended: false, limit: '64kb', parameterLimit: 100 }));
@@ -52,10 +60,10 @@ async function bootstrap(): Promise<void> {
       new DocumentBuilder()
         .setTitle('RehabCRM API')
         .setDescription(
-          'Staff-only API. Browser clients authenticate via the Next.js BFF; Swagger bearer tokens are for controlled development only.',
+          'Browser clients authenticate using opaque session cookies through the Next.js BFF.',
         )
         .setVersion('0.1.0')
-        .addBearerAuth()
+        .addCookieAuth('rehabmis_session')
         .build(),
     );
     SwaggerModule.setup('api/docs', app, document);

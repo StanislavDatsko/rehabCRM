@@ -55,10 +55,10 @@ export function StaffProfileActions({ staff, capabilities }: { staff: StaffRespo
     <div className="grid gap-6 xl:grid-cols-2">
       {capabilities.canUpdate ? <form
         action={profileAction}
-        className="rc-card rc-card-elevated space-y-4 p-5"
+        className="ui-surface space-y-4 p-5"
       >
         <IdentityFields staff={staff} />
-        <h2 className="font-serif text-lg">Профіль</h2>
+        <h2 className="font-sans text-lg">Профіль</h2>
         <Feedback state={profileState} />
         <div className="grid gap-3 sm:grid-cols-2">
           <Field id="firstName" label="Ім’я" defaultValue={staff.firstName} required />
@@ -77,15 +77,15 @@ export function StaffProfileActions({ staff, capabilities }: { staff: StaffRespo
         <Button type="submit" disabled={profilePending}>
           Зберегти профіль
         </Button>
-      </form> : <section className="rc-card space-y-4 p-5"><h2 className="font-serif text-lg">Профіль</h2><p>{staff.firstName} {staff.lastName}</p><p className="text-sm text-text-secondary">Профіль доступний лише для читання.</p></section>}
+      </form> : <section className="ui-surface space-y-4 p-5"><h2 className="font-sans text-lg">Профіль</h2><p>{staff.firstName} {staff.lastName}</p><p className="text-sm text-text-secondary">Профіль доступний лише для читання.</p></section>}
 
       <div className="space-y-6">
         {capabilities.canChangeRole && staff.role !== 'SYSTEM_ADMIN' ? <form
           action={roleAction}
-          className="rc-card space-y-3 p-5"
+          className="ui-surface space-y-3 p-5"
         >
           <IdentityFields staff={staff} />
-          <h2 className="font-serif text-lg">Роль і клінічний профіль</h2>
+          <h2 className="font-sans text-lg">Роль і клінічний профіль</h2>
           <Feedback state={roleState} />
           <label htmlFor="staff-role" className="block text-xs font-medium text-text-secondary">
             Роль
@@ -94,7 +94,7 @@ export function StaffProfileActions({ staff, capabilities }: { staff: StaffRespo
             id="staff-role"
             name="role"
             defaultValue={staff.role}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field w-full"
           >
             {ASSIGNABLE_STAFF_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -105,10 +105,10 @@ export function StaffProfileActions({ staff, capabilities }: { staff: StaffRespo
           <Button type="submit" disabled={rolePending}>
             Змінити роль
           </Button>
-        </form> : <section className="rc-card space-y-3 p-5"><h2 className="font-serif text-lg">Роль і клінічний профіль</h2><p>{staffRoleLabel(staff.role)}</p></section>}
+        </form> : <section className="ui-surface space-y-3 p-5"><h2 className="font-sans text-lg">Роль і клінічний профіль</h2><p>{staffRoleLabel(staff.role)}</p></section>}
 
-        <section className="rc-card space-y-4 p-5">
-          <h2 className="font-serif text-lg">Доступ і сеанси</h2>
+        <section className="ui-surface space-y-4 p-5">
+          <h2 className="font-sans text-lg">Доступ і сеанси</h2>
           {staff.identitySyncPending ? (
             <p
               role="alert"

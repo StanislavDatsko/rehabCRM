@@ -1,4 +1,4 @@
-export const IDENTITY_PROVIDER = 'neon-auth' as const;
+export const IDENTITY_PROVIDER = 'local' as const;
 
 export const DEV_SEED = {
   organizations: {
@@ -13,7 +13,7 @@ export const DEV_SEED = {
       slug: 'dev-other-clinic',
     },
   },
-  neonAuthSubjects: {
+  localSubjects: {
     organizationAdmin: '66666666-6666-4666-8666-666666666666',
     receptionist: '11111111-1111-4111-8111-111111111111',
     specialist: '22222222-2222-4222-8222-222222222222',

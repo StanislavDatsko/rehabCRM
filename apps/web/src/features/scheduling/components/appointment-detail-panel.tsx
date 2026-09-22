@@ -11,6 +11,7 @@ import { t } from '../../../i18n/messages';
 import {
   cancelAppointmentAction,
   checkInAppointmentAction,
+  confirmAndStartEncounterAction,
   confirmAppointmentAction,
   noShowAppointmentAction,
   rescheduleAppointmentAction,
@@ -19,7 +20,9 @@ import {
 } from '../actions/scheduling-actions';
 import { appointmentActionLabel } from '../labels';
 import {
+  canChangeAppointmentStatus,
   canUpdateAppointment,
+  canStartEncounter,
   visibleAppointmentActions,
 } from '../permissions';
 import { formatSchedulingInstant } from '../timezone';
@@ -97,6 +100,9 @@ export function AppointmentDetailPanel({
   );
 
   const actions = visibleAppointmentActions(appointment.status, user);
+  const canConfirmAndStart = canChangeAppointmentStatus(user) && canStartEncounter(user);
+  const confirmAction = canConfirmAndStart ? confirmAndStartEncounterAction : confirmAppointmentAction;
+  const confirmCommand = canConfirmAndStart ? 'confirm-and-start' : 'confirm';
   const canReschedule = canUpdateAppointment(user) && appointment.status !== 'CANCELLED';
 
   const durationMinutes = useMemo(() => {
@@ -114,11 +120,13 @@ export function AppointmentDetailPanel({
       role="dialog"
       aria-modal="true"
       aria-labelledby="appointment-detail-title"
-      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-lg flex-col border-l border-border bg-surface shadow-sm"
+      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-lg flex-col border-l border-success/30 bg-[#120d1f] shadow-[-24px_0_80px_rgba(0,0,0,.35)]"
     >
-      <div className="flex items-start justify-between border-b border-border px-5 py-4">
+      <div className="border-b border-border bg-gradient-to-br from-success/10 via-surface to-surface px-5 py-5">
+        <div className="flex items-start justify-between">
         <div>
-          <h2 id="appointment-detail-title" className="font-serif text-xl text-text-primary">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-success">Клінічний календар</p>
+          <h2 id="appointment-detail-title" className="mt-1 font-sans text-2xl text-text-primary">
             {t('appointmentDetailTitle')}
           </h2>
           <div className="mt-2">
@@ -128,11 +136,35 @@ export function AppointmentDetailPanel({
         <a href={closeHref} className="text-sm text-text-secondary underline">
           {t('appointmentClose')}
         </a>
+        </div>
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5 text-sm">
-        <dl className="space-y-3">
-          <div>
+        {actions.includes('confirm') ? (
+          <div className="rounded-lg border border-info/30 bg-info/5 p-4">
+            <p className="mb-3 text-sm text-text-secondary">Після підтвердження прийом одразу розпочнеться, а сторінка візиту відкриється автоматично.</p>
+            <StatusActionForm action={confirmAction} appointmentId={appointment.id} version={appointment.version} command={confirmCommand} variant="primary" />
+          </div>
+        ) : actions.includes('check-in') ? (
+          <div className="rounded-lg border border-success/30 bg-success/5 p-4">
+            <p className="mb-3 text-sm text-text-secondary">Коли пацієнт прибув, відміть його прибуття, щоб розпочати прийом.</p>
+            <StatusActionForm action={checkInAppointmentAction} appointmentId={appointment.id} version={appointment.version} command="check-in" variant="primary" />
+          </div>
+        ) : null}
+        {!appointment.encounterId && actions.includes('start-encounter') ? (
+          <div className="rounded-lg border border-success/30 bg-success/5 p-4">
+            <p className="mb-3 text-sm text-text-secondary">Почни прийом, щоб додати виконані вправи та інші клінічні записи.</p>
+            <StatusActionForm
+              action={startEncounterAction}
+              appointmentId={appointment.id}
+              version={appointment.version}
+              command="start-encounter"
+              variant="primary"
+            />
+          </div>
+        ) : null}
+        <dl className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-border bg-surface/60 p-3">
             <dt className="text-text-secondary">{t('appointmentFieldPatient')}</dt>
             <dd>
               <a href={`/app/patients/${appointment.patient.id}`} className="text-info underline">
@@ -140,15 +172,15 @@ export function AppointmentDetailPanel({
               </a>
             </dd>
           </div>
-          <div>
+          <div className="rounded-lg border border-border bg-surface/60 p-3">
             <dt className="text-text-secondary">{t('appointmentFieldPractitioner')}</dt>
             <dd>{appointment.practitioner.displayName}</dd>
           </div>
-          <div>
+          <div className="rounded-lg border border-border bg-surface/60 p-3">
             <dt className="text-text-secondary">{t('appointmentFieldDate')}</dt>
             <dd>{formatSchedulingInstant(appointment.startsAt, timezone)}</dd>
           </div>
-          <div>
+          <div className="rounded-lg border border-border bg-surface/60 p-3">
             <dt className="text-text-secondary">{t('appointmentFieldDuration')}</dt>
             <dd>
               {durationMinutes} {t('appointmentMinutesShort')}
@@ -193,7 +225,10 @@ export function AppointmentDetailPanel({
         </dl>
 
         {appointment.encounterId ? (
-          <a href={`/app/encounters/${appointment.encounterId}`}>
+          <a
+            href={`/app/encounters/${appointment.encounterId}`}
+            className="mt-6 block w-fit"
+          >
             <Button type="button">{t('appointmentActionOpenEncounter')}</Button>
           </a>
         ) : null}
@@ -274,10 +309,10 @@ export function AppointmentDetailPanel({
             <div className="flex flex-wrap gap-2">
               {actions.includes('confirm') ? (
                 <StatusActionForm
-                  action={confirmAppointmentAction}
+                  action={confirmAction}
                   appointmentId={appointment.id}
                   version={appointment.version}
-                  command="confirm"
+                  command={confirmCommand}
                   variant="primary"
                 />
               ) : null}
@@ -289,14 +324,8 @@ export function AppointmentDetailPanel({
                   command="check-in"
                 />
               ) : null}
-              {actions.includes('start-encounter') ? (
-                <StatusActionForm
-                  action={startEncounterAction}
-                  appointmentId={appointment.id}
-                  version={appointment.version}
-                  command="start-encounter"
-                  variant="primary"
-                />
+              {actions.includes('start-encounter') && appointment.encounterId ? (
+                <StatusActionForm action={startEncounterAction} appointmentId={appointment.id} version={appointment.version} command="start-encounter" variant="primary" />
               ) : null}
               {actions.includes('no-show') ? (
                 <StatusActionForm

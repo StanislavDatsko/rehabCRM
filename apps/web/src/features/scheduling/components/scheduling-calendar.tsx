@@ -1,7 +1,7 @@
 'use client';
 
 import type { AppointmentCalendarItem } from '@repo/contracts';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { cloneElement, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Calendar, dateFnsLocalizer, type View } from 'react-big-calendar';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
 import { uk } from 'date-fns/locale';
@@ -31,23 +31,51 @@ type CalendarEvent = {
   resource: AppointmentCalendarItem;
 };
 
+function FullWidthEventWrapper(props: object) {
+  const children = 'children' in props ? (props as { children?: ReactNode }).children : undefined;
+  if (!isValidElement<{ style?: CSSProperties }>(children)) return <>{children}</>;
+  return cloneElement(children, {
+    style: {
+      ...children.props.style,
+      left: '3px',
+      right: '3px',
+      width: 'auto',
+    },
+  });
+}
+
 export function SchedulingCalendar({
   view,
   date,
   timezone,
   events,
   query,
+  onSelectSlot,
 }: {
   view: 'day' | 'week';
   date: string;
   timezone: string;
   events: CalendarEvent[];
   query: CalendarQuery;
+  onSelectSlot: (slot: { start: Date; end: Date }) => void;
 }) {
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
   const calendarView: View = view === 'day' ? 'day' : 'week';
   const calendarContainer = useRef<HTMLDivElement>(null);
   const [a11yReady, setA11yReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
+
+  // Keep the week overview on mobile too; the responsive layout below turns it
+  // into a horizontally scrollable week board instead of collapsing to a day.
+  const effectiveView: View = calendarView;
 
   useLayoutEffect(() => {
     // react-big-calendar emits an incomplete ARIA grid hierarchy in time views.
@@ -84,7 +112,7 @@ export function SchedulingCalendar({
     <div
       ref={calendarContainer}
       data-a11y-ready={a11yReady ? 'true' : 'false'}
-      className="rc-scheduling-calendar rounded-md border border-border bg-surface p-3"
+      className={`rc-scheduling-calendar rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-md${isMobile ? ' calendar-mobile' : ''}`}
     >
       {/*
         react-big-calendar: chosen for MIT license, mature day/week views, date-fns
@@ -96,7 +124,7 @@ export function SchedulingCalendar({
         localizer={localizer}
         culture="uk"
         events={events}
-        view={calendarView}
+        view={effectiveView}
         date={currentDate}
         onNavigate={(nextDate) => {
           const y = nextDate.getFullYear();
@@ -109,29 +137,32 @@ export function SchedulingCalendar({
           window.location.href = buildCalendarHref(query, { view: mapped });
         }}
         views={['day', 'week']}
-        step={15}
-        timeslots={4}
+        step={60}
+        timeslots={1}
         min={new Date(1970, 0, 1, 7, 0, 0)}
         max={new Date(1970, 0, 1, 21, 0, 0)}
         messages={messages}
         popup
-        selectable={false}
+        selectable
+        onSelectSlot={onSelectSlot}
         onSelectEvent={(event) => {
           window.location.href = buildCalendarHref(query, { appointmentId: event.id });
         }}
         components={{
+          eventWrapper: FullWidthEventWrapper,
           event: ({ event }) => {
             const item = event.resource as AppointmentCalendarItem;
             return (
-              <div className="space-y-0.5 text-xs leading-tight">
-                <div className="font-semibold">{item.patient.displayName}</div>
-                {item.appointmentType ? <div>{item.appointmentType.name}</div> : null}
-                <AppointmentStatusBadge status={item.status} />
+              <div className="calendar-event-card">
+                <span className="calendar-event-time">{format(event.start, 'HH:mm')}</span>
+                <span className="calendar-event-patient">{item.patient.displayName}</span>
+                {item.appointmentType ? <span className="calendar-event-type">{item.appointmentType.name}</span> : null}
+                <span className="calendar-event-status"><AppointmentStatusBadge status={item.status} /></span>
               </div>
             );
           },
         }}
-        style={{ minHeight: '640px' }}
+        style={{ minHeight: isMobile ? '600px' : '680px' }}
       />
     </div>
   );

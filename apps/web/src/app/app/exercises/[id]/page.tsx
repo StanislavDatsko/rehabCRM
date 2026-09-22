@@ -1,4 +1,5 @@
 import type { CurrentUserResponse } from '@repo/contracts';
+import { PageHeader } from '@repo/ui/workspace';
 import { getExercise } from '../../../../features/rehabilitation/api/rehabilitation-api';
 import { canReadExercises } from '../../../../features/rehabilitation/permissions';
 import { serverApiFetch } from '../../../../lib/api/server-api-client';
@@ -14,18 +15,12 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
       <a href="/app/exercises" className="text-sm text-info underline">
         ← До бібліотеки
       </a>
-      <header>
-        <p className="text-xs uppercase tracking-wide text-text-secondary">
-          {exercise.code} · {exercise.category}
-        </p>
-        <h1 className="mt-1 font-serif text-3xl">{exercise.name}</h1>
-        <p className="mt-3 text-text-secondary">{exercise.description}</p>
-      </header>
-      <section className="rc-card rc-card-elevated p-5">
-        <h2 className="font-serif text-xl">Інструкція</h2>
+      <PageHeader eyebrow={`${exercise.code} · ${exercise.category}`} title={exercise.name} description={exercise.description} actions={<a href="/app/exercises" className="rc-btn rc-btn-secondary">← До бібліотеки</a>} />
+      <section className="ui-surface p-5">
+        <h2 className="font-sans text-xl">Інструкція</h2>
         <p className="mt-3 whitespace-pre-line text-sm leading-6">{exercise.instructions}</p>
       </section>
-      <dl className="rc-card grid gap-4 p-5 text-sm sm:grid-cols-2">
+      <dl className="ui-surface grid gap-4 p-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-text-secondary">Ділянки</dt>
           <dd>{exercise.anatomicalRegions.join(', ') || '—'}</dd>

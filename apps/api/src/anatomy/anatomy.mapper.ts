@@ -35,6 +35,7 @@ export function mapAnnotation(row: AnnotationRow): BodyAnnotationResponse {
     mappingId: row.mappingId,
     type: row.type,
     severity: row.severity,
+    colorHex: row.colorHex,
     title: row.title,
     note: row.note,
     status: row.status,

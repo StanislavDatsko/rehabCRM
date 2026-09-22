@@ -20,16 +20,18 @@ export type NavItem = {
     | 'navAlerts';
   permission?: Permission;
   enabled: boolean;
+  group: 'workspace' | 'clinical' | 'operations';
 };
 
 export const staffNav: NavItem[] = [
-  { id: 'dashboard', href: '/app', labelKey: 'navDashboard', enabled: true },
+  { id: 'dashboard', href: '/app', labelKey: 'navDashboard', enabled: true, group: 'workspace' },
   {
     id: 'patients',
     href: '/app/patients',
     labelKey: 'navPatients',
     permission: PERMISSIONS.PATIENT_READ_ADMIN,
     enabled: true,
+    group: 'clinical',
   },
   {
     id: 'calendar',
@@ -37,6 +39,7 @@ export const staffNav: NavItem[] = [
     labelKey: 'navCalendar',
     permission: PERMISSIONS.APPOINTMENT_READ,
     enabled: true,
+    group: 'operations',
   },
   {
     id: 'rehab',
@@ -44,6 +47,7 @@ export const staffNav: NavItem[] = [
     labelKey: 'navRehabilitation',
     permission: PERMISSIONS.REHABILITATION_PLAN_READ,
     enabled: true,
+    group: 'clinical',
   },
   {
     id: 'exercises',
@@ -51,6 +55,7 @@ export const staffNav: NavItem[] = [
     labelKey: 'navExercises',
     permission: PERMISSIONS.EXERCISE_READ,
     enabled: true,
+    group: 'clinical',
   },
   {
     id: 'anatomy',
@@ -58,6 +63,7 @@ export const staffNav: NavItem[] = [
     labelKey: 'navAnatomy',
     permission: PERMISSIONS.ANATOMY_READ,
     enabled: true,
+    group: 'clinical',
   },
   {
     id: 'reports',
@@ -65,6 +71,7 @@ export const staffNav: NavItem[] = [
     labelKey: 'navReports',
     permission: PERMISSIONS.CLINICAL_REPORT_READ,
     enabled: true,
+    group: 'operations',
   },
   {
     id: 'admin',
@@ -72,8 +79,9 @@ export const staffNav: NavItem[] = [
     labelKey: 'navAdmin',
     permission: PERMISSIONS.STAFF_READ,
     enabled: true,
+    group: 'operations',
   },
-  { id: 'alerts', href: '/app/alerts', labelKey: 'navAlerts', permission: PERMISSIONS.CLINICAL_ALERT_READ, enabled: true },
+  { id: 'alerts', href: '/app/alerts', labelKey: 'navAlerts', permission: PERMISSIONS.CLINICAL_ALERT_READ, enabled: true, group: 'operations' },
 ];
 
 export function canSeeNavItem(user: CurrentUserResponse, item: NavItem): boolean {

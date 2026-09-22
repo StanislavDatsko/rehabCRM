@@ -128,8 +128,8 @@ export function PatientForm({
         </div>
       ) : null}
 
-        <section className="rc-card space-y-4 p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionBasics')}</h2>
+        <section className="ui-surface space-y-4 p-6">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionBasics')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             id="lastName"
@@ -169,7 +169,7 @@ export function PatientForm({
               id="sex"
               name="sex"
               defaultValue={value('sex', patient?.sex)} aria-invalid={Boolean(errorFor('sex'))}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 w-full"
             >
               <option value="">{t('patientSexNone')}</option>
               {PATIENT_SEX_VALUES.map((sex) => (
@@ -193,8 +193,8 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="rc-card space-y-4 p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionContacts')}</h2>
+      <section className="ui-surface space-y-4 p-6">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionContacts')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             id="phone"
@@ -215,8 +215,8 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="rc-card space-y-4 p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAddress')}</h2>
+      <section className="ui-surface space-y-4 p-6">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionAddress')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             id="addressLine1"
@@ -257,8 +257,8 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="rc-card space-y-4 p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionEmergency')}</h2>
+      <section className="ui-surface space-y-4 p-6">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionEmergency')}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             id="emergencyContactName"
@@ -282,8 +282,8 @@ export function PatientForm({
         </div>
       </section>
 
-      <section className="rc-card space-y-4 p-6">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionCare')}</h2>
+      <section className="ui-surface space-y-4 p-6">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionCare')}</h2>
         <div>
           <label
             htmlFor="responsiblePractitionerId"
@@ -295,7 +295,7 @@ export function PatientForm({
             id="responsiblePractitionerId"
             name="responsiblePractitionerId"
             defaultValue={value('responsiblePractitionerId', currentPractitionerId)} aria-invalid={Boolean(errorFor('responsiblePractitionerId'))}
-            className="mt-1 w-full max-w-lg rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 w-full max-w-lg"
           >
             <option value="">{t('patientsUnassigned')}</option>
             {selectable.map((p) => (
@@ -308,7 +308,7 @@ export function PatientForm({
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="ui-form-actions">
         <Button type="submit" disabled={pending}>
           {t('patientSave')}
         </Button>

@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts';
 import React, { useState } from 'react';
 import { BODY_ANNOTATION_TYPE_LABELS } from '../anatomy-ui';
-import type { UnmappedSurfaceSelection } from './anatomy-viewer';
+import type { UnmappedSurfaceSelection } from './selection-types';
 
 type Tab = 'overview' | 'annotations' | 'measurements' | 'goals' | 'exercises';
 const tabs: Array<{ id: Tab; label: string }> = [
@@ -34,7 +34,7 @@ export function StructureInspector({
     ? annotations.filter((item) => item.structure.id === structure.id && item.status !== 'VOIDED')
     : [];
   return (
-    <section className="rc-card rc-card-elevated p-4">
+    <section className="ui-surface p-4">
       <h2 className="font-medium">Structure inspector</h2>
       {!structure ? (
         unmappedSelection ? (
@@ -73,7 +73,7 @@ export function StructureInspector({
                 role="tab"
                 aria-selected={tab === item.id}
                 onClick={() => setTab(item.id)}
-                className={`rounded px-2 py-1 text-xs ${tab === item.id ? 'bg-info text-white' : 'bg-background text-text-secondary'}`}
+                className={`rounded-md px-2 py-1 text-xs transition-colors ${tab === item.id ? 'bg-info text-white' : 'bg-surface-muted text-text-secondary hover:text-text-primary'}`}
               >
                 {item.label}
               </button>

@@ -20,7 +20,7 @@ describe('patient media authorization and safety', () => {
   it('lists only the requested patient and organization with bounded page size', async () => {
     const d = deps();
     await new PatientMediaService(d.prisma as never, d.storage as never).list(principal, 'patient-a', { page: 1, pageSize: 50, status: 'READY' });
-    expect(d.prisma.patientMedia.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: 'org-a', patientId: 'patient-a', status: 'READY' }, take: 50 }));
+    expect(d.prisma.patientMedia.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { organizationId: 'org-a', patientId: 'patient-a', status: 'READY', encounterId: null }, take: 50 }));
   });
 
   it('rejects an upload over the configured image limit before creating metadata', async () => {

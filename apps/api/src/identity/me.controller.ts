@@ -12,7 +12,7 @@ export class MeController {
   constructor(private readonly identity: IdentityService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Current staff profile (application authorization, not raw OIDC)' })
+  @ApiOperation({ summary: 'Current staff profile with application authorization' })
   @ApiOkResponse({ description: 'Authenticated staff context' })
   async me(@CurrentPrincipal() principal: AuthenticatedPrincipal): Promise<CurrentUserResponse> {
     await this.identity.markLogin(principal.userId);
