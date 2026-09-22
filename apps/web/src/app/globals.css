@@ -715,3 +715,60 @@ table tbody tr:hover {
   .workspace-header { min-height: 58px; padding-inline: 32px; background: color-mix(in srgb, var(--color-background) 88%, transparent); }
   .workspace-content { padding-top: 36px; }
 }
+
+/* Point annotations on an isolated Human Atlas structure */
+.pa-layer { position: absolute; inset: 0; z-index: 15; overflow: hidden; pointer-events: none; }
+.pa-marker { position: absolute; left: 0; top: 0; display: grid; width: 26px; height: 26px; margin: -13px; padding: 0; place-items: center; border: 0; border-radius: 50%; background: transparent; cursor: pointer; pointer-events: auto; will-change: transform; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.pa-marker[data-visible='false'] { visibility: hidden; }
+.pa-marker[data-facing='false'] { opacity: .32; }
+.pa-marker[data-facing='false']:hover, .pa-marker[data-facing='false']:focus-visible { opacity: .85; }
+.pa-marker-core { display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--pa-color, var(--color-accent)); box-shadow: 0 0 0 1.5px rgba(13, 9, 19, .85), 0 0 0 3px rgba(255, 255, 255, .82), 0 0 0 6px color-mix(in srgb, var(--pa-color, var(--color-accent)) 26%, transparent), 0 0 16px color-mix(in srgb, var(--pa-color, var(--color-accent)) 55%, transparent); transition: transform var(--duration-ui) var(--ease-ui), box-shadow var(--duration-ui) var(--ease-ui); }
+.pa-marker:hover .pa-marker-core, .pa-marker:focus-visible .pa-marker-core, .pa-marker[data-active='true'] .pa-marker-core { transform: scale(1.28); box-shadow: 0 0 0 1.5px rgba(13, 9, 19, .85), 0 0 0 3px #fff, 0 0 0 8px color-mix(in srgb, var(--pa-color, var(--color-accent)) 32%, transparent), 0 0 22px color-mix(in srgb, var(--pa-color, var(--color-accent)) 70%, transparent); }
+.pa-marker:focus-visible { outline: none; }
+.pa-marker--resolved { --pa-color: #9aa3b2; }
+.pa-marker--draft .pa-marker-core { --pa-color: #fff; animation: pa-pulse 1.4s ease-in-out infinite; }
+@keyframes pa-pulse { 0%, 100% { box-shadow: 0 0 0 1.5px rgba(13, 9, 19, .85), 0 0 0 3px rgba(255, 255, 255, .9), 0 0 0 6px rgba(199, 243, 107, .3), 0 0 14px rgba(199, 243, 107, .5); } 50% { box-shadow: 0 0 0 1.5px rgba(13, 9, 19, .85), 0 0 0 3px rgba(255, 255, 255, .9), 0 0 0 11px rgba(199, 243, 107, .12), 0 0 22px rgba(199, 243, 107, .7); } }
+.pa-connector { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.pa-connector line { stroke: color-mix(in srgb, var(--color-accent) 75%, #fff); stroke-width: 1.25; stroke-linecap: round; }
+.pa-connector circle { fill: color-mix(in srgb, var(--color-accent) 75%, #fff); }
+.pa-card { position: absolute; left: 0; top: 0; width: min(292px, calc(100% - 32px)); padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--color-accent) 42%, var(--color-border)); border-radius: 12px; background: rgba(18, 13, 31, .94); color: var(--color-text-primary); font-size: 13px; line-height: 1.45; box-shadow: 0 14px 34px rgba(0, 0, 0, .42), 0 0 20px color-mix(in srgb, var(--color-accent) 14%, transparent); backdrop-filter: blur(12px); pointer-events: auto; animation: pa-card-in var(--duration-ui) var(--ease-ui) both; }
+.pa-card[data-side='left'] { animation-name: pa-card-in-left; }
+.pa-card[data-state='closing'] { animation: pa-card-out 160ms var(--ease-ui) both; pointer-events: none; }
+@keyframes pa-card-in { from { opacity: 0; transform: translateX(-12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes pa-card-in-left { from { opacity: 0; transform: translateX(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes pa-card-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.98); } }
+.pa-card-eyebrow { margin-bottom: 4px; color: var(--color-accent); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.pa-card-meta { margin-top: 8px; color: var(--color-text-secondary); font-size: 11px; }
+.pa-card-comment { white-space: pre-wrap; word-break: break-word; }
+.pa-textarea { display: block; width: 100%; min-height: 76px; margin-top: 8px; padding: 9px 11px; border: 1px solid #52386d; border-radius: 9px; background: #120b1b; color: #fff; font: inherit; font-size: 13px; line-height: 1.45; resize: vertical; }
+.pa-textarea::placeholder { color: #806f91; }
+.pa-textarea:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgb(199 243 107 / .12); outline: none; }
+.pa-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.pa-actions .rc-btn { min-height: 2.125rem; padding: .375rem .75rem; font-size: .8125rem; }
+.pa-error { margin-top: 8px; color: var(--color-danger); font-size: 12px; }
+.pa-hint { margin-top: 6px; color: var(--color-text-secondary); font-size: 11px; }
+.pa-backdrop { position: fixed; inset: 0; z-index: var(--z-dialog); display: grid; place-items: center; padding: 16px; background: rgba(8, 5, 14, .58); backdrop-filter: blur(3px); animation: pa-fade var(--duration-fast) ease-out both; }
+@keyframes pa-fade { from { opacity: 0; } to { opacity: 1; } }
+.pa-dialog { width: min(440px, 100%); padding: 20px 22px; border: 1px solid var(--color-border); border-radius: 14px; background: linear-gradient(180deg, #1d122b 0%, #160e20 100%); color: var(--color-text-primary); box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, .03) inset; animation: pa-dialog-in var(--duration-panel) var(--ease-ui) both; }
+@keyframes pa-dialog-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.pa-dialog h2 { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.pa-dialog-body { margin-top: 12px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.pa-dialog dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin-top: 14px; font-size: 12px; }
+.pa-dialog dt { color: var(--color-text-secondary); }
+.pa-dialog .pa-actions { margin-top: 18px; }
+.pa-dialog--danger .rc-btn-danger { background: var(--color-danger); color: #160e20; border-color: transparent; }
+.rc-btn-danger { background: var(--color-danger); color: #160e20; }
+.pa-toast { position: absolute; left: 50%; bottom: 18px; z-index: 16; padding: 9px 14px; border: 1px solid color-mix(in srgb, var(--color-success) 45%, var(--color-border)); border-radius: 999px; background: rgba(18, 13, 31, .94); color: var(--color-text-primary); font-size: 12px; box-shadow: 0 10px 26px rgba(0, 0, 0, .35); transform: translateX(-50%); pointer-events: none; animation: pa-toast-in var(--duration-panel) var(--ease-ui) both; }
+@keyframes pa-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.pa-hint-badge { position: absolute; left: 50%; top: 14px; z-index: 16; padding: 6px 12px; border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); border-radius: 999px; background: rgba(18, 13, 31, .86); color: var(--color-text-secondary); font-size: 11px; transform: translateX(-50%); pointer-events: none; }
+@media (max-width: 767px) {
+  .pa-card--sheet { position: fixed; left: 0; right: 0; bottom: 0; width: auto; border-radius: 16px 16px 0 0; animation-name: pa-sheet-in; z-index: var(--z-dialog); }
+  @keyframes pa-sheet-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .pa-backdrop { align-items: end; padding: 0; }
+  .pa-dialog { width: 100%; border-radius: 16px 16px 0 0; }
+  .pa-hint-badge { top: auto; bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pa-card, .pa-dialog, .pa-toast, .pa-backdrop, .pa-marker--draft .pa-marker-core { animation: none; }
+  .pa-marker-core { transition: none; }
+}

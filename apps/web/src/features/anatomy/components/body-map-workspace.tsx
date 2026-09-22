@@ -17,6 +17,8 @@ import type { SurfaceSelection, UnmappedSurfaceSelection } from './selection-typ
 import { StructureInspector } from './structure-inspector';
 import { HumanAtlasExplorer } from '../human-atlas/human-atlas-explorer';
 import type { AtlasSelection } from '../human-atlas/scene';
+import { PointAnnotationsLayer } from '../point-annotations/point-annotations-layer';
+import { usePointAnnotations } from '../point-annotations/use-point-annotations';
 import { PageHeader } from '@repo/ui/workspace';
 
 const initial: AnatomyActionState = { error: null, ok: false };
@@ -45,19 +47,32 @@ export function BodyMapWorkspace({
   const [to, setTo] = useState('');
   const [clinicalHeatmapMode, setClinicalHeatmapMode] = useState(false);
   const [createState, createAction, creating] = useActionState(createBodyAnnotationAction, initial);
+  // Point notes on isolated structures share the BodyAnnotation model; the controller merges
+  // optimistic creates/voids into the server list until the route revalidates.
+  const points = usePointAnnotations({
+    patientId: data.patient.id,
+    encounterId,
+    serverAnnotations: data.annotations,
+    structures: data.structures,
+    models: data.models,
+    mappings: data.mappings,
+    canCreate: permissions.create,
+    canDelete: permissions.void,
+  });
+  const allAnnotations = points.annotations;
   const annotations = useMemo(
     () =>
-      filterBodyAnnotations(data.annotations, {
+      filterBodyAnnotations(allAnnotations, {
         status,
         type,
         structureId: selectedStructureId,
         from,
         to,
       }),
-    [data.annotations, from, selectedStructureId, status, to, type],
+    [allAnnotations, from, selectedStructureId, status, to, type],
   );
   const selectedAnnotation =
-    data.annotations.find((item) => item.id === selectedAnnotationId) ?? null;
+    allAnnotations.find((item) => item.id === selectedAnnotationId) ?? null;
   const selectedStructure = data.structures.find((item) => item.id === selectedStructureId) ?? null;
   const highlightedSourcePartId = selectedAnnotation
     ? data.mappings.find((mapping) => mapping.structureId === selectedAnnotation.structure.id)?.sourcePartId ?? null
@@ -67,30 +82,28 @@ export function BodyMapWorkspace({
     const result: Record<string, number> = {};
     data.mappings.forEach((mapping) => {
       if (!mapping.sourcePartId) return;
-      const maximum = data.annotations
+      const maximum = allAnnotations
         .filter((annotation) => annotation.status === 'ACTIVE' && annotation.structure.id === mapping.structureId && annotation.severity !== null)
         .reduce((value, annotation) => Math.max(value, annotation.severity ?? 0), 0);
       if (maximum > 0) result[mapping.sourcePartId] = maximum;
     });
     return result;
-  }, [data.annotations, data.mappings]);
+  }, [allAnnotations, data.mappings]);
   const humanAtlasColors = useMemo(() => {
     const result: Record<string, string> = {};
     data.mappings.forEach((mapping) => {
-      const colors = data.annotations.filter((annotation) => annotation.status === 'ACTIVE' && annotation.structure.id === mapping.structureId && annotation.colorHex);
+      const colors = allAnnotations.filter((annotation) => annotation.status === 'ACTIVE' && annotation.structure.id === mapping.structureId && annotation.colorHex);
       const color = colors.at(-1)?.colorHex;
       if (mapping.sourcePartId && color) result[mapping.sourcePartId] = color;
     });
     return result;
-  }, [data.annotations, data.mappings]);
-  const humanAtlasMarkers = useMemo(() => {
-    const result: Record<string, { position: [number, number, number]; title: string; note: string | null; severity: number | null; color: string | null }> = {};
-    data.mappings.forEach((mapping) => {
-      const annotation = data.annotations.find((item) => item.status === 'ACTIVE' && item.structure.id === mapping.structureId && item.anchor);
-      if (mapping.sourcePartId && annotation) result[mapping.sourcePartId] = { position: annotation.anchor.localPosition, title: annotation.title ?? annotation.structure.name, note: annotation.note, severity: annotation.severity, color: annotation.colorHex };
-    });
-    return result;
-  }, [data.annotations, data.mappings]);
+  }, [allAnnotations, data.mappings]);
+  const tapIsolatedSurface = (next: AtlasSelection) => {
+    const outcome = points.onSurfaceTap(next);
+    if (outcome === 'unmapped')
+      setViewerMessage('Ця геометрія ще не має підтвердженого анатомічного зіставлення — нотатку додати не можна.');
+    else if (outcome === 'draft') setViewerMessage(null);
+  };
   const chooseSurface = (next: SurfaceSelection) => {
     setSelection(next);
     setUnmappedSelection(null);
@@ -133,7 +146,7 @@ export function BodyMapWorkspace({
     );
   };
   const chooseAnnotation = (annotationId: string) => {
-    const annotation = data.annotations.find((item) => item.id === annotationId);
+    const annotation = allAnnotations.find((item) => item.id === annotationId);
     if (!annotation) return;
     chooseStructure(annotation.structure.id);
     setSelectedAnnotationId(annotationId);
@@ -149,7 +162,38 @@ export function BodyMapWorkspace({
               <h2 id="human-atlas-primary-title" className="font-medium">Human Atlas · primary source</h2>
               <p className="text-sm text-text-secondary">Source geometry is selectable for inspection. Clinical annotations require a verified RehabMIS mapping.</p>
             </div>
-            <HumanAtlasExplorer onSelect={chooseHumanAtlas} severity={humanAtlasSeverity} severityColors={humanAtlasColors} markerPoints={humanAtlasMarkers} highlightSourcePartId={highlightedSourcePartId} clinicalMode={clinicalHeatmapMode} onToggleClinicalMode={() => setClinicalHeatmapMode((value) => !value)} />
+            <HumanAtlasExplorer
+              onSelect={chooseHumanAtlas}
+              onSurfaceTap={tapIsolatedSurface}
+              onIsolationChange={points.setIsolation}
+              projector={points.projector}
+              severity={humanAtlasSeverity}
+              severityColors={humanAtlasColors}
+              highlightSourcePartId={highlightedSourcePartId}
+              clinicalMode={clinicalHeatmapMode}
+              onToggleClinicalMode={() => setClinicalHeatmapMode((value) => !value)}
+              stageOverlay={
+                <PointAnnotationsLayer
+                  projector={points.projector}
+                  annotations={points.visible}
+                  isolation={points.isolation}
+                  ui={points.ui}
+                  canCreate={points.canCreate}
+                  canDelete={points.canDelete}
+                  highlightId={selectedAnnotationId}
+                  onHover={points.hover}
+                  onMarkerClick={points.openDetail}
+                  onDraftComment={points.setDraftComment}
+                  onDraftSave={points.saveDraft}
+                  onDraftCancel={points.cancelDraft}
+                  onDetailClose={points.closeDetail}
+                  onDeleteRequest={points.requestDelete}
+                  onDeleteConfirm={points.confirmDelete}
+                  onDeleteCancel={points.cancelDelete}
+                  onToastDone={points.clearToast}
+                />
+              }
+            />
           </section>
           <div className="atlas-toolbar"><p className="text-xs text-text-secondary">Human Atlas is the only anatomy source for this workspace.</p></div>
           {viewerMessage ? (
@@ -165,7 +209,7 @@ export function BodyMapWorkspace({
           <StructureInspector
             structure={selectedStructure}
             context={context}
-            annotations={data.annotations}
+            annotations={allAnnotations}
             unmappedSelection={unmappedSelection}
           />
           {permissions.create && selection ? (

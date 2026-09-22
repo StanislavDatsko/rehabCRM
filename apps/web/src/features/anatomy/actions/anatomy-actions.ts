@@ -1,13 +1,19 @@
 'use server';
 
-import type { BodyAnnotationType, SurfaceAnchor } from '@repo/contracts';
+import type { BodyAnnotationResponse, BodyAnnotationType, SurfaceAnchor } from '@repo/contracts';
 import { revalidatePath } from 'next/cache';
+import { ServerApiError } from '../../../lib/api/server-api-client';
 import { loadCurrentUser } from '../../../lib/app/load-current-user';
 import {
   createBodyAnnotation,
   transitionBodyAnnotation,
   updateBodyAnnotation,
 } from '../api/anatomy-api';
+import {
+  POINT_ANNOTATION_VOID_REASON,
+  validatePointAnnotationInput,
+  type PointAnnotationInput,
+} from '../point-annotations/input';
 import {
   canCreateBodyAnnotation,
   canResolveBodyAnnotation,
@@ -107,5 +113,80 @@ export async function transitionBodyAnnotationAction(
     return { error: null, ok: true };
   } catch {
     return { error: 'The status could not be changed. Refresh and retry.', ok: false };
+  }
+}
+
+export type PointAnnotationResult =
+  | { ok: true; annotation: BodyAnnotationResponse }
+  | { ok: false; error: string };
+
+function describeApiFailure(error: unknown, fallback: string): string {
+  if (error instanceof ServerApiError) {
+    if (error.status === 409) return 'Нотатку вже змінили в іншому вікні. Оновіть сторінку.';
+    if (error.status === 403) return denied.error!;
+    if (error.status === 404) return 'Пацієнта або структуру не знайдено.';
+    if (error.status === 400) return 'Сервер відхилив точку. Оберіть ділянку ще раз.';
+  }
+  return fallback;
+}
+
+/**
+ * Saves a free-text point note as an OTHER body annotation on the shared anchor model.
+ * The organization always comes from the authenticated session, never from the browser.
+ */
+export async function createPointAnnotationAction(
+  input: PointAnnotationInput,
+): Promise<PointAnnotationResult> {
+  const me = await user();
+  if (me === 'unauthenticated' || me === 'denied' || !canCreateBodyAnnotation(me))
+    return { ok: false, error: denied.error! };
+  const valid = validatePointAnnotationInput(input);
+  if (!valid.ok) return valid;
+  try {
+    const annotation = await createBodyAnnotation(valid.value.patientId, {
+      encounterId: valid.value.encounterId,
+      structureId: valid.value.structureId,
+      modelVersionId: valid.value.modelVersionId,
+      mappingId: valid.value.mappingId,
+      type: 'OTHER',
+      severity: null,
+      colorHex: null,
+      title: null,
+      note: valid.value.comment,
+      anchor: valid.value.anchor,
+    });
+    revalidatePath(`/app/patients/${valid.value.patientId}/body-map`);
+    revalidatePath(`/app/patients/${valid.value.patientId}`);
+    return { ok: true, annotation };
+  } catch (error) {
+    return {
+      ok: false,
+      error: describeApiFailure(error, 'Не вдалося зберегти нотатку. Спробуйте ще раз.'),
+    };
+  }
+}
+
+export async function voidPointAnnotationAction(input: {
+  patientId: string;
+  annotationId: string;
+  version: number;
+}): Promise<PointAnnotationResult> {
+  const me = await user();
+  if (me === 'unauthenticated' || me === 'denied' || !canVoidBodyAnnotation(me))
+    return { ok: false, error: denied.error! };
+  try {
+    const annotation = await transitionBodyAnnotation(
+      input.annotationId,
+      'void',
+      input.version,
+      POINT_ANNOTATION_VOID_REASON,
+    );
+    revalidatePath(`/app/patients/${input.patientId}/body-map`);
+    return { ok: true, annotation };
+  } catch (error) {
+    return {
+      ok: false,
+      error: describeApiFailure(error, 'Не вдалося видалити нотатку. Спробуйте ще раз.'),
+    };
   }
 }

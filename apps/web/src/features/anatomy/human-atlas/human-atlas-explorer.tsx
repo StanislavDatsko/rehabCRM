@@ -1,13 +1,28 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import AnatomyScene from './scene';
 import type { AtlasSelection, AtlasStatus } from './scene';
 import { DEFAULT_VISIBLE, SYSTEMS, type Atlas, type Concept, type SceneState, type SystemId } from './anatomy';
+import type { MarkerProjector } from '../point-annotations/projection';
+import type { IsolationState } from '../point-annotations/visibility';
 
 const initialState: SceneState = { explode: 0, visible: [...DEFAULT_VISIBLE, 'integumentary'], selected: [], hidden: [], severity: {}, isolate: false, view: 'three-quarter', rotate: false, reset: 0, fit: 0 };
 
-export function HumanAtlasExplorer({ onSelect, severity = {}, severityColors = {}, markerPoints = {}, highlightSourcePartId, clinicalMode = false, onToggleClinicalMode }: { onSelect?: (selection: AtlasSelection) => void; severity?: Record<string, number>; severityColors?: Record<string, string>; markerPoints?: SceneState['markerPoints']; highlightSourcePartId?: string | null; clinicalMode?: boolean; onToggleClinicalMode?: () => void }) {
+export function HumanAtlasExplorer({ onSelect, onSurfaceTap, onIsolationChange, projector, stageOverlay, severity = {}, severityColors = {}, highlightSourcePartId, clinicalMode = false, onToggleClinicalMode }: {
+  onSelect?: (selection: AtlasSelection) => void;
+  /** Tap on the surface of the currently isolated structure. Selection does not change. */
+  onSurfaceTap?: (selection: AtlasSelection) => void;
+  onIsolationChange?: (isolation: IsolationState) => void;
+  projector?: MarkerProjector;
+  /** Overlay rendered inside the 3D stage, above the canvas (point annotation layer). */
+  stageOverlay?: ReactNode;
+  severity?: Record<string, number>;
+  severityColors?: Record<string, string>;
+  highlightSourcePartId?: string | null;
+  clinicalMode?: boolean;
+  onToggleClinicalMode?: () => void;
+}) {
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [state, setState] = useState<SceneState>(initialState);
   const [query, setQuery] = useState('');
@@ -16,8 +31,13 @@ export function HumanAtlasExplorer({ onSelect, severity = {}, severityColors = {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<AtlasStatus>('loading');
   const [retry, setRetry] = useState(0);
-  const [heatmapEnabled, setHeatmapEnabled] = useState(true);
-  const [placedMarker, setPlacedMarker] = useState<SceneState['markerPoints']>({});
+  const [heatmapEnabled] = useState(true);
+  const isolationListener = useRef(onIsolationChange);
+  isolationListener.current = onIsolationChange;
+  const isolationKey = `${state.isolate ? 1 : 0}:${state.selected.join(',')}`;
+  useEffect(() => {
+    isolationListener.current?.({ isolate: state.isolate, partIds: state.selected });
+  }, [isolationKey]);
   useEffect(() => { let cancelled = false; setStatus('loading'); setError(''); fetch('/api/anatomy/human-atlas/assets').then(async (response) => { if (!response.ok) { const body = await response.json().catch(() => null) as { code?: string } | null; throw new Error(`Human Atlas assets request failed (${response.status}${body?.code ? `: ${body.code}` : ''}).`); } return response.json() as Promise<Array<{ kind: 'MANIFEST' | 'GEOMETRY_CHUNK'; assetIndex: number; url: string }>>; }).then(async (assets) => { const manifestAsset = assets.find((asset) => asset.kind === 'MANIFEST'); if (!manifestAsset) throw new Error('Human Atlas manifest asset is missing.'); const loaded = await fetch(manifestAsset.url); if (!loaded.ok) throw new Error(`Human Atlas manifest request failed (${loaded.status}).`); const manifest = await loaded.json() as Atlas; manifest.chunks = manifest.chunks.map((chunk, index) => ({ ...chunk, gzip: assets.find((asset) => asset.kind === 'GEOMETRY_CHUNK' && asset.assetIndex === index)?.url ?? chunk.gzip })); if (!cancelled) setAtlas(manifest); }).catch((reason: unknown) => { if (!cancelled) { setStatus('error'); setError(reason instanceof Error ? reason.message : 'Human Atlas could not be loaded.'); } }); return () => { cancelled = true; }; }, [retry]);
   useEffect(() => {
     if (!highlightSourcePartId || !atlas?.parts.some((part) => part.id === highlightSourcePartId)) return;
@@ -31,7 +51,10 @@ export function HumanAtlasExplorer({ onSelect, severity = {}, severityColors = {
   const toggleSystem = (id: SystemId) => setState((current) => ({ ...current, visible: current.visible.includes(id) ? current.visible.filter((item) => item !== id) : [...current.visible, id], selected: [], isolate: false }));
   const reset = () => { setState({ ...initialState, reset: state.reset + 1 }); setSelected(null); };
   return <div data-testid="human-atlas-root" data-atlas-status={status} className={`atlas-workspace ${clinicalMode ? 'atlas-workspace-clinical' : ''}`}>
-    <div className="atlas-stage">{atlas ? <AnatomyScene atlas={atlas} state={{ ...state, severity: heatmapEnabled ? severity : {}, severityColors, markerPoints: clinicalMode ? placedMarker : {} }} onSelect={(selection) => { if (clinicalMode && state.isolate) setPlacedMarker({ [selection.sourcePartId]: { position: selection.anchor.localPosition, title: 'Нова точка', note: null, severity: null, color: null } }); onSelect?.(selection); const part = atlas.parts.find((item) => item.id === selection.sourcePartId); if (part) choose({ id: part.conceptId, name: part.name, elements: [part.id] }); }} onProgress={setProgress} onError={setError} onStatus={setStatus} /> : null}</div>
+    <div className="atlas-stage">{atlas ? <AnatomyScene atlas={atlas} state={{ ...state, severity: heatmapEnabled ? severity : {}, severityColors }} projector={projector} onSelect={(selection) => {
+      // Tapping the isolated mesh anchors a point note instead of re-selecting the structure.
+      if (state.isolate && state.selected.includes(selection.sourcePartId)) { onSurfaceTap?.(selection); return; }
+      onSelect?.(selection); const part = atlas.parts.find((item) => item.id === selection.sourcePartId); if (part) choose({ id: part.conceptId, name: part.name, elements: [part.id] }); }} onProgress={setProgress} onError={setError} onStatus={setStatus} /> : null}{atlas ? stageOverlay : null}</div>
     <div className="hidden" />
     <header className="atlas-heading"><div><p className="text-xs uppercase tracking-[0.18em] text-info">Primary anatomy source</p><h2 className="text-lg font-semibold">Human Atlas</h2><p className="text-sm text-white/65">BodyParts3D 4.0 · {atlas?.parts.length.toLocaleString('uk-UA') ?? '2 234'} source parts · 15 systems</p></div><button type="button" className={`atlas-heatmap-toggle ${clinicalMode ? 'is-active' : ''}`} onClick={onToggleClinicalMode}><span className="atlas-heatmap-dot" />{clinicalMode ? 'Закрити панель' : 'Теплова мапа'}</button></header>
     <aside className={`atlas-browser ${clinicalMode ? 'atlas-browser-clinical-hidden' : ''}`}>

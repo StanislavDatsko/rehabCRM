@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAnnotationBodySchema } from './anatomy.schemas';
+import { createAnnotationBodySchema, updateAnnotationBodySchema } from './anatomy.schemas';
 
 const input = {
   structureId: 'a7000000-0000-4000-8000-000000000001',
@@ -40,5 +40,61 @@ describe('createAnnotationBodySchema', () => {
     ['infinite local normal', { ...input.anchor, localNormal: [0, 0, Number.POSITIVE_INFINITY] }],
   ])('rejects %s', (_label, anchor) => {
     expect(createAnnotationBodySchema.safeParse({ ...input, anchor }).success).toBe(false);
+  });
+});
+
+describe('point note comments', () => {
+  const pointNote = {
+    ...input,
+    type: 'OTHER',
+    severity: null,
+    title: null,
+    note: 'Біль при максимальному згинанні плеча',
+  };
+
+  it('accepts a free-text point note anchored to the isolated mesh', () => {
+    const parsed = createAnnotationBodySchema.safeParse(pointNote);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.note).toBe('Біль при максимальному згинанні плеча');
+  });
+
+  it.each([null, '', '   '])('rejects an OTHER point note whose comment is %j', (note) => {
+    const result = createAnnotationBodySchema.safeParse({ ...pointNote, note });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0]?.path).toEqual(['note']);
+  });
+
+  it('trims and caps the comment at the shared maximum length', () => {
+    expect(createAnnotationBodySchema.safeParse({ ...pointNote, note: '  ok  ' }).success).toBe(
+      true,
+    );
+    expect(
+      createAnnotationBodySchema.safeParse({ ...pointNote, note: 'x'.repeat(3001) }).success,
+    ).toBe(false);
+  });
+
+  it('keeps typed findings valid without free text', () => {
+    expect(
+      createAnnotationBodySchema.safeParse({ ...input, type: 'PAIN', title: null, note: null })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects clearing the comment of an OTHER note on update', () => {
+    const base = { version: 1, type: 'OTHER', severity: null, colorHex: null, title: null };
+    expect(updateAnnotationBodySchema.safeParse({ ...base, note: 'Оновлений коментар' }).success).toBe(
+      true,
+    );
+    expect(updateAnnotationBodySchema.safeParse({ ...base, note: '' }).success).toBe(false);
+  });
+
+  it.each([
+    ['NaN anchor coordinate', { ...input.anchor, localPosition: [0, Number.NaN, 0] }],
+    ['infinite anchor coordinate', { ...input.anchor, localPosition: [Number.POSITIVE_INFINITY, 0, 0] }],
+    ['string anchor coordinate', { ...input.anchor, localPosition: ['0.1', 0.4, 0] }],
+    ['two-component anchor', { ...input.anchor, localPosition: [0.1, 0.4] }],
+    ['blank mesh key', { ...input.anchor, stableMeshKey: '   ' }],
+  ])('rejects a point note with %s', (_label, anchor) => {
+    expect(createAnnotationBodySchema.safeParse({ ...pointNote, anchor }).success).toBe(false);
   });
 });

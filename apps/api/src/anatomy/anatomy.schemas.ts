@@ -1,5 +1,6 @@
 import {
   ANATOMICAL_STRUCTURE_CATEGORIES,
+  BODY_ANNOTATION_NOTE_MAX_LENGTH,
   BODY_ANNOTATION_STATUSES,
   BODY_ANNOTATION_TYPES,
   LATERALITIES,
@@ -28,6 +29,14 @@ export const surfaceAnchorSchema = z
     (value) => Math.abs(value.barycentric.reduce((sum, item) => sum + item, 0) - 1) < 0.0001,
     { path: ['barycentric'], message: 'Barycentric coordinates must sum to 1' },
   );
+
+/**
+ * Typed findings (PAIN, WEAKNESS, ...) carry meaning through type and severity alone.
+ * An OTHER annotation is a free-text point note, so it must not be saved empty.
+ */
+function hasClinicalContent(value: { type: string; title?: string | null; note?: string | null }) {
+  return value.type !== 'OTHER' || Boolean(value.title) || Boolean(value.note);
+}
 
 export const annotationListQuerySchema = z
   .object({
@@ -63,10 +72,14 @@ export const createAnnotationBodySchema = z
     severity: z.number().int().min(0).max(10).nullable().optional(),
     colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     title: nullableText(200).optional(),
-    note: nullableText(3000).optional(),
+    note: nullableText(BODY_ANNOTATION_NOTE_MAX_LENGTH).optional(),
     anchor: surfaceAnchorSchema,
   })
-  .strict();
+  .strict()
+  .refine(hasClinicalContent, {
+    path: ['note'],
+    message: 'A free-text point note requires a non-empty comment.',
+  });
 
 export const updateAnnotationBodySchema = z
   .object({
@@ -75,9 +88,13 @@ export const updateAnnotationBodySchema = z
     severity: z.number().int().min(0).max(10).nullable(),
     colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(),
     title: nullableText(200),
-    note: nullableText(3000),
+    note: nullableText(BODY_ANNOTATION_NOTE_MAX_LENGTH),
   })
-  .strict();
+  .strict()
+  .refine(hasClinicalContent, {
+    path: ['note'],
+    message: 'A free-text point note requires a non-empty comment.',
+  });
 
 export const annotationStatusBodySchema = z
   .object({ version: z.number().int().positive(), reason: nullableText(1000).optional() })
