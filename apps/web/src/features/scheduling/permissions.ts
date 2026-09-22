@@ -40,7 +40,7 @@ export function canCompleteEncounter(user: CurrentUserResponse): boolean {
 
 const TRANSITIONS: Record<AppointmentStatus, readonly AppointmentStatus[]> = {
   SCHEDULED: ['CONFIRMED', 'CHECKED_IN', 'CANCELLED', 'NO_SHOW'],
-  CONFIRMED: ['CHECKED_IN', 'CANCELLED', 'NO_SHOW'],
+  CONFIRMED: ['CHECKED_IN', 'IN_PROGRESS', 'CANCELLED', 'NO_SHOW'],
   CHECKED_IN: ['IN_PROGRESS'],
   IN_PROGRESS: ['COMPLETED'],
   COMPLETED: [],

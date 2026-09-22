@@ -16,11 +16,6 @@ import {
 } from '@repo/contracts';
 import type { AuthenticatedPrincipal } from '../common/auth/principal';
 import { writeAuditEvent } from '../common/audit/write-audit';
-import {
-  IDENTITY_PROVIDER_ADMIN,
-  IdentityProviderAdminError,
-  type IdentityProviderAdminPort,
-} from '../identity/identity-provider-admin.port';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type {
   ChangeStaffRoleBody,
@@ -55,8 +50,6 @@ export class StaffService {
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(IDENTITY_PROVIDER_ADMIN)
-    private readonly identities: IdentityProviderAdminPort,
     @Inject(STAFF_MAILER)
     private readonly mailer: StaffMailer,
   ) {}
@@ -220,7 +213,7 @@ export class StaffService {
       await this.assertVersion(tx, principal.organizationId, membershipId, body.version, {
         role: body.role,
       });
-      if (body.role === 'REHABILITATION_SPECIALIST') {
+      if (body.role === 'REHABILITATION_SPECIALIST' || body.role === 'ORGANIZATION_ADMIN') {
         await tx.practitioner.upsert({
           where: {
             organizationId_userId: {
@@ -292,7 +285,7 @@ export class StaffService {
   ): Promise<void> {
     void requestId;
     await this.getRow(principal.organizationId, membershipId);
-    throw new ConflictException({ code: 'SESSION_REVOKE_NOT_SUPPORTED', message: 'Neon Auth session revocation requires an authenticated Neon admin session and is disabled.' });
+    throw new ConflictException({ code: 'SESSION_REVOKE_NOT_SUPPORTED', message: 'Session revocation is not available for this account.' });
   }
 
   async resendSetupActions(
@@ -301,7 +294,7 @@ export class StaffService {
     requestId: string,
   ): Promise<StaffResponse> {
     void requestId;
-    throw new ConflictException({ code: 'STAFF_INVITATIONS_NOT_SUPPORTED', message: 'Neon Auth onboarding uses RehabMIS invitations and is not available through the legacy setup-action endpoint.' });
+    throw new ConflictException({ code: 'STAFF_INVITATIONS_NOT_SUPPORTED', message: 'Use the staff invitation flow to set a password.' });
   }
 
   async history(
@@ -483,9 +476,6 @@ export class StaffService {
   }
 
   private handleIdentityError(error: unknown, message: string): never {
-    if (error instanceof IdentityProviderAdminError && error.kind === 'conflict') {
-      this.throwEmailConflict();
-    }
     throw new ServiceUnavailableException({
       code: API_ERROR_CODES.STAFF_IDENTITY_UNAVAILABLE,
       message,

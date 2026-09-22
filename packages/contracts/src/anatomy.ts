@@ -112,6 +112,7 @@ export type BodyAnnotationResponse = {
   mappingId: string;
   type: BodyAnnotationType;
   severity: number | null;
+  colorHex: string | null;
   title: string | null;
   note: string | null;
   status: BodyAnnotationStatus;

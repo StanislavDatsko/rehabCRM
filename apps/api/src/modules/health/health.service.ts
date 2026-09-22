@@ -25,16 +25,15 @@ export class HealthService {
   }
 
   async ready(): Promise<HealthReadyResponse> {
-    const [databaseReachable, redisReachable, storageReachable, identityReachable] =
+    const [databaseReachable, redisReachable, storageReachable] =
       await Promise.all([
         this.bounded(this.prisma.isReachable()),
         this.bounded(this.redis.isReachable()),
         this.bounded(this.storage.isReachable()),
-        this.identityReachable(),
       ]);
     const database: HealthStatus = databaseReachable ? 'ok' : 'down';
     const redis: HealthStatus = redisReachable ? 'ok' : 'down';
-    const identityProvider: HealthStatus = identityReachable ? 'ok' : 'down';
+    const identityProvider: HealthStatus = 'ok';
     const objectStorage: HealthStatus = storageReachable ? 'ok' : 'down';
     const status: HealthStatus =
       database === 'down'
@@ -66,14 +65,4 @@ export class HealthService {
     ]);
   }
 
-  private async identityReachable(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.env.NEON_AUTH_BASE_URL}/.well-known/jwks.json`, {
-        signal: AbortSignal.timeout(3_000),
-      });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
 }

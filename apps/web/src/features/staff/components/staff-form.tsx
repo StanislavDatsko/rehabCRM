@@ -11,7 +11,7 @@ const initial: StaffActionState = { error: null, success: null };
 export function StaffForm() {
   const [state, action, pending] = useActionState(createStaffAction, initial);
   return (
-    <form action={action} className="rc-card rc-card-elevated space-y-6 p-6">
+    <form action={action} className="ui-surface space-y-6 p-6">
       {state.error ? (
         <p
           role="alert"
@@ -33,7 +33,7 @@ export function StaffForm() {
             id="role"
             name="role"
             required
-            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="field mt-1 w-full"
           >
             {ASSIGNABLE_STAFF_ROLES.map((role) => (
               <option key={role} value={role}>
@@ -43,11 +43,11 @@ export function StaffForm() {
           </select>
         </div>
       </div>
-      <div className="rounded-xl border border-brand-lime/40 bg-brand-lime/10 p-4 text-sm text-text-secondary">
+      <div className="ui-inline-notice ui-inline-notice-info p-4 text-sm text-text-secondary">
         Пароль не створюється й не зберігається в RehabMIS. Працівник отримає захищене запрошення
         на email і завершить реєстрацію самостійно.
       </div>
-      <div className="flex gap-3">
+      <div className="ui-form-actions">
         <Button type="submit" disabled={pending}>
           {pending ? 'Створення…' : 'Створити працівника'}
         </Button>
@@ -83,7 +83,7 @@ function Field({
         type={type}
         autoComplete={autoComplete}
         required={required}
-        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+        className="field mt-1 w-full"
       />
     </div>
   );

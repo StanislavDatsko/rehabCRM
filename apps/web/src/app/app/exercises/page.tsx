@@ -3,6 +3,8 @@ import { ExerciseLibrary } from '../../../features/rehabilitation/components/exe
 import { listExercises } from '../../../features/rehabilitation/api/rehabilitation-api';
 import { canReadExercises } from '../../../features/rehabilitation/permissions';
 import { serverApiFetch } from '../../../lib/api/server-api-client';
+import { hasPermission, PERMISSIONS } from '@repo/contracts';
+import { ExerciseCreatePanel } from '../../../features/rehabilitation/components/exercise-create-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,5 +35,5 @@ export default async function ExercisesPage({
     page: Number(filters.page) || 1,
     pageSize: 12,
   });
-  return <ExerciseLibrary result={result} filters={filters} />;
+  return <div className="exercise-page">{hasPermission(me.permissions, PERMISSIONS.EXERCISE_MANAGE) ? <ExerciseCreatePanel /> : null}<ExerciseLibrary result={result} filters={filters} /></div>;
 }

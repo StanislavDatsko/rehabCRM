@@ -19,10 +19,10 @@ export function PatientStatusForm({ patient }: { patient: PatientAdministrativeR
   );
 
   return (
-    <form action={formAction} className="rc-card rc-card-elevated space-y-3 p-5">
+    <form action={formAction} className="ui-surface space-y-3 p-5">
       <input type="hidden" name="patientId" value={patient.id} />
       <input type="hidden" name="version" value={patient.version} />
-      <h2 className="font-serif text-lg text-text-primary">{t('patientSectionStatus')}</h2>
+      <h2 className="font-sans text-lg text-text-primary">{t('patientSectionStatus')}</h2>
 
       {state.error ? (
         <div
@@ -42,7 +42,7 @@ export function PatientStatusForm({ patient }: { patient: PatientAdministrativeR
           name="status"
           value={selected}
           onChange={(event) => setSelected(event.target.value as typeof selected)}
-          className="mt-1 w-full max-w-sm rounded-md border border-border bg-background px-3 py-2 text-sm"
+          className="field mt-1 w-full max-w-sm"
         >
           {PATIENT_STATUSES.map((status) => (
             <option key={status} value={status}>

@@ -7,7 +7,7 @@ export function MeasurementChart({ series }: { series: MeasurementTrendSeries })
   const range = max - min || 1;
   const points = series.points.map((point, index) => `${20 + (index * 260) / Math.max(1, series.points.length - 1)},${100 - ((point.value - min) / range) * 70}`).join(' ');
   return (
-    <div className="rc-card rc-card-elevated p-5">
+    <div className="ui-surface p-5">
       <p className="rc-kicker">Measurement trend</p><h3 className="mt-2 text-lg font-semibold">{series.definition.name}</h3>
       <p className="text-xs text-text-secondary">{[series.region, series.laterality, series.unit].filter(Boolean).join(' • ') || 'Без додаткового групування'}</p>
       <svg viewBox="0 0 300 120" className="mt-3 h-32 w-full" role="img" aria-label={`Графік ${series.definition.name}: ${series.points.length} точок`}>

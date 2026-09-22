@@ -1,7 +1,6 @@
 import {
   CanActivate,
   ExecutionContext,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,7 +10,8 @@ import { IS_PUBLIC_KEY } from '../common/auth/public.decorator';
 import type { AuthenticatedPrincipal } from '../common/auth/principal';
 import { SecurityEventLogger } from '../common/auth/security-events';
 import { IdentityResolutionError, IdentityService } from './identity.service';
-import { TOKEN_VERIFIER, type TokenVerifier } from './token-verifier';
+import { SessionService } from './session.service';
+import { readSessionCookie } from './session-cookie';
 
 const PUBLIC_PATH_PREFIXES = ['/health/', '/api/docs'];
 
@@ -19,9 +19,9 @@ const PUBLIC_PATH_PREFIXES = ['/health/', '/api/docs'];
 export class AuthenticationGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @Inject(TOKEN_VERIFIER) private readonly tokens: TokenVerifier,
     private readonly identity: IdentityService,
     private readonly security: SecurityEventLogger,
+    private readonly sessions: SessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -41,43 +41,22 @@ export class AuthenticationGuard implements CanActivate {
       return true;
     }
 
-    const header = request.headers.authorization;
-    if (!header || !header.startsWith('Bearer ')) {
-      this.security.accessDenied({ requestId, reason: 'anonymous', path });
-      throw new UnauthorizedException('Authentication is required.');
-    }
-
-    const accessToken = header.slice('Bearer '.length).trim();
-    if (!accessToken) {
-      this.security.accessDenied({ requestId, reason: 'anonymous', path });
-      throw new UnauthorizedException('Authentication is required.');
-    }
-
-    let subject: string;
-    try {
-      const verified = await this.tokens.verify(accessToken);
-      subject = verified.subject;
-    } catch {
-      this.security.accessDenied({ requestId, reason: 'invalid_token', path });
-      throw new UnauthorizedException('Authentication is required.');
-    }
-
-    try {
-      const principal = await this.identity.resolvePrincipal(subject);
-      request.principal = principal;
-      this.security.authenticated({ requestId, userId: principal.userId, path });
-      return true;
-    } catch (error) {
-      if (error instanceof IdentityResolutionError) {
-        this.security.accessDenied({
-          requestId,
-          reason: error.reason,
-          subject,
-          path,
-        });
-        this.identity.denyApplicationAccess();
+    const cookieToken = readSessionCookie(request.headers.cookie);
+    if (cookieToken) {
+      const session = await this.sessions.resolve(cookieToken);
+      if (session) {
+        try {
+          request.principal = await this.identity.resolvePrincipal(session.user.identityProviderSubject, session.userId);
+        } catch (error) {
+          if (!(error instanceof IdentityResolutionError)) throw error;
+          this.security.accessDenied({ requestId, reason: error.reason, path });
+          this.identity.denyApplicationAccess();
+        }
+        this.security.authenticated({ requestId, userId: request.principal.userId, path });
+        return true;
       }
-      throw error;
     }
+    this.security.accessDenied({ requestId, reason: 'anonymous', path });
+    throw new UnauthorizedException('Authentication is required.');
   }
 }

@@ -316,6 +316,7 @@ model Organization {
   appointmentTypes            AppointmentType[]
   appointments                Appointment[]
   encounters                  Encounter[]
+  encounterExerciseLogs       EncounterExerciseLog[]
   measurementDefinitions      MeasurementDefinition[]
   assessmentTemplates         AssessmentTemplate[]
   assessments                 Assessment[]
@@ -345,6 +346,7 @@ model User {
   id                      String     @id @default(uuid()) @db.Uuid
   identityProvider        String
   identityProviderSubject String
+  passwordHash            String?
   email                   String
   firstName               String?    @db.VarChar(100)
   lastName                String?    @db.VarChar(100)
@@ -384,13 +386,33 @@ model User {
   clinicalAlertsResolved              ClinicalAlert[]               @relation("ClinicalAlertResolvedBy")
   patientMediaUploaded                PatientMedia[]                 @relation("PatientMediaUploadedBy")
   patientMediaVoided                  PatientMedia[]                 @relation("PatientMediaVoidedBy")
+  createdEncounterExerciseLogs        EncounterExerciseLog[]         @relation("EncounterExerciseLogCreatedBy")
   createdStaffInvitations             StaffInvitation[]               @relation("StaffInvitationCreatedBy")
   acceptedStaffInvitations            StaffInvitation[]               @relation("StaffInvitationAcceptedBy")
+  authSessions                        AuthSession[]
 
   @@unique([identityProvider, identityProviderSubject])
   @@unique([identityProvider, email])
   @@index([email])
   @@map("users")
+}
+
+model AuthSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique
+  expiresAt  DateTime  @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt DateTime? @db.Timestamptz(3)
+  userAgent  String?   @db.VarChar(500)
+  ipAddress  String?   @db.VarChar(64)
+  revokedAt  DateTime? @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
 }
 
 model StaffInvitation {
@@ -507,6 +529,7 @@ model Patient {
   notifications             Notification[]
   clinicalAlerts            ClinicalAlert[]
   media                     PatientMedia[]
+  exerciseLogs              EncounterExerciseLog[]
 
   @@unique([organizationId, internalReferenceNumber])
   @@index([organizationId, status, lastName, firstName, id])
@@ -518,7 +541,7 @@ model Patient {
 }
 
 /// Optional, explicit binding between an authenticated identity and a clinical patient.
-/// Credentials and provider identifiers remain on User/Keycloak, never on Patient.
+/// Credentials and provider identifiers remain on User, never on Patient.
 model PatientPortalAccount {
   id              String                      @id @default(uuid()) @db.Uuid
   organizationId  String                      @db.Uuid
@@ -827,10 +850,37 @@ model Encounter {
   assessments     Assessment[]
   bodyAnnotations BodyAnnotation[]
   media           PatientMedia[]
+  exerciseLogs    EncounterExerciseLog[]
 
   @@index([organizationId, patientId, startedAt])
   @@index([organizationId, practitionerId, startedAt])
   @@map("encounters")
+}
+
+model EncounterExerciseLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  organizationId  String   @db.Uuid
+  encounterId     String   @db.Uuid
+  patientId       String   @db.Uuid
+  exerciseId      String?  @db.Uuid
+  exerciseName    String?  @db.VarChar(200)
+  sets            Int?
+  repetitions     Int?
+  weightKg        Float?
+  durationMinutes Int?
+  specialistNote  String?  @db.VarChar(2000)
+  createdByUserId String   @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  encounter    Encounter          @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  patient      Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  exercise     ExerciseDefinition? @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  createdBy    User               @relation("EncounterExerciseLogCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, patientId, createdAt])
+  @@index([encounterId, createdAt])
+  @@map("encounter_exercise_logs")
 }
 
 /// Reusable structured observation semantics. Null organizationId means built-in/system.
@@ -1126,6 +1176,7 @@ model ExerciseDefinition {
   organization  Organization?          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   media         ExerciseMedia[]
   prescriptions ExercisePrescription[]
+  encounterExerciseLogs EncounterExerciseLog[]
 
   @@unique([organizationId, code])
   @@index([organizationId, active, category, code])
@@ -1348,6 +1399,7 @@ model BodyAnnotation {
   mappingId               String               @db.Uuid
   type                    BodyAnnotationType
   severity                Int?
+  colorHex                String?              @db.VarChar(7)
   title                   String?              @db.VarChar(200)
   note                    String?              @db.VarChar(3000)
   status                  BodyAnnotationStatus @default(ACTIVE)

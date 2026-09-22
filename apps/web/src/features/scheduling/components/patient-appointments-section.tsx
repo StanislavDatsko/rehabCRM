@@ -40,9 +40,9 @@ export function PatientAppointmentsSection({
   canCreate: boolean;
 }) {
   return (
-    <section className="rc-card p-5">
+    <section className="ui-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionAppointments')}</h2>
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionAppointments')}</h2>
         <div className="flex flex-wrap gap-2">
           <a href={`/app/calendar?patient=${patientId}`}>
             <Button type="button" variant="secondary">

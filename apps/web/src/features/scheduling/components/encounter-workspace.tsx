@@ -3,6 +3,7 @@
 import type { EncounterResponse } from '@repo/contracts';
 import type { CurrentUserResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 import { useActionState } from 'react';
 import { t } from '../../../i18n/messages';
 import { completeEncounterAction, type SchedulingFormState } from '../actions/scheduling-actions';
@@ -14,6 +15,9 @@ import { AssessmentHistorySection } from '../../assessments/components/assessmen
 import type { RehabilitationPlanListItem } from '@repo/contracts';
 import { RehabilitationPlansSection } from '../../rehabilitation/components/rehabilitation-plans-section';
 import { canReadBodyMap } from '../../anatomy/permissions';
+import { EncounterExerciseLogSection } from './encounter-exercise-log-section';
+import type { ExerciseLibraryItem } from '@repo/contracts';
+import { PatientMediaGallery } from '../../patient-media/patient-media-gallery';
 
 const initialState: SchedulingFormState = { error: null };
 
@@ -26,6 +30,10 @@ export function EncounterWorkspace({
   canCreateAssessment,
   rehabilitationPlans,
   canCreatePlan,
+  exerciseLogs,
+  exercises,
+  canCreateExerciseLog,
+  encounterMedia,
 }: {
   user: CurrentUserResponse;
   encounter: EncounterResponse;
@@ -35,6 +43,10 @@ export function EncounterWorkspace({
   canCreateAssessment: boolean;
   rehabilitationPlans: RehabilitationPlanListItem[];
   canCreatePlan: boolean;
+  exerciseLogs: any[];
+  exercises: ExerciseLibraryItem[];
+  canCreateExerciseLog: boolean;
+  encounterMedia: { items: any[]; total: number };
 }) {
   const [state, formAction, pending] = useActionState(completeEncounterAction, initialState);
   const canComplete = canCompleteEncounter(user) && encounter.status === 'IN_PROGRESS';
@@ -50,15 +62,9 @@ export function EncounterWorkspace({
         </div>
       ) : null}
 
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand">
-        <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">
-          {t('encounterWorkspaceLabel')}
-        </p>
-        <h1 className="mt-1 font-serif text-3xl text-white">{t('encounterTitle')}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-text-secondary">{t('encounterWorkspaceIntro')}</p>
-      </header>
+      <PageHeader eyebrow={t('encounterWorkspaceLabel')} title={encounter.patient.displayName} description={`${t('encounterTitle')} · ${formatSchedulingInstant(encounter.startedAt, timezone)}`} metadata={<StatusPill tone={encounter.status === 'IN_PROGRESS' ? 'info' : 'neutral'}>{encounterStatusLabel(encounter.status)}</StatusPill>} actions={<a href={`/app/patients/${encounter.patient.id}`} className="rc-btn rc-btn-secondary">Картка пацієнта ↗</a>} />
 
-      <section className="rc-card p-5">
+      <section className="ui-surface p-5">
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-text-secondary">{t('encounterFieldPatient')}</dt>
@@ -112,24 +118,34 @@ export function EncounterWorkspace({
         canCreate={canCreatePlan}
       />
 
+      <EncounterExerciseLogSection encounterId={encounter.id} logs={exerciseLogs} exercises={exercises} canCreate={canCreateExerciseLog} />
+
+      <PatientMediaGallery
+        patientId={encounter.patient.id}
+        encounterId={encounter.id}
+        initialItems={encounterMedia.items}
+        initialTotal={encounterMedia.total}
+        title="Фото та відео тренування"
+        description="Медіа цього візиту · окремо від картки пацієнта"
+      />
+
       {canReadBodyMap(user) ? (
-        <section className="rc-card p-5">
-          <h2 className="font-serif text-lg text-text-primary">Body annotations</h2>
+        <section className="ui-surface p-5">
+          <h2 className="font-sans text-lg text-text-primary">Карта тіла та клінічні позначки</h2>
           <p className="mt-1 text-sm text-text-secondary">
-            Open the patient body map in this encounter context. New annotations will be linked to
-            this encounter.
+            Нові позначки на карті тіла будуть пов’язані з цим візитом.
           </p>
           <a
             href={`/app/patients/${encounter.patient.id}/body-map?encounterId=${encounter.id}`}
             className="mt-3 inline-block text-sm text-info underline"
           >
-            Open encounter body map
+            Відкрити карту тіла
           </a>
         </section>
       ) : null}
 
       {canComplete ? (
-        <form action={formAction} className="space-y-3">
+        <form action={formAction} className="clinical-action-bar">
           <input type="hidden" name="encounterId" value={encounter.id} />
           {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
           <Button type="submit" disabled={pending}>

@@ -1,5 +1,6 @@
 import type { PatientAdministrativeResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
+import { Avatar } from '@repo/ui/workspace';
 import { t } from '../../../i18n/messages';
 import { ageFromDateOfBirth, formatDateOfBirth } from '../age';
 import { buildPatientsListHref, type PatientListQuery } from '../list-query';
@@ -46,8 +47,9 @@ export function PatientListTable({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rc-card overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+      <div className="ui-table-container">
+        <table className="ui-data-table w-full text-left text-sm">
+          <caption className="sr-only">{t('patientsTitle')}</caption>
           <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase tracking-wide text-text-secondary">
             <tr>
               <th scope="col" className="px-4 py-3 font-medium">
@@ -80,6 +82,7 @@ export function PatientListTable({
                 className="border-b border-border last:border-b-0 hover:bg-surface-muted/50"
               >
                 <td className="px-4 py-3">
+                  <div className="flex items-center gap-3"><span className="hidden sm:block"><Avatar name={patient.fullName} /></span><div className="min-w-0">
                   <a
                     href={`/app/patients/${patient.id}`}
                     className="font-medium text-text-primary underline-offset-2 hover:underline"
@@ -91,6 +94,7 @@ export function PatientListTable({
                       {patient.internalReferenceNumber}
                     </p>
                   ) : null}
+                  </div></div>
                 </td>
                 <td className="hidden px-4 py-3 text-text-secondary md:table-cell">
                   {dobAgeCell(patient)}
@@ -115,11 +119,7 @@ export function PatientListTable({
                       </Button>
                     </a>
                     {canEdit ? (
-                      <a href={`/app/patients/${patient.id}/edit`}>
-                        <Button type="button" variant="ghost">
-                          {t('patientsEdit')}
-                        </Button>
-                      </a>
+                      <a className="rc-btn rc-btn-ghost inline-flex items-center" href={`/app/patients/${patient.id}/edit`} aria-label={`${t('patientsEdit')}: ${patient.fullName}`}>{t('patientsEdit')}</a>
                     ) : null}
                   </div>
                 </td>

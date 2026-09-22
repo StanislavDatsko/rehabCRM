@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker/docker-compose.yml down",
-    "auth:live": "node scripts/verify-oidc-live.mjs",
+    "auth:live": "node --env-file=.env scripts/verify-local-auth.mjs",
     "anatomy:inspect": "tsx scripts/anatomy/inspect-glb.ts",
     "anatomy:mappings": "tsx scripts/anatomy/generate-mapping-report.ts",
     "anatomy:mappings:validate": "tsx scripts/anatomy/validate-mapping.ts",

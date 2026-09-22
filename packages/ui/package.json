@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./styles.css": "./src/styles.css",
-    "./button": "./src/button.tsx"
+    "./button": "./src/button.tsx",
+    "./workspace": "./src/workspace.tsx",
+    "./components": "./src/components.tsx"
   },
   "scripts": {
     "lint": "eslint .",

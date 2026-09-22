@@ -21,10 +21,10 @@ export function RehabilitationPlansSection({
   const open = plans.filter((plan) => ['DRAFT', 'ACTIVE', 'PAUSED'].includes(plan.status));
   const previous = plans.filter((plan) => ['COMPLETED', 'CANCELLED'].includes(plan.status));
   return (
-    <section className="rc-card p-6">
+    <section className="ui-surface p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-serif text-xl text-text-primary">Плани реабілітації</h2>
+          <h2 className="font-sans text-xl text-text-primary">Плани реабілітації</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Цілі, етапи та індивідуальні призначення вправ.
           </p>
@@ -62,7 +62,7 @@ function PlanGroup({ title, items }: { title: string; items: RehabilitationPlanL
           <a
             key={plan.id}
             href={`/app/rehabilitation-plans/${plan.id}`}
-            className="rc-card block p-4 transition hover:border-info/50 hover:bg-surface-muted"
+            className="ui-surface block p-4 transition hover:border-info/50 hover:bg-surface-muted"
           >
             <div className="flex items-start justify-between gap-3">
               <strong className="text-text-primary">{plan.title}</strong>

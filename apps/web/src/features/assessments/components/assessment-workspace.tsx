@@ -6,6 +6,7 @@ import type {
   MeasurementHistoryPoint,
   MeasurementResponse,
 } from '@repo/contracts';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 import {
   completeAssessmentAction,
   saveAssessmentAction,
@@ -115,6 +116,7 @@ function MeasurementInput({
   if (definition.valueType === 'BOOLEAN') {
     return (
       <select
+        aria-label={definition.name}
         disabled={disabled}
         name={name}
         defaultValue={value}
@@ -129,6 +131,7 @@ function MeasurementInput({
   if (definition.valueType === 'CODED') {
     return (
       <select
+        aria-label={definition.name}
         disabled={disabled}
         name={name}
         defaultValue={value}
@@ -146,6 +149,7 @@ function MeasurementInput({
   if (definition.valueType === 'TEXT') {
     return (
       <textarea
+        aria-label={definition.name}
         disabled={disabled}
         name={name}
         defaultValue={value}
@@ -157,6 +161,7 @@ function MeasurementInput({
   return (
     <div className="flex items-center gap-2">
       <input
+        aria-label={definition.name}
         disabled={disabled}
         name={name}
         defaultValue={value}
@@ -221,9 +226,9 @@ function TrendSummary({ history }: { history: MeasurementHistoryPoint[] }) {
   const trends = [...groups.values()].filter((points) => points.length >= 2).slice(0, 3);
   if (trends.length === 0) return null;
   return (
-    <section className="rc-card rc-card-elevated p-5">
+    <section className="ui-filter-bar">
       <p className="rc-kicker">Тренд показників</p>
-      <h2 className="mt-1 font-serif text-xl">Динаміка вимірювань</h2>
+      <h2 className="mt-1 text-lg font-semibold tracking-tight">Динаміка вимірювань</h2>
       <p className="mt-1 text-sm text-text-secondary">
         Фактичні значення за датою виконання, без згладжування та автоматичної оцінки покращення.
       </p>
@@ -327,35 +332,24 @@ export function AssessmentWorkspace({
           {error}
         </div>
       ) : null}
-      <header className="rc-gradient-brand rounded-[1.25rem] p-6 text-white shadow-brand sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/75">
-              {assessment.patient.displayName}
-            </p>
-            <h1 className="mt-1 font-serif text-3xl">{assessment.title}</h1>
-            <p className="mt-2 text-sm text-white/80">
-              {formatClinicalDate(assessment.performedAt)} · {assessment.practitioner.displayName}
-            </p>
-          </div>
-          <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-medium ring-1 ring-white/20">
-            {assessmentStatusLabel(assessment.status)}
-          </span>
-        </div>
+      <PageHeader eyebrow={assessment.patient.displayName} title={assessment.title} description={`${formatClinicalDate(assessment.performedAt)} · ${assessment.practitioner.displayName}`} metadata={<StatusPill tone={assessment.status === 'COMPLETED' ? 'success' : assessment.status === 'VOIDED' ? 'danger' : 'warning'}>{assessmentStatusLabel(assessment.status)}</StatusPill>} actions={<a className="rc-btn rc-btn-secondary" href={`/app/patients/${assessment.patient.id}`}>Картка пацієнта ↗</a>} />
         {assessment.template ? (
-          <p className="mt-3 text-xs text-white/70">
+          <p className="text-xs text-text-secondary">
             {assessment.template.name} · незмінна редакція {assessment.template.revision}
             {assessment.template.configurableSample
               ? ' · демонстраційний конфігурований шаблон'
               : ''}
           </p>
         ) : null}
-      </header>
+      <div className="clinical-section-index">
+        <div><p className="text-xs text-text-secondary">Збережені показники</p><p className="mt-1 text-sm font-medium">{items.filter(item => measurementByItem.has(item.id)).length} / {items.length}</p></div>
+        <nav aria-label="Розділи оцінювання" className="flex flex-wrap gap-2">{categories.map(category => <a key={category} href={`#measurement-${category}`} className="rc-btn rc-btn-ghost">{categoryLabels[category] ?? category}</a>)}<a href="#assessment-summary" className="rc-btn rc-btn-ghost">Підсумок</a></nav>
+      </div>
 
       <form action={saveAssessmentAction} className="space-y-6">
         <input type="hidden" name="assessmentId" value={assessment.id} />
         <input type="hidden" name="version" value={assessment.version} />
-        <section className="rc-card grid gap-4 p-5 md:grid-cols-2">
+        <section className="ui-filter-bar grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium">
             Назва
             <input
@@ -381,8 +375,8 @@ export function AssessmentWorkspace({
           </label>
         </section>
         {categories.map((category) => (
-          <section key={category} className="rc-card p-5">
-            <h2 className="font-serif text-xl">{categoryLabels[category]}</h2>
+          <section id={`measurement-${category}`} key={category} className="clinical-measurement-section ui-filter-bar">
+            <h2 className="text-lg font-semibold tracking-tight">{categoryLabels[category]}</h2>
             <div className="mt-4 space-y-6">
               {items
                 .filter((item) => item.definition.category === category)
@@ -393,7 +387,7 @@ export function AssessmentWorkspace({
                   const selectedLaterality =
                     measurement?.laterality ?? item.defaultLaterality ?? '';
                   return (
-                    <div key={item.id} className="rounded-xl border border-border/70 bg-surface-muted/45 p-4 transition-colors hover:border-brand/35">
+                    <div key={item.id} className="clinical-measurement-row">
                       <input type="hidden" name={`definition.${item.id}`} value={definition.id} />
                       <input
                         type="hidden"
@@ -489,6 +483,7 @@ export function AssessmentWorkspace({
                           Примітка до показника
                         </summary>
                         <textarea
+                          aria-label={`Примітка: ${definition.name}`}
                           disabled={!editable}
                           name={`note.${item.id}`}
                           defaultValue={measurement?.note ?? ''}
@@ -502,8 +497,8 @@ export function AssessmentWorkspace({
             </div>
           </section>
         ))}
-        <section className="rc-card p-5">
-          <label className="block font-serif text-xl">
+        <section id="assessment-summary" className="clinical-measurement-section ui-filter-bar">
+          <label className="block text-lg font-semibold tracking-tight">
             Професійний підсумок
             <textarea
               disabled={!editable}
@@ -516,7 +511,7 @@ export function AssessmentWorkspace({
           </label>
         </section>
         {editable ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="clinical-action-bar">
             <button type="submit" className="rc-btn rc-btn-primary">
               Зберегти чернетку
             </button>
@@ -530,11 +525,11 @@ export function AssessmentWorkspace({
       {assessment.status === 'DRAFT' && canComplete ? (
         <form
           action={completeAssessmentAction}
-          className="rc-card border-brand/20 bg-brand/5 p-5"
+          className="ui-filter-bar border-success/30 bg-success/5"
         >
           <input type="hidden" name="assessmentId" value={assessment.id} />
           <input type="hidden" name="version" value={assessment.version} />
-          <h2 className="font-serif text-lg">Завершення оцінювання</h2>
+          <h2 className="text-base font-semibold tracking-tight">Завершення оцінювання</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Спочатку збережіть усі зміни. Після завершення звичайне редагування буде заблоковано.
           </p>
@@ -546,7 +541,7 @@ export function AssessmentWorkspace({
       {assessment.status !== 'VOIDED' && canVoid ? (
         <form
           action={voidAssessmentAction}
-          className="rc-card border-danger/20 bg-surface p-5"
+          className="ui-filter-bar border-danger/20 bg-surface"
         >
           <input type="hidden" name="assessmentId" value={assessment.id} />
           <input type="hidden" name="version" value={assessment.version} />

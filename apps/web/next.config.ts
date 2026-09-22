@@ -8,7 +8,6 @@ const origin = (value: string | undefined, fallback: string) => {
   }
 };
 const apiOrigin = origin(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3001');
-const identityOrigin = origin(process.env.NEON_AUTH_BASE_URL, 'http://localhost:3000');
 const storageOrigin = origin(process.env.NEXT_PUBLIC_S3_PUBLIC_URL, 'http://localhost:9000');
 const hardenedDeployment = ['staging', 'production'].includes(
   process.env.DEPLOYMENT_ENV ?? 'development',
@@ -19,12 +18,12 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  `form-action 'self' ${identityOrigin}`,
+  "form-action 'self'",
   `img-src 'self' data: blob: ${storageOrigin}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${developmentScriptSources}`,
-  `connect-src 'self' ${apiOrigin} ${identityOrigin} ${storageOrigin}`,
+  `connect-src 'self' ${apiOrigin} ${storageOrigin}`,
   `media-src 'self' blob: ${storageOrigin}`,
   "worker-src 'self' blob:",
   ...(hardenedDeployment ? ['upgrade-insecure-requests'] : []),

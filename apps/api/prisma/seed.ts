@@ -8,11 +8,12 @@ import {
 } from '@prisma/client';
 import { DEV_SEED, IDENTITY_PROVIDER, devSeedPatientId } from '../src/identity/dev-seed-ids';
 import { seedAnatomy, seedDemoBodyAnnotations } from './anatomy-seed';
+import argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  if (process.env.NODE_ENV === 'production' || process.env.DEPLOYMENT_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || ['staging', 'production'].includes(process.env.DEPLOYMENT_ENV ?? '')) {
     throw new Error('Development seed is disabled in production.');
   }
   await prisma.organization.upsert({
@@ -40,18 +41,18 @@ async function main(): Promise<void> {
   const staff = [
     {
       id: DEV_SEED.users.organizationAdmin,
-      subject: DEV_SEED.neonAuthSubjects.organizationAdmin,
+      subject: DEV_SEED.localSubjects.organizationAdmin,
       email: 'admin@rehabcrm.local',
       displayName: 'Iryna Organization Admin',
       status: UserStatus.ACTIVE,
       orgId: DEV_SEED.organizations.demo.id,
       role: StaffRole.ORGANIZATION_ADMIN,
       membershipStatus: MembershipStatus.ACTIVE,
-      practitioner: false,
+      practitioner: true,
     },
     {
       id: DEV_SEED.users.receptionist,
-      subject: DEV_SEED.neonAuthSubjects.receptionist,
+      subject: DEV_SEED.localSubjects.receptionist,
       email: 'receptionist@rehabcrm.local',
       displayName: 'Olena Reception Demo',
       status: UserStatus.ACTIVE,
@@ -62,7 +63,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.specialist,
-      subject: DEV_SEED.neonAuthSubjects.specialist,
+      subject: DEV_SEED.localSubjects.specialist,
       email: 'specialist@rehabcrm.local',
       displayName: 'Andriy Specialist Demo',
       status: UserStatus.ACTIVE,
@@ -73,7 +74,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.disabledUser,
-      subject: DEV_SEED.neonAuthSubjects.disabledUser,
+      subject: DEV_SEED.localSubjects.disabledUser,
       email: 'disabled-user@rehabcrm.local',
       displayName: 'Disabled User Demo',
       status: UserStatus.DISABLED,
@@ -84,7 +85,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.disabledMembership,
-      subject: DEV_SEED.neonAuthSubjects.disabledMembership,
+      subject: DEV_SEED.localSubjects.disabledMembership,
       email: 'disabled-membership@rehabcrm.local',
       displayName: 'Disabled Membership Demo',
       status: UserStatus.ACTIVE,
@@ -95,7 +96,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.otherOrgSpecialist,
-      subject: DEV_SEED.neonAuthSubjects.otherOrgSpecialist,
+      subject: DEV_SEED.localSubjects.otherOrgSpecialist,
       email: 'other-specialist@rehabcrm.local',
       displayName: 'Other Clinic Specialist Demo',
       status: UserStatus.ACTIVE,
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
     },
     {
       id: DEV_SEED.users.patient,
-      subject: DEV_SEED.neonAuthSubjects.patient,
+      subject: DEV_SEED.localSubjects.patient,
       email: 'patient@rehabcrm.local',
       displayName: 'Demo Patient Portal',
       status: UserStatus.ACTIVE,
@@ -116,24 +117,24 @@ async function main(): Promise<void> {
       practitioner: false,
     },
   ] as const;
+  // DEV ONLY: never use this fallback credential outside local development.
+  const seedPasswordHash = await argon2.hash(process.env.DEV_SEED_ADMIN_PASSWORD ?? 'RehabLocal123!', { type: argon2.argon2id });
 
   for (const person of staff) {
     const [firstName = person.displayName, ...lastNameParts] = person.displayName.split(' ');
     const lastName = lastNameParts.join(' ') || null;
     await prisma.user.upsert({
-      where: {
-        identityProvider_identityProviderSubject: {
-          identityProvider: IDENTITY_PROVIDER,
-          identityProviderSubject: person.subject,
-        },
-      },
+      where: { id: person.id },
       update: {
         id: person.id,
+        identityProvider: IDENTITY_PROVIDER,
+        identityProviderSubject: person.subject,
         email: person.email,
         firstName,
         lastName,
         displayName: person.displayName,
         status: person.status,
+        passwordHash: seedPasswordHash,
       },
       create: {
         id: person.id,
@@ -144,6 +145,7 @@ async function main(): Promise<void> {
         lastName,
         displayName: person.displayName,
         status: person.status,
+        passwordHash: seedPasswordHash,
       },
     });
 

@@ -8,7 +8,9 @@ import type {
 } from '@repo/contracts';
 import type { CurrentUserResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
+import { PageHeader } from '@repo/ui/workspace';
 import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import { t } from '../../../i18n/messages';
 import type { CalendarQuery } from '../calendar-query';
 import { buildCalendarHref } from '../calendar-query';
@@ -40,6 +42,7 @@ export function CalendarPageClient({
   prefillPatientId: string;
 }) {
   const [showCreate, setShowCreate] = useState(query.create);
+  const [createSlot, setCreateSlot] = useState<{ date: string; startTime: string } | null>(null);
 
   const events = useMemo(
     () =>
@@ -66,31 +69,10 @@ export function CalendarPageClient({
         </div>
       ) : null}
 
-      <header className="flex flex-col gap-4 rounded-2xl bg-surface p-6 shadow-sm lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="font-serif text-3xl text-text-primary">{t('calendarTitle')}</h1>
-          <p className="mt-1 text-sm text-text-secondary">{t('calendarSubtitle')}</p>
-        </div>
-        {canCreateAppointment(user) ? (
-          <Button type="button" onClick={() => setShowCreate(true)}>
-            {t('calendarNewAppointment')}
-          </Button>
-        ) : null}
-      </header>
+      <PageHeader eyebrow="Розклад команди" title={t('calendarTitle')} description={t('calendarSubtitle')} metadata={<span className="ui-count">{items.length} візитів</span>} actions={canCreateAppointment(user) ? <Button onClick={() => setShowCreate(true)}>+ {t('calendarNewAppointment')}</Button> : null} />
 
-      <div className="rc-card flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <a href={buildCalendarHref(query, { date: query.date, view: 'day' })}>
-            <Button type="button" variant={query.view === 'day' ? 'primary' : 'secondary'}>
-              {t('calendarViewDay')}
-            </Button>
-          </a>
-          <a href={buildCalendarHref(query, { date: query.date, view: 'week' })}>
-            <Button type="button" variant={query.view === 'week' ? 'primary' : 'secondary'}>
-              {t('calendarViewWeek')}
-            </Button>
-          </a>
-        </div>
+      <div className="ui-filter-bar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <nav className="ui-segmented" aria-label="Вигляд календаря"><a aria-current={query.view === 'day' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'day' })}>{t('calendarViewDay')}</a><a aria-current={query.view === 'week' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'week' })}>{t('calendarViewWeek')}</a></nav>
 
         <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <input type="hidden" name="view" value={query.view} />
@@ -139,6 +121,10 @@ export function CalendarPageClient({
         timezone={timezone}
         events={events}
         query={query}
+        onSelectSlot={(slot) => {
+          setCreateSlot({ date: format(slot.start, 'yyyy-MM-dd'), startTime: format(slot.start, 'HH:mm') });
+          setShowCreate(true);
+        }}
       />
 
       {selectedAppointment ? (
@@ -157,6 +143,8 @@ export function CalendarPageClient({
           practitioners={activePractitioners}
           timezone={timezone}
           prefillPatientId={prefillPatientId}
+          initialDate={createSlot?.date}
+          initialStartTime={createSlot?.startTime}
           onClose={() => setShowCreate(false)}
         />
       ) : null}

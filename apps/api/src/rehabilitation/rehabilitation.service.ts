@@ -29,6 +29,7 @@ import {
 } from './rehabilitation.mapper';
 import type {
   CancelPlanBody,
+  CreateExerciseBody,
   CreatePlanBody,
   ExerciseListQuery,
   PlanVersionCommand,
@@ -47,6 +48,16 @@ type Prepared = {
 @Injectable()
 export class RehabilitationService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async createExercise(principal: AuthenticatedPrincipal, body: CreateExerciseBody): Promise<ExerciseDetailResponse> {
+    try {
+      const row = await this.prisma.exerciseDefinition.create({ data: { id: randomUUID(), organizationId: principal.organizationId, code: body.code, name: body.name, description: body.description, instructions: body.instructions, category: body.category, difficulty: body.difficulty ?? null, anatomicalRegionCodes: body.anatomicalRegionCodes, lateralityApplicability: ['LEFT', 'RIGHT', 'MIDLINE', 'NOT_APPLICABLE'], targetMuscleGroupCodes: body.targetMuscleGroupCodes, equipment: body.equipment, supportedDosageKinds: [], active: true }, include: EXERCISE_INCLUDE });
+      return toExerciseDetail(row);
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') throw new ConflictException({ code: 'EXERCISE_CODE_CONFLICT', message: 'Exercise code already exists in this organization.' });
+      throw error;
+    }
+  }
 
   async listExercises(
     principal: AuthenticatedPrincipal,

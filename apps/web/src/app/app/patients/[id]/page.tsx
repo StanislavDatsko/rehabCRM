@@ -83,7 +83,7 @@ export default async function PatientProfilePage({
         : mapApiErrorToMessage(undefined);
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientProfileTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('patientProfileTitle')}</h1>
         <PatientsErrorState message={message} />
         <a href="/app/patients" className="text-sm text-info underline">
           {t('patientBackToList')}
@@ -106,6 +106,7 @@ export default async function PatientProfilePage({
   let bodyMap: Awaited<ReturnType<typeof getPatientBodyMap>> | null = null;
   let schedulingTimezone = DEFAULT_TIMEZONE;
   let patientMedia: { items: Array<{ id: string; kind: 'IMAGE' | 'VIDEO'; mimeType: string; originalFileName: string; title: string | null; description: string | null; capturedAt: string | null; createdAt: string; uploadedBy: string; sizeBytes: string }>; total: number } | null = null;
+  let visitMedia: { items: any[]; total: number } = { items: [], total: 0 };
   if (canReadAppointments(me)) {
     try {
       appointmentSummary = await getPatientAppointments(id);
@@ -156,6 +157,7 @@ export default async function PatientProfilePage({
   }
   if (me.permissions.includes('patient_media.read')) {
     try { patientMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=25`); } catch { patientMedia = { items: [], total: 0 }; }
+    try { visitMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=100&encounterOnly=true`); } catch { visitMedia = { items: [], total: 0 }; }
   }
 
   const flashMessage = flash.created
@@ -164,7 +166,15 @@ export default async function PatientProfilePage({
       ? t('patientUpdatedFlash')
       : flash.statusUpdated
         ? t('patientStatusUpdatedFlash')
-        : null;
+      : null;
+
+  const visitMediaGroups = Object.values(visitMedia.items.reduce<Record<string, { encounterId: string; startedAt: string | null; items: any[] }>>((groups, item) => {
+    if (!item.encounterId) return groups;
+    const group = groups[item.encounterId] ?? { encounterId: item.encounterId, startedAt: item.encounterStartedAt, items: [] as any[] };
+    group.items.push(item);
+    groups[item.encounterId] = group;
+    return groups;
+  }, {})).sort((a, b) => new Date(b.startedAt ?? 0).getTime() - new Date(a.startedAt ?? 0).getTime());
 
   return (
     <div className="space-y-8">
@@ -177,21 +187,65 @@ export default async function PatientProfilePage({
         </div>
       ) : null}
 
-      <PatientProfileHeader patient={patient} canEdit={canUpdatePatient(me)} />
-      <PatientProfileDetails patient={patient} />
+      <PatientProfileHeader
+        patient={patient}
+        canEdit={canUpdatePatient(me)}
+        actions={<>
+          {canReadAssessments(me) && canCreateAssessment(me) ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/assessments/new`}>+ Оцінювання</a> : null}
+          {canReadPlans(me) && canCreatePlan(me) ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/rehabilitation/new`}>+ План</a> : null}
+          {canReadBodyMap(me) && bodyMap ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/body-map`}>Body map</a> : null}
+        </>}
+      />
+      <nav aria-label="Розділи картки пацієнта" className="patient-section-nav">
+        <a href="#overview">Огляд</a>
+        {appointmentSummary && <a href="#appointments">Візити</a>}
+        {assessments && <a href="#assessments">Оцінювання</a>}
+        {rehabilitationPlans && <a href="#plans">Плани</a>}
+        {patientMedia && <a href="#media">Медіа</a>}
+        {me.permissions.includes('patient_media.read') && <a href="#visit-media">Медіа з візитів</a>}
+        {bodyMap && <a href="#body-map">Карта тіла</a>}
+        {canReadProgress(me) && <a href={`/app/patients/${id}/progress`}>Динаміка</a>}
+        {canReadClinicalReports(me) && <a href={`/app/patients/${id}/reports`}>Звіти</a>}
+        <a href="#history">Історія</a>
+      </nav>
+      <section id="overview" className="patient-workspace-section"><PatientProfileDetails patient={patient} /></section>
 
-      {patientMedia ? <PatientMediaGallery patientId={id} initialItems={patientMedia.items} initialTotal={patientMedia.total} /> : null}
+      {patientMedia ? <section id="media" className="patient-workspace-section"><PatientMediaGallery patientId={id} initialItems={patientMedia.items} initialTotal={patientMedia.total} /></section> : null}
+
+      {me.permissions.includes('patient_media.read') ? (
+        <section id="visit-media" className="patient-workspace-section">
+          <details className="ui-surface overflow-hidden" open>
+            <summary className="cursor-pointer px-5 py-4 font-sans text-lg text-text-primary">Медіа з візитів · {visitMedia.total} записів</summary>
+            <div className="space-y-5 border-t border-border p-5">
+              {!visitMediaGroups.length ? <p className="text-sm text-text-secondary">Медіа з візитів ще не додано.</p> : null}
+              {visitMediaGroups.map((group) => (
+                <div key={group.encounterId} className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm font-semibold text-text-primary">
+                    <span className="h-px flex-1 bg-border" />
+                    <span>{group.startedAt ? new Date(group.startedAt).toLocaleDateString('uk-UA', { dateStyle: 'long', timeZone: schedulingTimezone }) : 'Дата візиту не вказана'}</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                  <PatientMediaGallery patientId={id} encounterId={group.encounterId} initialItems={group.items} initialTotal={group.items.length} title="Медіа візиту" description="Фото та відео тренування" />
+                </div>
+              ))}
+            </div>
+          </details>
+        </section>
+      ) : null}
 
       {appointmentSummary ? (
+        <section id="appointments" className="patient-workspace-section">
         <PatientAppointmentsSection
           patientId={id}
           summary={appointmentSummary}
           timezone={schedulingTimezone}
           canCreate={canCreateAppointment(me)}
         />
+        </section>
       ) : null}
 
       {assessments ? (
+        <section id="assessments" className="patient-workspace-section">
         <AssessmentHistorySection
           patientId={id}
           assessments={assessments}
@@ -204,21 +258,24 @@ export default async function PatientProfilePage({
             to: flash.assessmentTo,
           }}
         />
+        </section>
       ) : null}
 
       {rehabilitationPlans ? (
+        <section id="plans" className="patient-workspace-section">
         <RehabilitationPlansSection
           patientId={id}
           plans={rehabilitationPlans}
           canCreate={canCreatePlan(me)}
         />
+        </section>
       ) : null}
 
       {bodyMap ? (
-        <section className="rounded-md border border-border bg-surface p-5">
+        <section id="body-map" className="patient-workspace-section ui-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif text-lg text-text-primary">Clinical body map</h2>
+              <h2 className="font-sans text-lg text-text-primary">Clinical body map</h2>
               <p className="mt-1 text-sm text-text-secondary">
                 {bodyMap.summary.active} active · {bodyMap.summary.resolved} resolved
                 {bodyMap.summary.maximumSeverity === null
@@ -234,7 +291,7 @@ export default async function PatientProfilePage({
             </div>
             <a
               href={`/app/patients/${id}/body-map`}
-              className="rounded bg-info px-3 py-2 text-sm text-white"
+              className="rc-btn rc-btn-primary"
             >
               Open body map
             </a>
@@ -243,8 +300,8 @@ export default async function PatientProfilePage({
       ) : null}
 
       {canReadProgress(me) || canReadClinicalReports(me) ? (
-        <section className="rounded-md border border-border bg-surface p-5">
-          <h2 className="font-serif text-lg text-text-primary">Клінічна динаміка та звіти</h2>
+        <section className="ui-surface p-5">
+          <h2 className="font-sans text-lg text-text-primary">Клінічна динаміка та звіти</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Поздовжній перегляд вимірювань, цілей, редакцій плану та позначок тіла.
           </p>
@@ -266,8 +323,8 @@ export default async function PatientProfilePage({
 
       {canChangePatientStatus(me) ? <PatientStatusForm patient={patient} /> : null}
 
-      <section className="rounded-md border border-border bg-surface p-5">
-        <h2 className="font-serif text-lg text-text-primary">{t('patientSectionHistory')}</h2>
+      <section id="history" className="patient-workspace-section ui-surface p-5">
+        <h2 className="font-sans text-lg text-text-primary">{t('patientSectionHistory')}</h2>
         <div className="mt-4">
           <PatientHistoryList items={history} />
         </div>

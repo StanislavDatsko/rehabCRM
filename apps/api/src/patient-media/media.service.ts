@@ -23,9 +23,9 @@ export class PatientMediaService {
 
   async list(principal: AuthenticatedPrincipal, patientId: string, query: ListMediaQuery) {
     await this.patient(principal, patientId);
-    const where = { organizationId: principal.organizationId, patientId, status: query.status, ...(query.kind ? { kind: query.kind } : {}) };
-    const [items, total] = await Promise.all([this.prisma.patientMedia.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (query.page - 1) * query.pageSize, take: query.pageSize, select: { id: true, patientId: true, kind: true, status: true, originalFileName: true, mimeType: true, sizeBytes: true, title: true, description: true, capturedAt: true, createdAt: true, uploadedBy: { select: { displayName: true } }, encounterId: true, assessmentId: true, rehabilitationPlanId: true, version: true } }), this.prisma.patientMedia.count({ where })]);
-    return { items: items.map((item) => ({ ...item, sizeBytes: item.sizeBytes.toString(), uploadedBy: item.uploadedBy.displayName })), page: query.page, pageSize: query.pageSize, total, hasNextPage: query.page * query.pageSize < total };
+    const where = { organizationId: principal.organizationId, patientId, status: query.status, ...(query.kind ? { kind: query.kind } : {}), encounterId: query.encounterOnly ? { not: null } : (query.encounterId ?? null) };
+    const [items, total] = await Promise.all([this.prisma.patientMedia.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (query.page - 1) * query.pageSize, take: query.pageSize, select: { id: true, patientId: true, kind: true, status: true, originalFileName: true, mimeType: true, sizeBytes: true, title: true, description: true, capturedAt: true, createdAt: true, uploadedBy: { select: { displayName: true } }, encounterId: true, encounter: { select: { startedAt: true } }, assessmentId: true, rehabilitationPlanId: true, version: true } }), this.prisma.patientMedia.count({ where })]);
+    return { items: items.map((item) => ({ ...item, sizeBytes: item.sizeBytes.toString(), uploadedBy: item.uploadedBy.displayName, encounterStartedAt: item.encounter?.startedAt.toISOString() ?? null })), page: query.page, pageSize: query.pageSize, total, hasNextPage: query.page * query.pageSize < total };
   }
 
   async initiate(principal: AuthenticatedPrincipal, patientId: string, body: InitiateMediaBody, requestId: string) {

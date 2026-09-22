@@ -9,6 +9,7 @@ describe('canTransitionAppointment', () => {
     ['SCHEDULED', 'CANCELLED'],
     ['SCHEDULED', 'NO_SHOW'],
     ['CONFIRMED', 'CHECKED_IN'],
+    ['CONFIRMED', 'IN_PROGRESS'],
     ['CONFIRMED', 'CANCELLED'],
     ['CONFIRMED', 'NO_SHOW'],
     ['CHECKED_IN', 'IN_PROGRESS'],
@@ -25,7 +26,6 @@ describe('canTransitionAppointment', () => {
     ['NO_SHOW', 'IN_PROGRESS'],
     ['IN_PROGRESS', 'CHECKED_IN'],
     ['SCHEDULED', 'COMPLETED'],
-    ['CONFIRMED', 'IN_PROGRESS'],
   ];
 
   it.each(rejected)('rejects %s -> %s', (from, to) => {

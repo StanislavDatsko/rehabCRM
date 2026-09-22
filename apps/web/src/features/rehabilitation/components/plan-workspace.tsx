@@ -9,6 +9,7 @@ import {
   type RehabilitationPlanRevisionResponse,
 } from '@repo/contracts';
 import { useActionState } from 'react';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 import {
   planLifecycleAction,
   savePlanAction,
@@ -56,27 +57,17 @@ export function PlanWorkspace({
       {flash ? (
         <div
           role="status"
-          className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success shadow-sm"
+          className="ui-inline-notice ui-inline-notice-success"
         >
           Зміни збережено.
         </div>
       ) : null}
-      <header className="rc-card flex flex-wrap items-start justify-between gap-4 p-6">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-text-secondary">
-            {plan.patient.displayName} · план реабілітації
-          </p>
-          <h1 className="mt-1 font-serif text-3xl">
-            {draft?.title ?? plan.currentRevision?.title ?? 'План'}
-          </h1>
-          <p className="mt-2 text-sm text-text-secondary">
-            Відповідальний фахівець: {plan.responsiblePractitioner.displayName}
-          </p>
-        </div>
-        <span className="rounded-full bg-surface-muted px-3 py-1 text-sm">
-          {planStatusLabel(plan.status)}
-        </span>
-      </header>
+      <PageHeader eyebrow={`${plan.patient.displayName} · реабілітація`} title={draft?.title ?? plan.currentRevision?.title ?? 'План'} description={`Відповідальний фахівець: ${plan.responsiblePractitioner.displayName}`} metadata={<StatusPill tone={plan.status === 'ACTIVE' ? 'success' : plan.status === 'DRAFT' ? 'warning' : 'neutral'}>{planStatusLabel(plan.status)}</StatusPill>} actions={<a className="rc-btn rc-btn-secondary" href={`/app/patients/${plan.patient.id}`}>Картка пацієнта ↗</a>} />
+      <nav className="patient-section-nav" aria-label="Розділи плану">
+        {plan.currentRevision && plan.status !== 'DRAFT' && <a href="#published-plan">Опублікований план</a>}
+        {draft && capabilities.edit && <a href="#plan-draft">Редагування</a>}
+        <a href="#plan-history">Історія редакцій</a>
+      </nav>
 
       <Lifecycle plan={plan} capabilities={capabilities} />
 
@@ -93,13 +84,13 @@ export function PlanWorkspace({
           prefillBaselineId={prefillBaselineId}
         />
       ) : draft ? (
-        <p className="rounded-md border border-border p-5 text-sm text-text-secondary">
+        <p className="ui-empty-state p-5 text-sm text-text-secondary">
           Чернетка доступна лише для перегляду користувачам без права редагування.
         </p>
       ) : null}
 
-      <section className="rounded-md border border-border bg-surface p-5">
-        <h2 className="font-serif text-xl">Історія редакцій</h2>
+      <section id="plan-history" className="patient-workspace-section ui-filter-bar">
+        <h2 className="text-lg font-semibold tracking-tight">Історія редакцій</h2>
         {plan.revisionHistory.length ? (
           <ol className="mt-4 space-y-3">
             {plan.revisionHistory.map((revision) => (
@@ -139,7 +130,7 @@ function Lifecycle({
           ? 'resume'
           : null;
   return (
-    <section className="rc-card flex flex-wrap items-end gap-3 p-5">
+    <section className="ui-form-actions static flex-wrap items-end border-y-0 py-4">
       {command ? (
         <form action={action}>
           <input type="hidden" name="planId" value={plan.id} />
@@ -215,13 +206,13 @@ function Lifecycle({
 
 function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionResponse }) {
   return (
-    <section className="rc-card space-y-5 p-6">
+    <section id="published-plan" className="patient-workspace-section ui-filter-bar space-y-5">
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-text-secondary">
             Опублікована редакція {revision.revisionNumber}
           </p>
-          <h2 className="font-serif text-xl">{revision.title}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{revision.title}</h2>
         </div>
         <p className="text-sm text-text-secondary">
           {formatDate(revision.startDate)} — {formatDate(revision.expectedEndDate)}
@@ -232,10 +223,10 @@ function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionR
           <h3 className="font-medium">Цілі та прогрес</h3>
           <div className="mt-2 grid gap-3 lg:grid-cols-2">
             {revision.goals.map((goal) => (
-              <article key={goal.id} className="rounded-md bg-surface-muted p-4">
+              <article key={goal.id} className="plan-goal">
                 <div className="flex justify-between gap-2">
                   <strong>{goal.title}</strong>
-                  <span className="text-xs text-text-secondary">{goal.status}</span>
+                  <StatusPill tone={goal.status === 'ACHIEVED' ? 'success' : 'neutral'}>{goal.status}</StatusPill>
                 </div>
                 {goal.baseline ? (
                   <p className="mt-2 text-sm">
@@ -274,7 +265,7 @@ function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionR
           <h3 className="font-medium">Призначені вправи</h3>
           <div className="mt-2 grid gap-3 lg:grid-cols-2">
             {revision.exercisePrescriptions.map((item) => (
-              <article key={item.id} className="rounded-md border border-border p-4">
+              <article key={item.id} className="plan-exercise">
                 <strong>{item.exercise.name}</strong>
                 <p className="mt-1 text-sm text-text-secondary">{dosage(item)}</p>
                 {item.specialistNote ? <p className="mt-2 text-sm">{item.specialistNote}</p> : null}
@@ -366,7 +357,7 @@ function DraftEditor({
     revision.phases.map((phase, index) => [phase.id, `phase-${index + 1}`]),
   );
   return (
-    <form action={action} className="space-y-6 rounded-md border-2 border-info/25 bg-surface p-5">
+    <form id="plan-draft" action={action} className="patient-workspace-section plan-editor ui-filter-bar space-y-6">
       <input type="hidden" name="planId" value={plan.id} />
       <input type="hidden" name="revisionId" value={revision.id} />
       <input type="hidden" name="version" value={plan.version} />
@@ -374,7 +365,7 @@ function DraftEditor({
         <p className="text-xs uppercase tracking-wide text-info">
           Редагована чернетка · редакція {revision.revisionNumber}
         </p>
-        <h2 className="font-serif text-xl">Зміст плану</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Зміст плану</h2>
         <p className="mt-1 text-xs text-text-secondary">
           Збереження не публікує зміни. Опубліковані редакції залишаються незмінними.
         </p>
@@ -768,8 +759,8 @@ function EditorSection({
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <h3 className="font-serif text-lg">{title}</h3>
+    <section className="plan-editor-section">
+      <h3 className="text-base font-semibold tracking-tight">{title}</h3>
       <p className="mb-3 text-xs text-text-secondary">{intro}</p>
       <div className="space-y-3">{children}</div>
     </section>

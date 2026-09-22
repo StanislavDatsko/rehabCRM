@@ -1,3 +1,4 @@
+import { Avatar, PageHeader, StatusPill } from '@repo/ui/workspace';
 import type { CurrentUserResponse, StaffRole } from '@repo/contracts';
 import { listStaff, listStaffInvitations } from '../../../../features/staff/api/staff-api';
 import { staffErrorMessage, staffRoleLabel } from '../../../../features/staff/labels';
@@ -11,13 +12,6 @@ const roles: StaffRole[] = ['ORGANIZATION_ADMIN', 'REHABILITATION_SPECIALIST'];
 function invitationStatus(status: string) {
   const labels: Record<string, string> = { PENDING: 'Очікує прийняття', ACCEPTED: 'Прийнято', EXPIRED: 'Прострочене', DELIVERY_FAILED: 'Не доставлено', REVOKED: 'Відкликане' };
   return labels[status] ?? status;
-}
-
-function invitationStatusClass(status: string) {
-  if (status === 'ACCEPTED') return 'bg-emerald-100 text-emerald-800';
-  if (status === 'EXPIRED' || status === 'REVOKED') return 'bg-slate-100 text-slate-700';
-  if (status === 'DELIVERY_FAILED') return 'bg-red-100 text-red-800';
-  return 'bg-brand-lime/20 text-success';
 }
 
 export default async function StaffPage({
@@ -45,30 +39,16 @@ export default async function StaffPage({
     }), listStaffInvitations()]);
     return (
       <div className="space-y-6">
-        {createdNotice ? <p role="status" className="rounded-xl border border-brand-lime/40 bg-brand-lime/10 p-4 text-sm text-text-primary">{createdNotice}</p> : null}
-        <div className="rc-atmosphere flex flex-col gap-4 rounded-3xl p-6 text-white shadow-brand sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="rc-kicker text-white/75">Організація</p>
-            <h1 className="mt-1 font-serif text-3xl">Персонал</h1>
-            <p className="mt-1 text-sm text-white/80">
-              Облікові записи, ролі й доступ працівників організації
-            </p>
-            <p className="mt-2 text-sm text-white/70">Усього: {list.total}</p>
-          </div>
-          {canCreateStaff(me) ? (
-            <a href="/app/administration/staff/new" className="rc-btn rc-btn-primary">
-              Додати працівника
-            </a>
-          ) : null}
-        </div>
-        <form className="rc-card grid gap-3 p-4 md:grid-cols-4">
+        {createdNotice ? <p role="status" className="ui-inline-notice ui-inline-notice-success">{createdNotice}</p> : null}
+        <PageHeader eyebrow="Організація" title="Команда" description="Співробітники, ролі та доступ до вашої практики." metadata={<span className="ui-count">{list.total}</span>} actions={canCreateStaff(me) ? <a href="/app/administration/staff/new" className="rc-btn rc-btn-primary">+ Запросити працівника</a> : null} />
+        <form className="ui-filter-bar grid gap-3 md:grid-cols-4">
           <label className="text-xs text-text-secondary">
             Пошук
             <input
               name="search"
               defaultValue={one('search')}
               placeholder="Ім’я або email"
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 w-full"
             />
           </label>
           <label className="text-xs text-text-secondary">
@@ -76,7 +56,7 @@ export default async function StaffPage({
             <select
               name="role"
               defaultValue={role ?? ''}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 w-full"
             >
               <option value="">Усі ролі</option>
               {roles.map((item) => (
@@ -91,7 +71,7 @@ export default async function StaffPage({
             <select
               name="status"
               defaultValue={status ?? ''}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className="field mt-1 w-full"
             >
               <option value="">Усі</option>
               <option value="ACTIVE">Активний</option>
@@ -99,18 +79,18 @@ export default async function StaffPage({
             </select>
           </label>
           <div className="flex items-end">
-            <button type="submit" className="rc-btn rc-btn-primary">
+            <button type="submit" className="rc-btn rc-btn-secondary w-full md:w-auto">
               Застосувати
             </button>
           </div>
         </form>
         {list.items.length === 0 ? (
-          <p className="rounded-md border border-border bg-surface p-6 text-sm text-text-secondary">
+          <p className="ui-filter-bar text-sm text-text-secondary">
             Працівників не знайдено.
           </p>
         ) : (
-          <div className="rc-card overflow-x-auto p-0">
-            <table className="min-w-full text-left text-sm">
+          <div className="ui-table-container">
+            <table className="ui-data-table min-w-full text-left text-sm">
               <thead className="border-b border-border bg-surface-muted text-xs text-text-secondary">
                 <tr>
                   <th className="px-4 py-3">Працівник</th>
@@ -122,19 +102,19 @@ export default async function StaffPage({
               </thead>
               <tbody>
                 {list.items.map((staff) => (
-                  <tr key={staff.id} className="border-b border-border last:border-0">
+                  <tr key={staff.id} className="border-b border-border last:border-0 hover:bg-surface-muted/50">
                     <td className="px-4 py-3">
-                      <a
+                      <div className="flex items-center gap-3"><Avatar name={staff.displayName} /><div><a
                         href={`/app/administration/staff/${staff.id}`}
                         className="font-medium text-info underline"
                       >
                         {staff.displayName}
                       </a>
-                      <div className="text-xs text-text-secondary">{staff.email}</div>
+                      <div className="text-xs text-text-secondary">{staff.email}</div></div></div>
                     </td>
                     <td className="px-4 py-3">{staffRoleLabel(staff.role)}</td>
                     <td className="px-4 py-3">
-                      {staff.status === 'ACTIVE' ? 'Активний' : 'Вимкнений'}
+                      <StatusPill tone={staff.status === 'ACTIVE' ? 'success' : 'neutral'}>{staff.status === 'ACTIVE' ? 'Активний' : 'Вимкнений'}</StatusPill>
                     </td>
                     <td className="px-4 py-3">
                       {staff.setupStatus === 'ACTIVE'
@@ -157,7 +137,7 @@ export default async function StaffPage({
             </table>
           </div>
         )}
-        {invitations.length > 0 ? <section className="rc-card p-5"><div className="flex items-baseline justify-between"><div><p className="rc-kicker">Onboarding</p><h2 className="mt-1 font-serif text-2xl">Запрошення</h2></div><span className="text-sm text-text-secondary">{invitations.length}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{invitations.map((invitation) => <div key={invitation.id} className="rounded-xl border border-border bg-surface-muted p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-text-primary">{invitation.firstName} {invitation.lastName}</p><p className="text-sm text-text-secondary">{invitation.email}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${invitationStatusClass(invitation.status)}`}>{invitationStatus(invitation.status)}</span></div><p className="mt-3 text-xs text-text-secondary">Дійсне до {new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(new Date(invitation.expiresAt))}</p></div>)}</div></section> : null}
+        {invitations.length > 0 ? <section className="ui-filter-bar"><div className="flex items-baseline justify-between"><div><p className="rc-kicker">Onboarding</p><h2 className="mt-1 text-lg font-semibold tracking-tight">Запрошення</h2></div><span className="ui-count">{invitations.length}</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{invitations.map((invitation) => <div key={invitation.id} className="border-b border-border p-4 last:border-b-0"><div className="flex items-start justify-between gap-3"><div><p className="font-medium text-text-primary">{invitation.firstName} {invitation.lastName}</p><p className="text-sm text-text-secondary">{invitation.email}</p></div><StatusPill tone={invitation.status === 'ACCEPTED' ? 'success' : invitation.status === 'DELIVERY_FAILED' ? 'danger' : invitation.status === 'PENDING' ? 'warning' : 'neutral'}>{invitationStatus(invitation.status)}</StatusPill></div><p className="mt-3 text-xs text-text-secondary">Дійсне до {new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(new Date(invitation.expiresAt))}</p></div>)}</div></section> : null}
         {list.totalPages > 1 ? (
           <nav aria-label="Сторінки персоналу" className="flex gap-3 text-sm">
             <a className="underline" href={`?page=${Math.max(1, page - 1)}`}>
@@ -176,7 +156,7 @@ export default async function StaffPage({
   } catch (error) {
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl">Персонал</h1>
+        <h1 className="font-sans text-3xl">Персонал</h1>
         <p role="alert" className="text-danger">
           {staffErrorMessage(error instanceof ServerApiError ? error.body?.code : undefined)}
         </p>
@@ -188,7 +168,7 @@ export default async function StaffPage({
 function Forbidden() {
   return (
     <div className="space-y-4">
-      <h1 className="font-serif text-3xl">Персонал</h1>
+      <h1 className="font-sans text-3xl">Персонал</h1>
       <p role="alert" className="rounded-md border border-danger/30 bg-danger/5 p-4 text-danger">
         У вас немає доступу до адміністрування персоналу.
       </p>

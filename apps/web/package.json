@@ -13,7 +13,6 @@
     "e2e:install": "playwright install --with-deps chromium firefox webkit"
   },
   "dependencies": {
-    "@neondatabase/auth": "0.2.0-beta.1",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@repo/config": "workspace:*",

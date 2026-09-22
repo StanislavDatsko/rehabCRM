@@ -4,6 +4,7 @@ import { StaffProfileActions } from '../../../../../features/staff/components/st
 import { staffErrorMessage, staffRoleLabel } from '../../../../../features/staff/labels';
 import { canReadStaff, canUpdateStaff, canChangeStaffRole, canDisableStaff, canEnableStaff, canRevokeStaffSessions } from '../../../../../features/staff/permissions';
 import { ServerApiError, serverApiFetch } from '../../../../../lib/api/server-api-client';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,16 +17,8 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
     const [staff, history] = await Promise.all([getStaff(id), getStaffHistory(id)]);
     return (
       <div className="space-y-6">
-        <div className="rc-atmosphere rounded-3xl p-6 text-white shadow-brand">
-          <a href="/app/administration/staff" className="text-sm text-white/75 underline">
-            ← До списку персоналу
-          </a>
-          <h1 className="mt-3 font-serif text-3xl">{staff.displayName}</h1>
-          <p className="mt-1 text-sm text-white/75">
-            {staff.email} · {staffRoleLabel(staff.role)}
-          </p>
-        </div>
-        <dl className="rc-card grid gap-4 p-5 sm:grid-cols-4">
+        <PageHeader eyebrow="Команда · Профіль" title={staff.displayName} description={`${staff.email} · ${staffRoleLabel(staff.role)}`} actions={<a href="/app/administration/staff" className="rc-btn rc-btn-secondary">← До списку</a>} metadata={<StatusPill tone={staff.status === 'ACTIVE' ? 'success' : 'neutral'}>{staff.status === 'ACTIVE' ? 'Активний' : 'Вимкнений'}</StatusPill>} />
+        <dl className="ui-filter-bar grid gap-4 p-5 sm:grid-cols-4">
           <Info label="Статус" value={staff.status === 'ACTIVE' ? 'Активний' : 'Вимкнений'} />
           <Info
             label="Налаштування"
@@ -56,8 +49,8 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
           />
         </dl>
         <StaffProfileActions staff={staff} capabilities={{ canUpdate: canUpdateStaff(me), canChangeRole: canChangeStaffRole(me), canDisable: canDisableStaff(me), canEnable: canEnableStaff(me), canRevokeSessions: canRevokeStaffSessions(me), canResendSetup: canUpdateStaff(me) }} />
-        <section className="rc-card p-5">
-          <h2 className="font-serif text-lg">Історія доступу</h2>
+        <section className="ui-filter-bar">
+          <h2 className="font-sans text-lg">Історія доступу</h2>
           {history.length === 0 ? (
             <p className="mt-3 text-sm text-text-secondary">Подій ще немає.</p>
           ) : (
@@ -82,7 +75,7 @@ export default async function StaffProfilePage({ params }: { params: Promise<{ i
   } catch (error) {
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl">Профіль працівника</h1>
+        <h1 className="font-sans text-3xl">Профіль працівника</h1>
         <p role="alert" className="text-danger">
           {staffErrorMessage(error instanceof ServerApiError ? error.body?.code : undefined)}
         </p>

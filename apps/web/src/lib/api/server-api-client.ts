@@ -2,8 +2,8 @@ import 'server-only';
 
 import { parseWebEnv } from '@repo/config/web-env';
 import { randomUUID } from 'node:crypto';
-import { getAccessToken } from '../auth/access-token';
 import type { ApiErrorBody } from '@repo/contracts';
+import { cookies } from 'next/headers';
 
 export class ServerApiError extends Error {
   constructor(
@@ -17,22 +17,14 @@ export class ServerApiError extends Error {
 
 export async function serverApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const env = parseWebEnv();
-  const accessToken = await getAccessToken();
-  if (!accessToken) {
-    throw new ServerApiError(401, {
-      code: 'UNAUTHENTICATED',
-      message: 'Authentication is required.',
-      requestId: 'local',
-    });
-  }
-
   const requestId = randomUUID();
+  const cookieHeader = (await cookies()).toString();
   const response = await fetch(`${env.API_INTERNAL_URL}${path}`, {
     ...init,
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${accessToken}`,
       'x-request-id': requestId,
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',

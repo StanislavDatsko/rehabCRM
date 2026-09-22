@@ -35,7 +35,7 @@ export default async function CalendarPage({
   if (!canReadAppointments(me)) {
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('calendarTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('calendarTitle')}</h1>
         <SchedulingForbiddenState />
       </div>
     );
@@ -53,7 +53,7 @@ export default async function CalendarPage({
         : mapSchedulingErrorToMessage(undefined);
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('calendarTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('calendarTitle')}</h1>
         <SchedulingErrorState message={message} />
       </div>
     );
@@ -83,7 +83,7 @@ export default async function CalendarPage({
         : mapSchedulingErrorToMessage(undefined);
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('calendarTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('calendarTitle')}</h1>
         <SchedulingErrorState message={message} />
       </div>
     );

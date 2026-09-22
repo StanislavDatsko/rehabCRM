@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-const insecureSecretMarkers = ['change-me', 'dev-only', 'local-only', 'rehabcrm-web-dev'];
 const isLocal = (value: string) => {
   const host = new URL(value).hostname;
   return host === 'localhost' || host === '127.0.0.1' || host === '::1';
@@ -12,8 +11,7 @@ export const webEnvSchema = z
     DEPLOYMENT_ENV: z.enum(['development', 'test', 'staging', 'production']).default('development'),
     API_INTERNAL_URL: z.string().url().default('http://localhost:3001'),
     NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3001'),
-    NEON_AUTH_BASE_URL: z.string().url(),
-    NEON_AUTH_COOKIE_SECRET: z.string().min(32),
+    AUTH_ALLOW_REGISTRATION: z.union([z.boolean(), z.enum(['true', 'false'])]).transform(value => value === true || value === 'true').default(true),
     REDIS_URL: z.string().url().default('redis://localhost:6379'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
     NEXT_PUBLIC_S3_PUBLIC_URL: z.string().url().optional(),
@@ -29,19 +27,10 @@ export const webEnvSchema = z
       issue('NODE_ENV', 'staging/production deployments require NODE_ENV=production');
     for (const [name, url] of [
       ['NEXT_PUBLIC_API_URL', env.NEXT_PUBLIC_API_URL],
-      ['NEON_AUTH_BASE_URL', env.NEON_AUTH_BASE_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],
     ] as const) {
       if (new URL(url).protocol !== 'https:') issue(name, 'must use HTTPS');
       if (isLocal(url)) issue(name, 'must not use a loopback host');
-    }
-    for (const [name, secret] of [
-      ['NEON_AUTH_COOKIE_SECRET', env.NEON_AUTH_COOKIE_SECRET],
-    ] as const) {
-      if (secret.length < 32) issue(name, 'must contain at least 32 characters');
-      if (insecureSecretMarkers.some((marker) => secret.toLowerCase().includes(marker))) {
-        issue(name, 'contains a known development secret marker');
-      }
     }
     if (env.APP_VERSION === '0.0.0-dev') issue('APP_VERSION', 'must identify the release');
     if (env.APP_COMMIT_SHA === 'unknown')

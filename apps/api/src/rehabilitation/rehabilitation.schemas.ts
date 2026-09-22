@@ -30,6 +30,19 @@ export const exerciseListQuerySchema = z
   })
   .strict();
 
+export const createExerciseBodySchema = z.object({
+  code: z.string().trim().min(1).max(100).toLowerCase().transform((value) => value.replace(/\s+/g, '-')).pipe(z.string().regex(/^[a-z0-9][a-z0-9-]*$/)),
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(1000).default(''),
+  instructions: z.string().trim().max(5000).default(''),
+  category: z.enum(EXERCISE_CATEGORIES),
+  difficulty: z.enum(['FOUNDATIONAL', 'INTERMEDIATE', 'ADVANCED']).nullable().optional(),
+  anatomicalRegionCodes: z.array(z.string().trim().min(1).max(64)).default([]),
+  targetMuscleGroupCodes: z.array(z.string().trim().min(1).max(64)).default([]),
+  equipment: z.array(z.string().trim().min(1).max(100)).default([]),
+}).strict();
+export type CreateExerciseBody = z.infer<typeof createExerciseBodySchema>;
+
 export const createPlanBodySchema = z
   .object({
     title: z.string().trim().min(1).max(200),

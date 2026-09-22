@@ -13,10 +13,13 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // Keep local smoke runs independent of the optional Playwright ffmpeg binary.
+    video: 'off',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The local workstation keeps a managed Chrome channel but not the bundled
+    // Playwright shell. CI can override this project with its installed browser.
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], channel: 'chrome' } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     { name: 'tablet', use: { ...devices['iPad Pro 11'] } },

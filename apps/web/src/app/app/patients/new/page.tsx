@@ -1,5 +1,5 @@
 import type { CurrentUserResponse } from '@repo/contracts';
-import { Button } from '@repo/ui/button';
+import { PageHeader } from '@repo/ui/workspace';
 import { listResponsiblePractitioners } from '../../../../features/patients/api/patients-api';
 import { PatientForm } from '../../../../features/patients/components/patient-form';
 import { PatientsForbiddenState } from '../../../../features/patients/components/patients-states';
@@ -14,7 +14,7 @@ export default async function NewPatientPage() {
   if (!canCreatePatient(me)) {
     return (
       <>
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientNewTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('patientNewTitle')}</h1>
         <div className="mt-6">
           <PatientsForbiddenState />
         </div>
@@ -26,14 +26,7 @@ export default async function NewPatientPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="font-serif text-3xl text-text-primary">{t('patientNewTitle')}</h1>
-        <a href="/app/patients">
-          <Button type="button" variant="secondary">
-            {t('patientBackToList')}
-          </Button>
-        </a>
-      </div>
+      <PageHeader eyebrow="Клінічна практика" title={t('patientNewTitle')} description="Створіть картку пацієнта з ключовими адміністративними та care-командними даними." actions={<a className="rc-btn rc-btn-secondary" href="/app/patients">{t('patientBackToList')}</a>} />
       <PatientForm mode="create" practitioners={practitioners} cancelHref="/app/patients" />
     </div>
   );

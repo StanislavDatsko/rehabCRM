@@ -20,6 +20,10 @@ import {
 } from '../../../../features/assessments/permissions';
 import { listPatientPlans } from '../../../../features/rehabilitation/api/rehabilitation-api';
 import { canCreatePlan, canReadPlans } from '../../../../features/rehabilitation/permissions';
+import { listPatientExerciseLogs } from '../../../../features/scheduling/api/scheduling-api';
+import { listExercises } from '../../../../features/rehabilitation/api/rehabilitation-api';
+import { canReadExercises } from '../../../../features/rehabilitation/permissions';
+import { hasPermission, PERMISSIONS } from '@repo/contracts';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +38,7 @@ export default async function EncounterPage({
   if (!canReadEncounter(me)) {
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('encounterTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('encounterTitle')}</h1>
         <SchedulingForbiddenState />
       </div>
     );
@@ -53,7 +57,7 @@ export default async function EncounterPage({
         : mapSchedulingErrorToMessage(undefined);
     return (
       <div className="space-y-4">
-        <h1 className="font-serif text-3xl text-text-primary">{t('encounterTitle')}</h1>
+        <h1 className="font-sans text-3xl text-text-primary">{t('encounterTitle')}</h1>
         <SchedulingErrorState message={message} />
       </div>
     );
@@ -70,6 +74,9 @@ export default async function EncounterPage({
   const flashMessage = flash.completed ? t('encounterCompletedFlash') : null;
   let assessments: Awaited<ReturnType<typeof listPatientAssessments>> = [];
   let rehabilitationPlans: Awaited<ReturnType<typeof listPatientPlans>> = [];
+  let exerciseLogs: any[] = [];
+  let exercises: Awaited<ReturnType<typeof listExercises>>['items'] = [];
+  let encounterMedia: any = { items: [], total: 0 };
   if (canReadAssessments(me)) {
     try {
       assessments = (await listPatientAssessments(encounter.patient.id)).filter(
@@ -86,6 +93,13 @@ export default async function EncounterPage({
       rehabilitationPlans = [];
     }
   }
+  if (canReadExercises(me)) {
+    try { exercises = (await listExercises({ page: 1, pageSize: 50 })).items; } catch { exercises = []; }
+  }
+  try { exerciseLogs = await listPatientExerciseLogs(encounter.patient.id); } catch { exerciseLogs = []; }
+  if (hasPermission(me.permissions, PERMISSIONS.PATIENT_MEDIA_READ)) {
+    try { encounterMedia = await serverApiFetch(`/api/v1/patients/${encounter.patient.id}/media?page=1&pageSize=100&encounterId=${encounter.id}`); } catch { encounterMedia = { items: [], total: 0 }; }
+  }
 
   return (
     <EncounterWorkspace
@@ -97,6 +111,10 @@ export default async function EncounterPage({
       canCreateAssessment={canCreateAssessment(me)}
       rehabilitationPlans={rehabilitationPlans}
       canCreatePlan={canCreatePlan(me)}
+      exerciseLogs={exerciseLogs}
+      exercises={exercises}
+      canCreateExerciseLog={hasPermission(me.permissions, PERMISSIONS.EXERCISE_PRESCRIPTION_WRITE) && encounter.status === 'IN_PROGRESS'}
+      encounterMedia={encounterMedia}
     />
   );
 }

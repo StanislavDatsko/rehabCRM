@@ -13,6 +13,8 @@ export const apiEnvSchema = z
     API_PORT: z.coerce.number().int().positive().default(3001),
     API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
     WEB_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
+    AUTH_ALLOW_REGISTRATION: z.union([z.boolean(), z.enum(['true', 'false'])]).transform((value) => value === true || value === 'true').default(false),
+    AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().positive().max(604800).default(604800),
     EMAIL_PROVIDER: z.enum(['console', 'resend', 'gmail-api']).default('console'),
     EMAIL_FROM: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
@@ -38,10 +40,6 @@ export const apiEnvSchema = z
       .union([z.boolean(), z.string()])
       .transform((value) => value === true || value === 'true')
       .default(true),
-    NEON_AUTH_BASE_URL: z.string().url(),
-    NEON_API_KEY: z.string().min(1).optional(),
-    NEON_PROJECT_ID: z.string().min(1).optional(),
-    NEON_BRANCH_ID: z.string().min(1).optional(),
     METRICS_TOKEN: z.string().optional(),
     APP_VERSION: z.string().min(1).default('0.0.0-dev'),
     APP_COMMIT_SHA: z.string().min(1).default('unknown'),
@@ -70,17 +68,12 @@ export const apiEnvSchema = z
       ['API_PUBLIC_URL', env.API_PUBLIC_URL],
       ['WEB_PUBLIC_URL', env.WEB_PUBLIC_URL],
       ['S3_ENDPOINT', env.S3_ENDPOINT],
-      ['NEON_AUTH_BASE_URL', env.NEON_AUTH_BASE_URL],
     ] as const) {
       if (new URL(url).protocol !== 'https:') issue(name, 'must use HTTPS');
       if (isLocal(url)) issue(name, 'must not use a loopback host');
     }
-    for (const name of ['NEON_API_KEY', 'NEON_PROJECT_ID', 'NEON_BRANCH_ID'] as const) {
-      if (!env[name]) issue(name, 'is required');
-    }
     for (const [name, secret] of [
       ['S3_SECRET_KEY', env.S3_SECRET_KEY],
-      ['NEON_API_KEY', env.NEON_API_KEY ?? ''],
       ['METRICS_TOKEN', env.METRICS_TOKEN ?? ''],
     ] as const) {
       if (secret.length < 32) issue(name, 'must contain at least 32 characters');

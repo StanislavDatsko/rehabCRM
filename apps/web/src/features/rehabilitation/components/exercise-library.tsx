@@ -12,13 +12,13 @@ export function ExerciseLibrary({
     <div className="space-y-6">
       <header>
         <p className="text-xs uppercase tracking-wide text-text-secondary">Клінічний довідник</p>
-        <h1 className="mt-1 font-serif text-3xl">Бібліотека вправ</h1>
+        <h1 className="mt-1 font-sans text-3xl">Бібліотека вправ</h1>
         <p className="mt-2 max-w-3xl text-sm text-text-secondary">
           Нейтральні визначення вправ для індивідуальних призначень. Дозування та придатність
           визначає фахівець.
         </p>
       </header>
-      <form method="get" className="rc-card grid gap-3 p-4 md:grid-cols-4">
+      <form method="get" className="ui-surface grid gap-3 p-4 md:grid-cols-4">
         <label className="text-xs text-text-secondary md:col-span-2">
           Пошук
           <input
@@ -76,7 +76,7 @@ export function ExerciseLibrary({
             <a
               href={`/app/exercises/${exercise.id}`}
               key={exercise.id}
-              className="rc-card rc-card-elevated p-5 transition hover:border-brand/40"
+              className="ui-surface p-5 transition hover:border-brand/40"
             >
               <div className="flex justify-between gap-3">
                 <strong>{exercise.name}</strong>

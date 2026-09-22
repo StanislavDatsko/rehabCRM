@@ -44,6 +44,7 @@ export async function createBodyAnnotationAction(
       mappingId: text(data, 'mappingId'),
       type: text(data, 'type') as BodyAnnotationType,
       severity: nullable(data, 'severity') === null ? null : Number(text(data, 'severity')),
+      colorHex: nullable(data, 'colorHex'),
       title: nullable(data, 'title'),
       note: nullable(data, 'note'),
       anchor,
@@ -70,6 +71,7 @@ export async function updateBodyAnnotationAction(
       version: Number(text(data, 'version')),
       type: text(data, 'type') as BodyAnnotationType,
       severity: nullable(data, 'severity') === null ? null : Number(text(data, 'severity')),
+      colorHex: nullable(data, 'colorHex'),
       title: nullable(data, 'title'),
       note: nullable(data, 'note'),
     });

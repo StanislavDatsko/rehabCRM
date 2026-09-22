@@ -12,6 +12,7 @@ import {
   canVoidClinicalReport,
 } from '../../../../../features/progress/permissions';
 import { serverApiFetch } from '../../../../../lib/api/server-api-client';
+import { PageHeader, StatusPill } from '@repo/ui/workspace';
 
 export const dynamic = 'force-dynamic';
 const today = () => new Date().toISOString().slice(0, 10);
@@ -37,30 +38,14 @@ export default async function PatientReportsPage({
   if (!canReadClinicalReports(me))
     return (
       <div className="rounded-md border border-danger/30 bg-danger/5 p-5">
-        <h1 className="font-serif text-2xl">Звіти недоступні</h1>
+        <h1 className="font-sans text-2xl">Звіти недоступні</h1>
         <p className="mt-2 text-sm">Недостатньо клінічних прав.</p>
       </div>
     );
   const [patient, reports] = await Promise.all([getPatient(id), listClinicalReports(id)]);
   return (
     <div className="space-y-8">
-      <header className="rc-gradient-brand flex flex-wrap items-end justify-between gap-4 rounded-[1.25rem] p-6 text-white shadow-brand">
-        <div>
-          <p className="rc-kicker text-white/75">Клінічні звіти</p>
-          <h1 className="font-serif text-3xl">{patient.fullName}</h1>
-          <p className="mt-2 text-sm text-white/80">
-            Завершений PDF є незмінним знімком вибраних джерел.
-          </p>
-        </div>
-        <nav className="flex gap-3 text-sm">
-          <a className="text-info underline" href={`/app/patients/${id}/progress`}>
-            Динаміка
-          </a>
-          <a className="text-info underline" href={`/app/patients/${id}`}>
-            Профіль
-          </a>
-        </nav>
-      </header>
+      <PageHeader eyebrow="Клінічні звіти" title={patient.fullName} description="Завершений PDF є незмінним знімком вибраних джерел." actions={<nav className="flex gap-3 text-sm"><a className="text-info underline" href={`/app/patients/${id}/progress`}>Динаміка</a><a className="text-info underline" href={`/app/patients/${id}`}>Профіль</a></nav>} />
       {flash.created ? (
         <p
           role="status"
@@ -86,8 +71,8 @@ export default async function PatientReportsPage({
         </p>
       ) : null}
       {canCreateClinicalReport(me) ? (
-        <section className="rc-card rc-card-elevated p-5">
-          <h2 className="font-serif text-xl">Сформувати звіт</h2>
+        <section className="ui-filter-bar">
+          <h2 className="font-sans text-xl">Сформувати звіт</h2>
           <p className="mt-1 text-sm text-text-secondary">
             Оберіть джерела та напишіть професійне резюме власноруч. Система не генерує клінічних
             висновків.
@@ -133,8 +118,8 @@ export default async function PatientReportsPage({
           </form>
         </section>
       ) : null}
-      <section className="rc-card p-5">
-        <h2 className="font-serif text-xl">Історія звітів</h2>
+      <section className="ui-filter-bar">
+        <h2 className="font-sans text-xl">Історія звітів</h2>
         <div className="mt-3 space-y-3">
           {reports.items.length ? (
             reports.items.map((report) => (
@@ -148,7 +133,7 @@ export default async function PatientReportsPage({
                       {report.generatedBy.displayName}
                     </p>
                   </div>
-                  <span className="text-sm">{statusLabel[report.status] ?? report.status}</span>
+                  <StatusPill tone={report.status === 'COMPLETED' ? 'success' : report.status === 'FAILED' ? 'danger' : 'neutral'}>{statusLabel[report.status] ?? report.status}</StatusPill>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-3">
                   {report.status === 'COMPLETED' ? (

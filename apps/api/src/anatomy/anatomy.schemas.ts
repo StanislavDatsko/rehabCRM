@@ -61,6 +61,7 @@ export const createAnnotationBodySchema = z
     mappingId: z.string().uuid(),
     type: z.enum(BODY_ANNOTATION_TYPES),
     severity: z.number().int().min(0).max(10).nullable().optional(),
+    colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     title: nullableText(200).optional(),
     note: nullableText(3000).optional(),
     anchor: surfaceAnchorSchema,
@@ -72,6 +73,7 @@ export const updateAnnotationBodySchema = z
     version: z.number().int().positive(),
     type: z.enum(BODY_ANNOTATION_TYPES),
     severity: z.number().int().min(0).max(10).nullable(),
+    colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(),
     title: nullableText(200),
     note: nullableText(3000),
   })

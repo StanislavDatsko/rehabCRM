@@ -29,6 +29,8 @@ export function appointmentActionLabel(action: string): string {
   switch (action) {
     case 'confirm':
       return t('appointmentActionConfirm');
+    case 'confirm-and-start':
+      return 'Підтвердити і розпочати візит';
     case 'check-in':
       return t('appointmentActionCheckIn');
     case 'start-encounter':
