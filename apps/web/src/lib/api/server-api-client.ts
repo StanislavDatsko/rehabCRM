@@ -3,7 +3,7 @@ import 'server-only';
 import { parseWebEnv } from '@repo/config/web-env';
 import { randomUUID } from 'node:crypto';
 import type { ApiErrorBody } from '@repo/contracts';
-import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 
 export class ServerApiError extends Error {
   constructor(
@@ -18,7 +18,7 @@ export class ServerApiError extends Error {
 export async function serverApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const env = parseWebEnv();
   const requestId = randomUUID();
-  const cookieHeader = (await cookies()).toString();
+  const cookieHeader = (await headers()).get('cookie') ?? '';
   const response = await fetch(`${env.API_INTERNAL_URL}${path}`, {
     ...init,
     headers: {

@@ -18,6 +18,8 @@ import { canReadBodyMap } from '../../anatomy/permissions';
 import { EncounterExerciseLogSection } from './encounter-exercise-log-section';
 import type { ExerciseLibraryItem } from '@repo/contracts';
 import { PatientMediaGallery } from '../../patient-media/patient-media-gallery';
+import type { MediaItem } from '../../patient-media/types';
+import type { EncounterExerciseLog } from '../types';
 
 const initialState: SchedulingFormState = { error: null };
 
@@ -43,10 +45,10 @@ export function EncounterWorkspace({
   canCreateAssessment: boolean;
   rehabilitationPlans: RehabilitationPlanListItem[];
   canCreatePlan: boolean;
-  exerciseLogs: any[];
+  exerciseLogs: EncounterExerciseLog[];
   exercises: ExerciseLibraryItem[];
   canCreateExerciseLog: boolean;
-  encounterMedia: { items: any[]; total: number };
+  encounterMedia: { items: MediaItem[]; total: number };
 }) {
   const [state, formAction, pending] = useActionState(completeEncounterAction, initialState);
   const canComplete = canCompleteEncounter(user) && encounter.status === 'IN_PROGRESS';

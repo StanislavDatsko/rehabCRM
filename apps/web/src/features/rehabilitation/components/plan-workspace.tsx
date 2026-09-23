@@ -217,21 +217,6 @@ function PublishedRevision({ revision }: { revision: RehabilitationPlanRevisionR
   );
 }
 
-function dosage(item: RehabilitationPlanRevisionResponse['exercisePrescriptions'][number]): string {
-  return [
-    item.sets && `${item.sets} підходи`,
-    item.repetitions && `${item.repetitions} повторень`,
-    item.trials && `${item.trials} спроб`,
-    item.durationSeconds && `${item.durationSeconds} с`,
-    item.holdSeconds && `утримання ${item.holdSeconds} с`,
-    item.distanceMeters && `${item.distanceMeters} м`,
-    item.loadKg !== null && `${item.loadKg} кг`,
-    item.daysPerWeek && `${item.daysPerWeek} днів/тиждень`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
-
 function DraftEditor({
   plan,
   revision,

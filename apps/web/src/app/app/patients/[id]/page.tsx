@@ -48,6 +48,7 @@ import {
   canReadClinicalReports,
   canReadProgress,
 } from '../../../../features/progress/permissions';
+import type { MediaItem, MediaListResponse, VisitMediaGroup } from '../../../../features/patient-media/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -107,7 +108,7 @@ export default async function PatientProfilePage({
   let bodyMap: Awaited<ReturnType<typeof getPatientBodyMap>> | null = null;
   let schedulingTimezone = DEFAULT_TIMEZONE;
   let patientMedia: { items: Array<{ id: string; kind: 'IMAGE' | 'VIDEO'; mimeType: string; originalFileName: string; title: string | null; description: string | null; capturedAt: string | null; createdAt: string; uploadedBy: string; sizeBytes: string }>; total: number } | null = null;
-  let visitMedia: { items: any[]; total: number } = { items: [], total: 0 };
+  let visitMedia: MediaListResponse = { items: [], total: 0 };
   if (canReadAppointments(me)) {
     try {
       appointmentSummary = await getPatientAppointments(id);
@@ -157,8 +158,8 @@ export default async function PatientProfilePage({
     }
   }
   if (me.permissions.includes('patient_media.read')) {
-    try { patientMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=25`); } catch { patientMedia = { items: [], total: 0 }; }
-    try { visitMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=100&encounterOnly=true`); } catch { visitMedia = { items: [], total: 0 }; }
+    try { patientMedia = await serverApiFetch<MediaListResponse>(`/api/v1/patients/${id}/media?page=1&pageSize=25`); } catch { patientMedia = { items: [], total: 0 }; }
+    try { visitMedia = await serverApiFetch<MediaListResponse>(`/api/v1/patients/${id}/media?page=1&pageSize=100&encounterOnly=true`); } catch { visitMedia = { items: [], total: 0 }; }
   }
 
   const flashMessage = flash.created
@@ -169,13 +170,13 @@ export default async function PatientProfilePage({
         ? t('patientStatusUpdatedFlash')
       : null;
 
-  const visitMediaGroups = Object.values(visitMedia.items.reduce<Record<string, { encounterId: string; startedAt: string | null; items: any[] }>>((groups, item) => {
+  const visitMediaGroups = Object.values(visitMedia.items.reduce<Record<string, VisitMediaGroup>>((groups, item: MediaItem) => {
     if (!item.encounterId) return groups;
-    const group = groups[item.encounterId] ?? { encounterId: item.encounterId, startedAt: item.encounterStartedAt, items: [] as any[] };
+    const group = groups[item.encounterId] ?? { encounterId: item.encounterId, encounterStartedAt: item.encounterStartedAt ?? null, items: [] };
     group.items.push(item);
     groups[item.encounterId] = group;
     return groups;
-  }, {})).sort((a, b) => new Date(b.startedAt ?? 0).getTime() - new Date(a.startedAt ?? 0).getTime());
+  }, {})).sort((a, b) => new Date(b.encounterStartedAt ?? 0).getTime() - new Date(a.encounterStartedAt ?? 0).getTime());
 
   return (
     <div className="space-y-8">

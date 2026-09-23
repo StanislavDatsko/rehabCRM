@@ -8,6 +8,7 @@ import type {
   SchedulingCatalogResponse,
 } from '@repo/contracts';
 import { serverApiFetch } from '../../../lib/api/server-api-client';
+import type { EncounterExerciseLog } from '../types';
 
 export type CalendarListQuery = {
   from: string;
@@ -162,11 +163,11 @@ export async function getEncounter(id: string): Promise<EncounterResponse> {
   return serverApiFetch<EncounterResponse>(`/api/v1/encounters/${id}`);
 }
 
-export async function listEncounterExerciseLogs(id: string): Promise<any[]> {
-  return serverApiFetch(`/api/v1/encounters/${id}/exercise-logs`);
+export async function listEncounterExerciseLogs(id: string): Promise<EncounterExerciseLog[]> {
+  return serverApiFetch<EncounterExerciseLog[]>(`/api/v1/encounters/${id}/exercise-logs`);
 }
-export async function listPatientExerciseLogs(id: string): Promise<any[]> {
-  return serverApiFetch(`/api/v1/encounters/patient/${id}/exercise-logs`);
+export async function listPatientExerciseLogs(id: string): Promise<EncounterExerciseLog[]> {
+  return serverApiFetch<EncounterExerciseLog[]>(`/api/v1/encounters/patient/${id}/exercise-logs`);
 }
 
 export async function completeEncounter(id: string): Promise<EncounterResponse> {

@@ -1,20 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
+import type { MediaItem } from './types';
 
-type MediaItem = {
-  id: string;
-  kind: 'IMAGE' | 'VIDEO';
-  mimeType: string;
-  originalFileName: string;
-  title: string | null;
-  description: string | null;
-  capturedAt: string | null;
-  createdAt: string;
-  uploadedBy: string;
-  sizeBytes: string;
-  encounterId?: string | null;
-  encounterStartedAt?: string | null;
-};
+export type { MediaItem } from './types';
 export function PatientMediaGallery({
   patientId,
   initialItems,

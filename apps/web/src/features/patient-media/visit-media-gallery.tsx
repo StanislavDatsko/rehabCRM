@@ -1,19 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { VisitMediaGroup } from './types';
 
-type VisitMediaItem = {
-  id: string;
-  kind: 'IMAGE' | 'VIDEO';
-  originalFileName: string;
-  createdAt: string;
-};
-
-type VisitMediaGroup = {
-  encounterId: string;
-  startedAt: string | null;
-  items: VisitMediaItem[];
-};
+export type { VisitMediaGroup } from './types';
 
 function dayKey(value: string | Date | null) {
   if (!value) return '';
@@ -25,14 +15,14 @@ export function VisitMediaGallery({ patientId, groups, total }: { patientId: str
   const [selectedEncounterId, setSelectedEncounterId] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [month, setMonth] = useState(() => {
-    const first = groups[0]?.startedAt ? new Date(groups[0].startedAt) : new Date();
+    const first = groups[0]?.encounterStartedAt ? new Date(groups[0].encounterStartedAt) : new Date();
     return new Date(first.getFullYear(), first.getMonth(), 1);
   });
   const [urls, setUrls] = useState<Record<string, string>>({});
 
   const selectedGroup = groups.find((group) => group.encounterId === selectedEncounterId) ?? null;
   const visibleGroups = selectedGroup ? [selectedGroup] : groups;
-  const availableDays = useMemo(() => new Set(groups.map((group) => dayKey(group.startedAt))), [groups]);
+  const availableDays = useMemo(() => new Set(groups.map((group) => dayKey(group.encounterStartedAt))), [groups]);
   const monthDays = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const firstWeekday = (new Date(month.getFullYear(), month.getMonth(), 1).getDay() + 6) % 7;
 
@@ -52,7 +42,7 @@ export function VisitMediaGallery({ patientId, groups, total }: { patientId: str
 
   function selectDay(day: number) {
     const target = groups.find((group) => {
-      const date = group.startedAt ? new Date(group.startedAt) : null;
+      const date = group.encounterStartedAt ? new Date(group.encounterStartedAt) : null;
       return date && date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth() && date.getDate() === day;
     });
     if (target) {
@@ -63,12 +53,12 @@ export function VisitMediaGallery({ patientId, groups, total }: { patientId: str
 
   return <div className="p-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-sm text-text-secondary">{selectedGroup ? `Візит · ${new Date(selectedGroup.startedAt ?? '').toLocaleDateString('uk-UA', { dateStyle: 'long' })}` : `${total} фото та відео з усіх візитів`}</p>
+      <p className="text-sm text-text-secondary">{selectedGroup ? `Візит · ${new Date(selectedGroup.encounterStartedAt ?? '').toLocaleDateString('uk-UA', { dateStyle: 'long' })}` : `${total} фото та відео з усіх візитів`}</p>
       <div className="flex items-center gap-2"><button type="button" className="rc-btn rc-btn-secondary" onClick={() => setCalendarOpen(true)}>Обрати дату</button>{selectedGroup ? <button type="button" className="rc-btn rc-btn-ghost" onClick={() => setSelectedEncounterId('')}>Показати всі</button> : null}</div>
     </div>
     <div className="space-y-5 p-5">
       {!visibleGroups.length ? <p className="text-sm text-text-secondary">Медіа з візитів ще не додано.</p> : visibleGroups.map((group) => <div key={group.encounterId} className="space-y-2">
-        <div className="flex items-center gap-3 text-xs font-semibold text-text-secondary"><span className="h-px flex-1 bg-border"/><span>{group.startedAt ? new Date(group.startedAt).toLocaleDateString('uk-UA', { dateStyle: 'long' }) : 'Дата не вказана'}</span><span className="h-px flex-1 bg-border"/></div>
+        <div className="flex items-center gap-3 text-xs font-semibold text-text-secondary"><span className="h-px flex-1 bg-border"/><span>{group.encounterStartedAt ? new Date(group.encounterStartedAt).toLocaleDateString('uk-UA', { dateStyle: 'long' }) : 'Дата не вказана'}</span><span className="h-px flex-1 bg-border"/></div>
         <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-6">
           {group.items.map((item) => <button key={item.id} type="button" className="group relative aspect-square overflow-hidden rounded-md bg-surface-muted" onClick={() => window.open(urls[item.id], '_blank', 'noopener,noreferrer')} aria-label={item.originalFileName}>
             {urls[item.id] ? item.kind === 'VIDEO' ? <video src={urls[item.id]} className="h-full w-full object-cover" muted preload="metadata"/> : <img src={urls[item.id]} alt={item.originalFileName} className="h-full w-full object-cover"/> : <span className="absolute inset-0 animate-pulse bg-surface-muted"/>}

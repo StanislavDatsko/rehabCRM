@@ -24,6 +24,8 @@ import { listPatientExerciseLogs } from '../../../../features/scheduling/api/sch
 import { listExercises } from '../../../../features/rehabilitation/api/rehabilitation-api';
 import { canReadExercises } from '../../../../features/rehabilitation/permissions';
 import { hasPermission, PERMISSIONS } from '@repo/contracts';
+import type { MediaListResponse } from '../../../../features/patient-media/types';
+import type { EncounterExerciseLog } from '../../../../features/scheduling/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,9 +76,9 @@ export default async function EncounterPage({
   const flashMessage = flash.completed ? t('encounterCompletedFlash') : null;
   let assessments: Awaited<ReturnType<typeof listPatientAssessments>> = [];
   let rehabilitationPlans: Awaited<ReturnType<typeof listPatientPlans>> = [];
-  let exerciseLogs: any[] = [];
+  let exerciseLogs: EncounterExerciseLog[] = [];
   let exercises: Awaited<ReturnType<typeof listExercises>>['items'] = [];
-  let encounterMedia: any = { items: [], total: 0 };
+  let encounterMedia: MediaListResponse = { items: [], total: 0 };
   if (canReadAssessments(me)) {
     try {
       assessments = (await listPatientAssessments(encounter.patient.id)).filter(
@@ -98,7 +100,7 @@ export default async function EncounterPage({
   }
   try { exerciseLogs = await listPatientExerciseLogs(encounter.patient.id); } catch { exerciseLogs = []; }
   if (hasPermission(me.permissions, PERMISSIONS.PATIENT_MEDIA_READ)) {
-    try { encounterMedia = await serverApiFetch(`/api/v1/patients/${encounter.patient.id}/media?page=1&pageSize=100&encounterId=${encounter.id}`); } catch { encounterMedia = { items: [], total: 0 }; }
+    try { encounterMedia = await serverApiFetch<MediaListResponse>(`/api/v1/patients/${encounter.patient.id}/media?page=1&pageSize=100&encounterId=${encounter.id}`); } catch { encounterMedia = { items: [], total: 0 }; }
   }
 
   return (
