@@ -20,6 +20,7 @@ import { ObservabilityModule } from './observability/observability.module';
 import { PatientPortalModule } from './patient-portal/patient-portal.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PatientMediaModule } from './patient-media/media.module';
+import { WorkAnalyticsModule } from './work-analytics/work-analytics.module';
 
 const env = parseApiEnv();
 
@@ -89,6 +90,7 @@ const env = parseApiEnv();
     PatientPortalModule,
     NotificationsModule,
     PatientMediaModule,
+    WorkAnalyticsModule,
     RedisModule,
     IdentityModule,
     StaffModule,

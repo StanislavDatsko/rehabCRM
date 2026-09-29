@@ -6,21 +6,22 @@ import { PatientStatusBadge } from '../patients/components/patient-status-badge'
 import { listAppointments } from '../scheduling/api/scheduling-api';
 import { AppointmentStatusBadge } from '../scheduling/components/appointment-status-badge';
 import { calendarQueryRange, DEFAULT_TIMEZONE, formatSchedulingTime, parseCalendarDate, todayCalendarDate } from '../scheduling/timezone';
+import type { WorkAnalyticsSummary } from '@repo/contracts';
+import { serverApiFetch } from '../../lib/api/server-api-client';
 
 export async function Overview({ user }: { user: CurrentUserResponse }) {
   const patientsAllowed = hasPermission(user.permissions, PERMISSIONS.PATIENT_READ_ADMIN);
   const scheduleAllowed = hasPermission(user.permissions, PERMISSIONS.APPOINTMENT_READ);
-  const alertsAllowed = hasPermission(user.permissions, PERMISSIONS.CLINICAL_ALERT_READ);
   const today = todayCalendarDate(DEFAULT_TIMEZONE);
   const range = calendarQueryRange('day', parseCalendarDate(today, DEFAULT_TIMEZONE), DEFAULT_TIMEZONE);
-  const [patients, schedule, alerts] = await Promise.all([
+  const [patients, schedule, analytics] = await Promise.all([
     patientsAllowed ? listPatients({ page: 1, pageSize: 6, sort: 'updatedAt', sortDir: 'desc', search: '', status: 'ACTIVE', responsiblePractitionerId: '' }).catch(() => null) : null,
     scheduleAllowed ? listAppointments(range).catch(() => null) : null,
-    alertsAllowed ? import('../../lib/api/server-api-client').then(({ serverApiFetch }) => serverApiFetch<Array<{ id: string; patientId: string; title: string; summary: string; severity: string; status: string; createdAt: string }>>('/api/v1/clinical-alerts').catch(() => null)) : null,
+    scheduleAllowed ? serverApiFetch<WorkAnalyticsSummary>('/api/v1/work-analytics/summary').catch(() => null) : null,
   ]);
   const appointments = [...(schedule?.items ?? [])].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   return <div className="space-y-8">
-    <PageHeader eyebrow={user.organization.name} title="Огляд практики" description={`Вітаємо, ${user.displayName}. Усе для наступного клінічного кроку.`} actions={scheduleAllowed ? <a href="/app/calendar" className="rc-btn rc-btn-primary">Відкрити календар ↗</a> : null} />
+    <PageHeader eyebrow={user.organization.name} title="Головна" description={`Вітаємо, ${user.displayName.split(/\s+/)[0]}. Усе важливе для вашого робочого дня — в одному місці.`} actions={scheduleAllowed ? <a href="/app/calendar" className="rc-btn rc-btn-primary">Відкрити календар ↗</a> : null} />
     <div className="overview-grid">
       <section className="overview-schedule"><SectionHeader title="Сьогодні" description={new Intl.DateTimeFormat('uk-UA', { dateStyle: 'full', timeZone: DEFAULT_TIMEZONE }).format(new Date())} action={schedule ? <span className="ui-count">{appointments.length} візитів</span> : null} />
         {!scheduleAllowed ? <p className="overview-empty">Календар недоступний для вашої ролі.</p> : !schedule ? <p role="alert" className="overview-empty">Не вдалося завантажити розклад. <a href="/app" className="text-info underline">Повторити</a></p> : !appointments.length ? <div className="overview-empty"><p className="font-medium text-text-primary">На сьогодні візитів немає</p><p className="mt-2">Перейдіть до календаря, щоб переглянути інші дати.</p></div> : <ol className="mt-6">{appointments.map(item => <li key={item.id}><a className="overview-appointment" href={`/app/calendar?appointment=${item.id}&date=${today}`}><time className="overview-time" dateTime={item.startsAt}>{formatSchedulingTime(item.startsAt, DEFAULT_TIMEZONE)}</time><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{item.patient.displayName}</p><p className="mt-1 text-xs text-text-secondary">{item.appointmentType?.name ?? 'Візит'} · {item.practitioner.displayName}</p>{item.location && <p className="mt-1 text-xs text-text-secondary">{item.location.name}</p>}</div><AppointmentStatusBadge status={item.status} /></a></li>)}</ol>}
@@ -30,16 +31,14 @@ export async function Overview({ user }: { user: CurrentUserResponse }) {
         {patientsAllowed && <a href="/app/patients" className="mt-5 inline-flex text-sm text-info">Усі пацієнти →</a>}
       </section>
     </div>
-    <section><SectionHeader title="Робочі інструменти" /><div className="overview-tools">{[
-      [PERMISSIONS.ANATOMY_READ, '/app/anatomy', 'Анатомія', 'Дослідження структур і клінічна карта тіла'],
-      [PERMISSIONS.REHABILITATION_PLAN_READ, '/app/rehabilitation-plans', 'Плани реабілітації', 'Цілі, призначення та редакції планів'],
-      [PERMISSIONS.STAFF_READ, '/app/administration/staff', 'Команда', 'Співробітники, ролі та запрошення'],
-    ].filter(([permission]) => user.permissions.includes(permission as typeof user.permissions[number])).map(([,href,title,description]) => <a key={href} href={href} className="overview-tool"><h3 className="text-sm font-semibold">{title} <span aria-hidden="true">↗</span></h3><p className="mt-2 text-xs leading-5 text-text-secondary">{description}</p></a>)}</div></section>
     <div className="overview-grid overview-grid-bottom">
-      <section className="overview-patients"><SectionHeader title="Клінічна активність" description="Стан робочого дня" />
-        <dl className="overview-metrics"><Stat label="Заплановано сьогодні" value={schedule ? appointments.length : '—'} /><Stat label="Активні пацієнти" value={patients ? patients.total : '—'} /><Stat label="Відкриті сигнали" value={alerts ? alerts.filter(item => item.status !== 'RESOLVED').length : '—'} /></dl>
-        <p className="mt-5 border-t border-border pt-4 text-xs leading-5 text-text-secondary">Показники оновлюються з актуальних клінічних даних. Використовуйте календар і чергу сигналів для наступної дії.</p>
+      <section className="overview-patients"><SectionHeader title="Моє навантаження" description="Фактично проведені візити" />
+        <div className="grid gap-6 md:grid-cols-2"><WorkloadPeriod title="Цей тиждень" data={analytics?.week} /><WorkloadPeriod title="Цей місяць" data={analytics?.month} /></div>
       </section>
     </div>
   </div>;
+}
+
+function WorkloadPeriod({ title, data }: { title: string; data: WorkAnalyticsSummary['week'] | undefined }) {
+  return <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-text-secondary">{title}</p><dl className="overview-metrics mt-3"><Stat label="Візити" value={data?.completedVisits ?? '—'} /><Stat label="Фізична терапія" value={data ? `${Math.floor(data.therapyMinutes / 60)} год ${data.therapyMinutes % 60} хв` : '—'} /><Stat label="Дохід" value={data ? `${(data.revenueMinor / 100).toLocaleString('uk-UA')} ₴` : '—'} /></dl></div>;
 }

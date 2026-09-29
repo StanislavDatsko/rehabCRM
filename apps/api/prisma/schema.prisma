@@ -79,10 +79,19 @@ enum ClinicalAlertStatus {
 }
 
 enum PatientStatus {
+  DRAFT
   ACTIVE
   INACTIVE
   COMPLETED
   ARCHIVED
+}
+
+enum AppointmentPriceType {
+  STANDARD
+  DISCOUNTED
+  CUSTOM
+  FREE
+  UNSPECIFIED
 }
 
 enum PatientSex {
@@ -802,6 +811,9 @@ model Appointment {
   status             AppointmentStatus @default(SCHEDULED)
   reason             String?           @db.VarChar(500)
   administrativeNote String?           @db.VarChar(2000)
+  priceType          AppointmentPriceType @default(UNSPECIFIED)
+  priceAmountUah     Int               @default(0)
+  currencyCode       String            @default("UAH") @db.VarChar(3)
   cancellationReason String?           @db.VarChar(500)
   version            Int               @default(1)
   createdByUserId    String            @db.Uuid

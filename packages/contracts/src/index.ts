@@ -134,6 +134,7 @@ export {
   PATIENT_STATUSES,
   PATIENT_SEX_VALUES,
   type PatientStatus,
+  type WorkAnalyticsSummary,
   type PatientSex,
   type ResponsiblePractitionerResponse,
   type PatientAdministrativeResponse,

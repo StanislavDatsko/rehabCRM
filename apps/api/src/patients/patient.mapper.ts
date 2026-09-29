@@ -94,7 +94,7 @@ export function toPatientAdministrativeResponse(
         }
       : null,
     responsiblePractitioner: mapResponsiblePractitioner(patient.responsiblePractitioner),
-    status: patient.status,
+  status: patient.status as PatientStatus,
     internalReferenceNumber: patient.internalReferenceNumber,
     version: patient.version,
     createdAt: patient.createdAt.toISOString(),
@@ -148,4 +148,3 @@ export const PATIENT_INCLUDE = {
     },
   },
 } as const;
-
