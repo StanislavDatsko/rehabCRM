@@ -64,6 +64,7 @@ export function SchedulingCalendar({
   const calendarContainer = useRef<HTMLDivElement>(null);
   const [a11yReady, setA11yReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [moreEvents, setMoreEvents] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -72,6 +73,13 @@ export function SchedulingCalendar({
     mediaQuery.addEventListener('change', update);
     return () => mediaQuery.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    if (!moreEvents) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setMoreEvents(null); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [moreEvents]);
 
   // Keep the week overview on mobile too; the responsive layout below turns it
   // into a horizontally scrollable week board instead of collapsing to a day.
@@ -104,6 +112,8 @@ export function SchedulingCalendar({
       time: t('calendarFieldTime'),
       event: t('calendarFieldEvent'),
       noEventsInRange: t('calendarNoEvents'),
+      month: t('calendarViewMonth'),
+      showMore: (total: number) => `+${total} ще`,
     }),
     [],
   );
@@ -142,12 +152,14 @@ export function SchedulingCalendar({
         min={new Date(1970, 0, 1, 7, 0, 0)}
         max={new Date(1970, 0, 1, 21, 0, 0)}
         messages={messages}
-        popup
+        popup={false}
         selectable
         onSelectSlot={onSelectSlot}
         onSelectEvent={(event) => {
+          setMoreEvents(null);
           window.location.href = buildCalendarHref(query, { appointmentId: event.id });
         }}
+        onShowMore={(dayEvents, day) => setMoreEvents({ date: day, events: dayEvents as CalendarEvent[] })}
         components={{
           eventWrapper: FullWidthEventWrapper,
           event: ({ event }) => {
@@ -164,6 +176,17 @@ export function SchedulingCalendar({
         }}
         style={{ minHeight: isMobile ? '600px' : '680px' }}
       />
+      {moreEvents ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreEvents(null); }}>
+          <section className="calendar-more-popover" role="dialog" aria-modal="true" aria-label="Записи за день">
+            <header className="flex items-start justify-between gap-4 border-b border-border pb-3">
+              <div><h2 className="text-base font-semibold text-text-primary">{format(moreEvents.date, 'EEEE, d MMMM', { locale: uk })}</h2><p className="mt-1 text-xs text-text-secondary">{moreEvents.events.length} записів</p></div>
+              <button type="button" className="calendar-more-close" aria-label="Закрити" onClick={() => setMoreEvents(null)}>×</button>
+            </header>
+            <div className="mt-3 max-h-[55vh] space-y-2 overflow-y-auto">{moreEvents.events.map((event) => <button type="button" key={event.id} className="calendar-more-row" onClick={() => { setMoreEvents(null); window.location.href = buildCalendarHref(query, { appointmentId: event.id }); }}><span className="calendar-more-time">{format(event.start, 'HH:mm')}</span><span className="min-w-0 text-left"><strong className="block truncate text-sm text-text-primary">{event.resource.patient.displayName}</strong><span className="block truncate text-xs text-text-secondary">{event.resource.appointmentType?.name ?? 'Запис'}</span></span><AppointmentStatusBadge status={event.resource.status} /></button>)}</div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

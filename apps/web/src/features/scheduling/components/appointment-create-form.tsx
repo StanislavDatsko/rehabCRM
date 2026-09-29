@@ -93,9 +93,7 @@ export function AppointmentCreateForm({
             {t('appointmentCreateTitle')}
           </h2>
           <p id="appointment-create-description" className="sr-only">Створення нового прийому для пацієнта.</p>
-          <button type="button" className="text-sm text-text-secondary underline" onClick={onClose}>
-            {t('appointmentClose')}
-          </button>
+          <button type="button" className="calendar-more-close" aria-label="Закрити" onClick={onClose}>×</button>
         </div>
 
         <form action={formAction} className="mt-6 space-y-4">

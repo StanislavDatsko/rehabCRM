@@ -941,6 +941,19 @@ table tbody tr:hover {
 .calendar-event-status { grid-column: 1 / -1; margin-top: 1px; }
 .calendar-event-status > span { padding: 1px 5px; font-size: .6rem; line-height: 1.1; }
 
+.rc-scheduling-calendar .rbc-off-range-bg { background: color-mix(in srgb, var(--color-background) 86%, #000 14%); }
+.rc-scheduling-calendar .rbc-off-range { color: color-mix(in srgb, var(--color-text-secondary) 62%, transparent); }
+.rc-scheduling-calendar .rbc-today { background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface)); }
+.calendar-more-popover { width: min(440px, 100%); max-height: min(70vh, 620px); overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border)); border-radius: 18px; background: #1b102b; padding: 18px; box-shadow: 0 24px 70px rgb(0 0 0 / .42); }
+.calendar-more-close { display: inline-grid; width: 32px; height: 32px; place-items: center; border: 1px solid var(--color-border); border-radius: 9px; color: var(--color-text-secondary); font-size: 22px; line-height: 1; }
+.calendar-more-close:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); color: var(--color-text-primary); }
+.calendar-more-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; width: 100%; gap: 10px; border: 1px solid var(--color-border); border-radius: 12px; background: rgb(255 255 255 / .025); padding: 10px; text-align: left; }
+.calendar-more-row:hover { border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); background: rgb(199 243 107 / .07); }
+.calendar-more-time { color: var(--color-accent); font-size: .8rem; font-weight: 700; }
+.ui-segmented button { min-height: 38px; border: 1px solid transparent; border-radius: 9px; padding: 8px 13px; color: var(--color-text-secondary); font-size: .82rem; }
+.ui-segmented button:hover { background: rgb(255 255 255 / .04); color: var(--color-text-primary); }
+.ui-segmented button[aria-pressed='true'] { border-color: rgb(199 243 107 / .3); background: rgb(199 243 107 / .1); color: var(--color-accent); font-weight: 600; }
+
 @media (max-width: 767px) {
   .rc-scheduling-calendar.calendar-mobile {
     padding: 10px !important;
