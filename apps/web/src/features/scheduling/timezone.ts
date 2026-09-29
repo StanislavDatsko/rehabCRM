@@ -1,9 +1,11 @@
 import {
   endOfDay,
+  endOfMonth,
   endOfWeek,
   isValid,
   parseISO,
   startOfDay,
+  startOfMonth,
   startOfWeek,
 } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
@@ -47,19 +49,13 @@ export function formatCalendarDate(date: Date, timezone: string): string {
 }
 
 export function calendarQueryRange(
-  view: 'day' | 'week',
+  view: 'day' | 'week' | 'month',
   anchor: Date,
   timezone: string,
 ): { from: string; to: string } {
   const zoned = toZonedTime(anchor, timezone);
-  const rangeStart =
-    view === 'day'
-      ? startOfDay(zoned)
-      : startOfWeek(zoned, { weekStartsOn: 1 });
-  const rangeEnd =
-    view === 'day'
-      ? endOfDay(zoned)
-      : endOfWeek(zoned, { weekStartsOn: 1 });
+  const rangeStart = view === 'day' ? startOfDay(zoned) : view === 'month' ? startOfMonth(zoned) : startOfWeek(zoned, { weekStartsOn: 1 });
+  const rangeEnd = view === 'day' ? endOfDay(zoned) : view === 'month' ? endOfMonth(zoned) : endOfWeek(zoned, { weekStartsOn: 1 });
   return {
     from: fromZonedTime(rangeStart, timezone).toISOString(),
     to: fromZonedTime(rangeEnd, timezone).toISOString(),

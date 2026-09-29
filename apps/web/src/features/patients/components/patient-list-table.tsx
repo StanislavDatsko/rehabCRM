@@ -5,6 +5,7 @@ import { t } from '../../../i18n/messages';
 import { ageFromDateOfBirth, formatDateOfBirth } from '../age';
 import { buildPatientsListHref, type PatientListQuery } from '../list-query';
 import { PatientStatusBadge } from './patient-status-badge';
+import { rejectDraftPatientFormAction } from '../actions/patient-actions';
 
 function formatUpdatedAt(iso: string): string {
   const date = new Date(iso);
@@ -121,6 +122,10 @@ export function PatientListTable({
                     {canEdit ? (
                       <a className="rc-btn rc-btn-ghost inline-flex items-center" href={`/app/patients/${patient.id}/edit`} aria-label={`${t('patientsEdit')}: ${patient.fullName}`}>{t('patientsEdit')}</a>
                     ) : null}
+                    {canEdit && patient.status === 'DRAFT' ? <>
+                      <a className="rc-btn rc-btn-ghost inline-flex items-center" href={`/app/patients/${patient.id}/edit`}>Заповнити картку</a>
+                      <form action={rejectDraftPatientFormAction} className="inline"><input type="hidden" name="patientId" value={patient.id} /><input type="hidden" name="version" value={patient.version} /><button className="rc-btn rc-btn-ghost text-danger" type="submit">Відхилити чернетку</button></form>
+                    </> : null}
                   </div>
                 </td>
               </tr>

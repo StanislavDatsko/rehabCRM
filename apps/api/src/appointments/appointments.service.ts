@@ -34,12 +34,14 @@ import type {
   CancelAppointmentBody,
   CreateAppointmentBody,
   UpdateAppointmentBody,
+  CreateDraftPatientAppointmentBody,
   VersionCommand,
 } from './appointment.schemas';
+import { normalizePhone } from '../patients/phone';
 
 type Tx = Prisma.TransactionClient;
 
-const SCHEDULABLE_PATIENT_STATUSES: readonly PatientStatus[] = ['ACTIVE', 'INACTIVE'];
+const SCHEDULABLE_PATIENT_STATUSES: readonly PatientStatus[] = ['ACTIVE', 'INACTIVE', 'DRAFT'];
 const UPDATABLE_APPOINTMENT_STATUSES: readonly AppointmentStatus[] = [
   'SCHEDULED',
   'CONFIRMED',
@@ -197,6 +199,9 @@ export class AppointmentsService {
             endsAt,
             reason: body.reason ?? null,
             administrativeNote: body.administrativeNote ?? null,
+            priceType: body.priceType,
+            priceAmountUah: body.priceAmountUah,
+            currencyCode: body.currencyCode,
             createdByUserId: principal.userId,
             updatedByUserId: principal.userId,
           },
@@ -220,6 +225,27 @@ export class AppointmentsService {
         return appointment;
       });
 
+      return toAppointmentDetail(created);
+    } catch (error) {
+      this.rethrowConflict(error);
+      throw error;
+    }
+  }
+
+  async createWithDraftPatient(principal: AuthenticatedPrincipal, body: CreateDraftPatientAppointmentBody, requestId: string): Promise<AppointmentDetailResponse> {
+    await this.assertActivePractitioner(principal.organizationId, body.appointment.practitionerId);
+    await this.assertAppointmentType(principal.organizationId, body.appointment.appointmentTypeId ?? null);
+    const startsAt = new Date(body.appointment.startsAt);
+    const endsAt = new Date(body.appointment.endsAt);
+    try {
+      const created = await this.prisma.$transaction(async (tx) => {
+        const phone = normalizePhone(body.patient.phone);
+        const patient = await tx.patient.create({ data: { organizationId: principal.organizationId, firstName: body.patient.firstName, lastName: body.patient.lastName, middleName: body.patient.middleName ?? null, phoneDisplay: phone.display, phoneNormalized: phone.normalized, status: 'DRAFT', createdByUserId: principal.userId, updatedByUserId: principal.userId }, select: { id: true } });
+        await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'PATIENT_CREATED', entityType: 'Patient', entityId: patient.id, requestId, metadata: { changedFields: ['firstName', 'lastName', 'middleName', 'phone', 'status'], status: 'DRAFT' } });
+        const appointment = await tx.appointment.create({ data: { organizationId: principal.organizationId, patientId: patient.id, practitionerId: body.appointment.practitionerId, appointmentTypeId: body.appointment.appointmentTypeId ?? null, startsAt, endsAt, administrativeNote: body.appointment.administrativeNote ?? null, priceType: body.appointment.priceType, priceAmountUah: body.appointment.priceAmountUah, currencyCode: body.appointment.currencyCode, createdByUserId: principal.userId, updatedByUserId: principal.userId }, include: APPOINTMENT_INCLUDE });
+        await writeAuditEvent(tx, { organizationId: principal.organizationId, actorUserId: principal.userId, action: 'APPOINTMENT_CREATED', entityType: 'Appointment', entityId: appointment.id, requestId, metadata: { changedFields: ['*'], draftPatientId: patient.id } });
+        return appointment;
+      });
       return toAppointmentDetail(created);
     } catch (error) {
       this.rethrowConflict(error);
@@ -295,6 +321,10 @@ export class AppointmentsService {
       }
       return nextPractitionerId !== existing.practitionerId;
     });
+    if (rescheduled) {
+      data.rescheduledAt = new Date();
+      data.rescheduleCount = { increment: 1 };
+    }
 
     const changedFields = Object.keys(data).filter(
       (key) => key !== 'updatedByUserId' && key !== 'version',

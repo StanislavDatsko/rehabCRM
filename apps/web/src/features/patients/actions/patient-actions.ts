@@ -208,3 +208,13 @@ export async function changePatientStatusAction(
   revalidatePath(`/app/patients/${id}`);
   redirect(`/app/patients/${id}?statusUpdated=1`);
 }
+
+export async function rejectDraftPatientAction(_prev: PatientFormState, formData: FormData): Promise<PatientFormState> {
+  formData.set('status', 'ARCHIVED');
+  return changePatientStatusAction(_prev, formData);
+}
+
+export async function rejectDraftPatientFormAction(formData: FormData): Promise<void> {
+  formData.set('status', 'ARCHIVED');
+  await changePatientStatusAction({ error: null }, formData);
+}

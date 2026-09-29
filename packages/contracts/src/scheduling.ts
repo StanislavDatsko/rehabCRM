@@ -47,6 +47,11 @@ export type AppointmentCalendarItem = {
   location: SchedulingLocationRef | null;
   room: SchedulingRoomRef | null;
   version: number;
+  priceType: 'STANDARD' | 'DISCOUNTED' | 'CUSTOM' | 'FREE' | 'UNSPECIFIED';
+  priceAmountUah: number;
+  currencyCode: string;
+  rescheduledAt: string | null;
+  rescheduleCount: number;
 };
 
 export type AppointmentDetailResponse = AppointmentCalendarItem & {

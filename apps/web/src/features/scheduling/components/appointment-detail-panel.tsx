@@ -10,10 +10,8 @@ import { useActionState, useMemo, useState } from 'react';
 import { t } from '../../../i18n/messages';
 import {
   cancelAppointmentAction,
-  checkInAppointmentAction,
   confirmAndStartEncounterAction,
   confirmAppointmentAction,
-  noShowAppointmentAction,
   rescheduleAppointmentAction,
   startEncounterAction,
   type SchedulingFormState,
@@ -145,11 +143,6 @@ export function AppointmentDetailPanel({
             <p className="mb-3 text-sm text-text-secondary">Після підтвердження прийом одразу розпочнеться, а сторінка візиту відкриється автоматично.</p>
             <StatusActionForm action={confirmAction} appointmentId={appointment.id} version={appointment.version} command={confirmCommand} variant="primary" />
           </div>
-        ) : actions.includes('check-in') ? (
-          <div className="rounded-lg border border-success/30 bg-success/5 p-4">
-            <p className="mb-3 text-sm text-text-secondary">Коли пацієнт прибув, відміть його прибуття, щоб розпочати прийом.</p>
-            <StatusActionForm action={checkInAppointmentAction} appointmentId={appointment.id} version={appointment.version} command="check-in" variant="primary" />
-          </div>
         ) : null}
         {!appointment.encounterId && actions.includes('start-encounter') ? (
           <div className="rounded-lg border border-success/30 bg-success/5 p-4">
@@ -192,6 +185,11 @@ export function AppointmentDetailPanel({
               <dd>{appointment.appointmentType.name}</dd>
             </div>
           ) : null}
+          <div>
+            <dt className="text-text-secondary">Вартість</dt>
+            <dd>{new Intl.NumberFormat('uk-UA').format(appointment.priceAmountUah)} ₴</dd>
+          </div>
+          {appointment.rescheduleCount > 0 ? <div><dt className="text-text-secondary">Стан</dt><dd className="text-warning">Перенесено</dd></div> : null}
           {appointment.location ? (
             <div>
               <dt className="text-text-secondary">{t('appointmentFieldLocation')}</dt>
@@ -316,24 +314,8 @@ export function AppointmentDetailPanel({
                   variant="primary"
                 />
               ) : null}
-              {actions.includes('check-in') ? (
-                <StatusActionForm
-                  action={checkInAppointmentAction}
-                  appointmentId={appointment.id}
-                  version={appointment.version}
-                  command="check-in"
-                />
-              ) : null}
               {actions.includes('start-encounter') && appointment.encounterId ? (
                 <StatusActionForm action={startEncounterAction} appointmentId={appointment.id} version={appointment.version} command="start-encounter" variant="primary" />
-              ) : null}
-              {actions.includes('no-show') ? (
-                <StatusActionForm
-                  action={noShowAppointmentAction}
-                  appointmentId={appointment.id}
-                  version={appointment.version}
-                  command="no-show"
-                />
               ) : null}
               {actions.includes('cancel') ? (
                 <StatusActionForm

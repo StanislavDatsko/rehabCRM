@@ -36,11 +36,20 @@ describe('parseCalendarQuery', () => {
 
   it('ignores invalid view and date values', () => {
     const parsed = parseCalendarQuery(
-      { view: 'month', date: 'not-a-date' },
+      { view: 'invalid', date: 'not-a-date' },
       'Europe/Kyiv',
     );
     expect(parsed.view).toBe('week');
     expect(parsed.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('accepts month view', () => {
+    const parsed = parseCalendarQuery(
+      { view: 'month', date: '2026-09-29' },
+      'Europe/Kyiv',
+    );
+    expect(parsed.view).toBe('month');
+    expect(parsed.date).toBe('2026-09-29');
   });
 });
 

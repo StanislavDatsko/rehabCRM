@@ -2,7 +2,8 @@
 
 import type { ResponsiblePractitionerResponse, SchedulingCatalogResponse } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
-import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { t } from '../../../i18n/messages';
 import {
   createAppointmentAction,
@@ -30,12 +31,15 @@ export function AppointmentCreateForm({
   onClose: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createAppointmentAction, initialState);
+  const router = useRouter();
   const [patientQuery, setPatientQuery] = useState('');
+  const [patientMode, setPatientMode] = useState<'existing' | 'new'>('existing');
   const [patientResults, setPatientResults] = useState<{ id: string; displayName: string }[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState(prefillPatientId);
   const [selectedTypeId, setSelectedTypeId] = useState('');
-  const [selectedLocationId, setSelectedLocationId] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('60');
+  const [priceType, setPriceType] = useState<'STANDARD' | 'DISCOUNTED' | 'CUSTOM' | 'FREE'>('STANDARD');
+  const [customPrice, setCustomPrice] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -47,12 +51,12 @@ export function AppointmentCreateForm({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const selectedLocation = useMemo(
-    () => catalog.locations.find((location) => location.id === selectedLocationId) ?? null,
-    [catalog.locations, selectedLocationId],
-  );
-
-  const rooms = selectedLocation?.rooms ?? [];
+  useEffect(() => {
+    if (state.success) {
+      onClose();
+      router.refresh();
+    }
+  }, [onClose, router, state.success]);
 
   useEffect(() => {
     const handle = window.setTimeout(async () => {
@@ -97,8 +101,11 @@ export function AppointmentCreateForm({
         <form action={formAction} className="mt-6 space-y-4">
           <input type="hidden" name="timezone" value={timezone} />
           <input type="hidden" name="patientId" value={selectedPatientId} />
+          <input type="hidden" name="patientMode" value={patientMode} />
 
-          <div>
+          <div className="ui-segmented" aria-label="Тип пацієнта"><button type="button" aria-pressed={patientMode === 'existing'} onClick={() => setPatientMode('existing')}>Існуючий пацієнт</button><button type="button" aria-pressed={patientMode === 'new'} onClick={() => setPatientMode('new')}>Новий пацієнт</button></div>
+
+          {patientMode === 'new' ? <div className="grid gap-3 sm:grid-cols-2"><label className="text-xs text-text-secondary">Ім’я *<input name="firstName" required className="field mt-1 w-full" /></label><label className="text-xs text-text-secondary">Прізвище *<input name="lastName" required className="field mt-1 w-full" /></label><label className="text-xs text-text-secondary">По батькові<input name="middleName" className="field mt-1 w-full" /></label><label className="text-xs text-text-secondary">Телефон *<input name="phone" required className="field mt-1 w-full" /></label></div> : <div>
             <label
               htmlFor="patient-search"
               className="block text-xs font-medium text-text-secondary"
@@ -136,10 +143,10 @@ export function AppointmentCreateForm({
             ) : null}
             {selectedPatientId ? (
               <p className="mt-1 text-xs text-text-secondary">
-                {t('appointmentSelectedPatient')}: {selectedPatientId}
+                {t('appointmentSelectedPatient')}: {patientQuery}
               </p>
             ) : null}
-          </div>
+          </div>}
 
           <label className="block text-xs font-medium text-text-secondary">
             {t('appointmentFieldType')}
@@ -214,40 +221,18 @@ export function AppointmentCreateForm({
             />
           </label>
 
-          <label className="block text-xs font-medium text-text-secondary">
-            {t('appointmentFieldLocation')}
-            <select
-              name="locationId"
-              value={selectedLocationId}
-              onChange={(event) => setSelectedLocationId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="">{t('calendarFilterAll')}</option>
-              {catalog.locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="space-y-2">
+            <legend className="text-xs font-medium text-text-secondary">Вартість</legend>
+            {([['STANDARD', 'Стандартна — 500 ₴'], ['DISCOUNTED', 'Пільгова — 300 ₴'], ['CUSTOM', 'Інша сума'], ['FREE', 'Безкоштовно']] as const).map(([value, label]) => (
+              <label key={value} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+                <input type="radio" name="priceType" value={value} checked={priceType === value} onChange={() => setPriceType(value)} />
+                <span>{label}</span>
+              </label>
+            ))}
+            {priceType === 'CUSTOM' ? <label className="block text-xs text-text-secondary">Сума<input name="customPrice" type="number" min="1" max="1000000" required value={customPrice} onChange={(event) => setCustomPrice(event.target.value)} className="field mt-1 w-full" /></label> : null}
+            <input type="hidden" name="priceAmountUah" value={priceType === 'STANDARD' ? '500' : priceType === 'DISCOUNTED' ? '300' : priceType === 'FREE' ? '0' : customPrice} />
+          </fieldset>
 
-          {rooms.length > 0 ? (
-            <label className="block text-xs font-medium text-text-secondary">
-              {t('appointmentFieldRoom')}
-              <select
-                name="roomId"
-                defaultValue=""
-                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">{t('calendarFilterAll')}</option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
 
           <label className="block text-xs font-medium text-text-secondary">
             {t('appointmentFieldNote')}
@@ -261,7 +246,7 @@ export function AppointmentCreateForm({
           {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
 
           <div className="ui-form-actions">
-            <Button type="submit" disabled={pending || !selectedPatientId}>
+            <Button type="submit" disabled={pending || (patientMode === 'existing' && !selectedPatientId)}>
               {t('appointmentSave')}
             </Button>
             <Button type="button" variant="secondary" onClick={onClose}>

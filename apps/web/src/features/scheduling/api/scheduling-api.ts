@@ -29,6 +29,9 @@ export type CreateAppointmentBody = {
   endsAt: string;
   reason?: string | null;
   administrativeNote?: string | null;
+  priceType?: 'STANDARD' | 'DISCOUNTED' | 'CUSTOM' | 'FREE' | 'UNSPECIFIED';
+  priceAmountUah?: number;
+  currencyCode?: 'UAH';
 };
 
 export type UpdateAppointmentBody = {
@@ -97,6 +100,10 @@ export async function createAppointment(
     '/api/v1/appointments',
     jsonInit('POST', body),
   );
+}
+
+export async function createDraftPatientAppointment(body: { patient: { firstName: string; lastName: string; middleName?: string | null; phone: string }; appointment: Omit<CreateAppointmentBody, 'patientId'> }) {
+  return serverApiFetch<AppointmentDetailResponse>('/api/v1/appointments/with-draft-patient', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 }
 
 export async function updateAppointment(

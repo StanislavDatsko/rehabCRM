@@ -814,6 +814,8 @@ model Appointment {
   priceType          AppointmentPriceType @default(UNSPECIFIED)
   priceAmountUah     Int               @default(0)
   currencyCode       String            @default("UAH") @db.VarChar(3)
+  rescheduledAt      DateTime?         @db.Timestamptz(3)
+  rescheduleCount    Int               @default(0)
   cancellationReason String?           @db.VarChar(500)
   version            Int               @default(1)
   createdByUserId    String            @db.Uuid

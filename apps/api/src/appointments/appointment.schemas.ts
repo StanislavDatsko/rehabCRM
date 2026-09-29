@@ -24,6 +24,15 @@ const optionalText = (max: number) =>
       message: `Must be at most ${max} characters`,
     });
 
+const pricing = z.object({
+  priceType: z.enum(['STANDARD', 'DISCOUNTED', 'CUSTOM', 'FREE', 'UNSPECIFIED']),
+  priceAmountUah: z.number().int().min(0).max(1_000_000),
+  currencyCode: z.literal('UAH'),
+}).superRefine((value, ctx) => {
+  if (value.priceType !== 'FREE' && value.priceType !== 'UNSPECIFIED' && value.priceAmountUah <= 0) ctx.addIssue({ code: 'custom', message: 'Price must be positive', path: ['priceAmountUah'] });
+  if ((value.priceType === 'FREE' || value.priceType === 'UNSPECIFIED') && value.priceAmountUah !== 0) ctx.addIssue({ code: 'custom', message: 'Free or unspecified price must be zero', path: ['priceAmountUah'] });
+});
+
 function validateTimeRange(startsAt: Date, endsAt: Date): boolean {
   if (endsAt <= startsAt) {
     return false;
@@ -46,6 +55,9 @@ export const createAppointmentBodySchema = z
     endsAt: isoDateTime,
     reason: optionalText(500),
     administrativeNote: optionalText(2000),
+    priceType: z.enum(['STANDARD', 'DISCOUNTED', 'CUSTOM', 'FREE', 'UNSPECIFIED']).default('UNSPECIFIED'),
+    priceAmountUah: z.number().int().min(0).max(1_000_000).default(0),
+    currencyCode: z.literal('UAH').default('UAH'),
   })
   .strict()
   .superRefine((body, ctx) => {
@@ -67,6 +79,11 @@ export const createAppointmentBodySchema = z
       });
     }
   });
+
+export const createDraftPatientAppointmentBodySchema = z.object({
+  patient: z.object({ firstName: z.string().trim().min(1).max(100), lastName: z.string().trim().min(1).max(100), middleName: optionalText(100), phone: z.string().trim().min(1).max(50) }).strict(),
+  appointment: z.object({ practitionerId: z.string().uuid(), appointmentTypeId: z.union([z.string().uuid(), z.null()]).optional(), startsAt: isoDateTime, endsAt: isoDateTime, administrativeNote: optionalText(2000), priceType: z.enum(['STANDARD', 'DISCOUNTED', 'CUSTOM', 'FREE', 'UNSPECIFIED']), priceAmountUah: z.number().int().min(0).max(1_000_000), currencyCode: z.literal('UAH') }).strict(),
+}).strict();
 
 export const updateAppointmentBodySchema = z
   .object({
@@ -140,6 +157,10 @@ export const calendarQuerySchema = z
   });
 
 export type CreateAppointmentBody = z.infer<typeof createAppointmentBodySchema>;
+export type CreateDraftPatientAppointmentBody = {
+  patient: { firstName: string; lastName: string; middleName?: string | null; phone: string };
+  appointment: { practitionerId: string; appointmentTypeId?: string | null; startsAt: string; endsAt: string; administrativeNote?: string | null; priceType: 'STANDARD' | 'DISCOUNTED' | 'CUSTOM' | 'FREE' | 'UNSPECIFIED'; priceAmountUah: number; currencyCode: 'UAH' };
+};
 export type UpdateAppointmentBody = z.infer<typeof updateAppointmentBodySchema>;
 export type CancelAppointmentBody = z.infer<typeof cancelAppointmentBodySchema>;
 export type CalendarQuery = z.infer<typeof calendarQuerySchema>;

@@ -11,6 +11,7 @@ import {
   completeEncounter,
   confirmAppointment,
   createAppointment,
+  createDraftPatientAppointment,
   markAppointmentNoShow,
   startEncounterForAppointment,
   updateAppointment,
@@ -29,6 +30,8 @@ import { addMinutesToIso, combineDateAndTimeToIso } from '../timezone';
 
 export type SchedulingFormState = {
   error: string | null;
+  success?: boolean;
+  appointmentId?: string;
 };
 
 function emptyToNull(value: FormDataEntryValue | null): string | null {
@@ -82,6 +85,9 @@ function createBodyFromFormData(formData: FormData, timezone: string): CreateApp
     endsAt,
     reason: emptyToNull(formData.get('reason')),
     administrativeNote: emptyToNull(formData.get('administrativeNote')),
+    priceType: (emptyToNull(formData.get('priceType')) ?? 'UNSPECIFIED') as CreateAppointmentBody['priceType'],
+    priceAmountUah: Number(formData.get('priceAmountUah') ?? 0),
+    currencyCode: 'UAH',
   };
 }
 
@@ -134,13 +140,17 @@ export async function createAppointmentAction(
 
   const timezone = emptyToNull(formData.get('timezone')) ?? 'Europe/Kyiv';
   const body = createBodyFromFormData(formData, timezone);
-  if (!body.patientId || !body.practitionerId || !body.startsAt || !body.endsAt) {
+  const isDraft = formData.get('patientMode') === 'new';
+  if ((!body.patientId && !isDraft) || !body.practitionerId || !body.startsAt || !body.endsAt) {
     return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
   }
 
   let createdId: string;
   try {
-    const created = await createAppointment(body);
+    const { patientId: _patientId, ...draftAppointment } = body;
+    const created = isDraft
+      ? await createDraftPatientAppointment({ patient: { firstName: String(formData.get('firstName') ?? ''), lastName: String(formData.get('lastName') ?? ''), middleName: emptyToNull(formData.get('middleName')), phone: String(formData.get('phone') ?? '') }, appointment: draftAppointment })
+      : await createAppointment(body);
     createdId = created.id;
   } catch (error: unknown) {
     if (error instanceof ServerApiError && error.status === 401) {
@@ -149,8 +159,8 @@ export async function createAppointmentAction(
     return errorState(error);
   }
 
-  revalidateSchedulingPaths(createdId, undefined, body.patientId);
-  redirect(`/app/calendar?appointment=${createdId}&created=1`);
+  revalidateSchedulingPaths(createdId, undefined, body.patientId || undefined);
+  return { error: null, success: true, appointmentId: createdId };
 }
 
 export async function rescheduleAppointmentAction(
@@ -201,7 +211,7 @@ export async function rescheduleAppointmentAction(
   }
 
   revalidateSchedulingPaths(id);
-  redirect(`/app/calendar?appointment=${id}&updated=1`);
+  return { error: null, success: true, appointmentId: id };
 }
 
 async function runStatusCommand(

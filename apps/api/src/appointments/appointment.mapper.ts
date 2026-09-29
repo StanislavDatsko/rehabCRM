@@ -105,6 +105,11 @@ export function toAppointmentCalendarItem(
       : null,
     room: row.room ? { id: row.room.id, name: row.room.name } : null,
     version: row.version,
+    priceType: row.priceType,
+    priceAmountUah: row.priceAmountUah,
+    currencyCode: row.currencyCode,
+    rescheduledAt: row.rescheduledAt?.toISOString() ?? null,
+    rescheduleCount: row.rescheduleCount,
   };
 }
 

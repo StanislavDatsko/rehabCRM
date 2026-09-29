@@ -223,6 +223,16 @@ export class PatientsService {
       return toPatientAdministrativeResponse(existing);
     }
 
+    if (existing.status === 'DRAFT' && body.status === 'ARCHIVED') {
+      const completedEncounter = await this.prisma.encounter.findFirst({
+        where: { organizationId: principal.organizationId, patientId: id, status: 'COMPLETED' },
+        select: { id: true },
+      });
+      if (completedEncounter) {
+        throw new BadRequestException({ code: 'DRAFT_ARCHIVE_UNSAFE', message: 'This draft has completed clinical data and cannot be rejected.' });
+      }
+    }
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const patient = await this.applyVersionedUpdate(
         tx,

@@ -52,7 +52,7 @@ export function SchedulingCalendar({
   query,
   onSelectSlot,
 }: {
-  view: 'day' | 'week';
+  view: 'day' | 'week' | 'month';
   date: string;
   timezone: string;
   events: CalendarEvent[];
@@ -60,7 +60,7 @@ export function SchedulingCalendar({
   onSelectSlot: (slot: { start: Date; end: Date }) => void;
 }) {
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
-  const calendarView: View = view === 'day' ? 'day' : 'week';
+  const calendarView: View = view;
   const calendarContainer = useRef<HTMLDivElement>(null);
   const [a11yReady, setA11yReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -133,10 +133,10 @@ export function SchedulingCalendar({
           window.location.href = buildCalendarHref(query, { date: `${y}-${m}-${d}` });
         }}
         onView={(nextView) => {
-          const mapped = nextView === 'day' ? 'day' : 'week';
+          const mapped = nextView === 'day' || nextView === 'month' ? nextView : 'week';
           window.location.href = buildCalendarHref(query, { view: mapped });
         }}
-        views={['day', 'week']}
+        views={['day', 'week', 'month']}
         step={60}
         timeslots={1}
         min={new Date(1970, 0, 1, 7, 0, 0)}

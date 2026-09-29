@@ -32,6 +32,8 @@ import {
   type CancelAppointmentBody,
   type CreateAppointmentBody,
   type UpdateAppointmentBody,
+  createDraftPatientAppointmentBodySchema,
+  type CreateDraftPatientAppointmentBody,
   type VersionCommand,
 } from './appointment.schemas';
 import { AppointmentsService } from './appointments.service';
@@ -80,6 +82,16 @@ export class AppointmentsController {
     @Headers('x-request-id') requestId?: string,
   ): Promise<AppointmentDetailResponse> {
     return this.appointments.create(principal, body, requestId ?? 'unknown');
+  }
+
+  @Post('with-draft-patient')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_CREATE)
+  createWithDraftPatient(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Body(new ZodValidationPipe(createDraftPatientAppointmentBodySchema)) body: CreateDraftPatientAppointmentBody,
+    @Headers('x-request-id') requestId?: string,
+  ) {
+    return this.appointments.createWithDraftPatient(principal, body, requestId ?? 'unknown');
   }
 
   @Get(':id')

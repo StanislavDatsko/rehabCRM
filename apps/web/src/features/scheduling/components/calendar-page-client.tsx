@@ -72,47 +72,7 @@ export function CalendarPageClient({
       <PageHeader eyebrow="Розклад команди" title={t('calendarTitle')} description={t('calendarSubtitle')} metadata={<span className="ui-count">{items.length} візитів</span>} actions={canCreateAppointment(user) ? <Button onClick={() => setShowCreate(true)}>+ {t('calendarNewAppointment')}</Button> : null} />
 
       <div className="ui-filter-bar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <nav className="ui-segmented" aria-label="Вигляд календаря"><a aria-current={query.view === 'day' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'day' })}>{t('calendarViewDay')}</a><a aria-current={query.view === 'week' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'week' })}>{t('calendarViewWeek')}</a></nav>
-
-        <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <input type="hidden" name="view" value={query.view} />
-          <input type="hidden" name="date" value={query.date} />
-          <label className="text-xs font-medium text-text-secondary">
-            {t('calendarFilterPractitioner')}
-            <select
-              name="practitioner"
-              defaultValue={query.practitionerId}
-              className="field mt-1 block bg-background py-2.5 text-sm focus:border-info focus:ring-2 focus:ring-info/20"
-            >
-              <option value="">{t('calendarFilterAll')}</option>
-              {activePractitioners.map((practitioner) => (
-                <option key={practitioner.id} value={practitioner.id}>
-                  {practitioner.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs font-medium text-text-secondary">
-            {t('calendarFilterLocation')}
-            <select
-              name="location"
-              defaultValue={query.locationId}
-              className="field mt-1 block bg-background py-2.5 text-sm focus:border-info focus:ring-2 focus:ring-info/20"
-            >
-              <option value="">{t('calendarFilterAll')}</option>
-              {catalog.locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="flex items-end">
-            <Button type="submit" variant="secondary">
-              {t('calendarApplyFilters')}
-            </Button>
-          </div>
-        </form>
+        <nav className="ui-segmented" aria-label="Вигляд календаря"><a aria-current={query.view === 'day' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'day' })}>{t('calendarViewDay')}</a><a aria-current={query.view === 'week' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'week' })}>{t('calendarViewWeek')}</a><a aria-current={query.view === 'month' ? 'page' : undefined} href={buildCalendarHref(query, { date: query.date, view: 'month' })}>{t('calendarViewMonth')}</a></nav>
       </div>
 
       <SchedulingCalendar
