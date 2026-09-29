@@ -1,6 +1,6 @@
 'use client';
 
-import type { AppointmentCalendarItem } from '@repo/contracts';
+import type { AppointmentCalendarItem, CalendarBlockResponse } from '@repo/contracts';
 import { cloneElement, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Calendar, dateFnsLocalizer, type View } from 'react-big-calendar';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
@@ -24,12 +24,17 @@ const localizer = dateFnsLocalizer({
 });
 
 type CalendarEvent = {
+  kind: 'appointment' | 'block';
   id: string;
   title: string;
   start: Date;
   end: Date;
-  resource: AppointmentCalendarItem;
+  resource: AppointmentCalendarItem | CalendarBlockResponse;
 };
+
+function isCalendarBlock(resource: CalendarEvent['resource']): resource is CalendarBlockResponse {
+  return 'type' in resource;
+}
 
 function FullWidthEventWrapper(props: object) {
   const children = 'children' in props ? (props as { children?: ReactNode }).children : undefined;
@@ -51,6 +56,7 @@ export function SchedulingCalendar({
   events,
   query,
   onSelectSlot,
+  onSelectBlock,
 }: {
   view: 'day' | 'week' | 'month';
   date: string;
@@ -58,6 +64,7 @@ export function SchedulingCalendar({
   events: CalendarEvent[];
   query: CalendarQuery;
   onSelectSlot: (slot: { start: Date; end: Date }) => void;
+  onSelectBlock: (block: CalendarBlockResponse | AppointmentCalendarItem) => void;
 }) {
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
   const calendarView: View = view;
@@ -158,13 +165,15 @@ export function SchedulingCalendar({
         onSelectSlot={onSelectSlot}
         onSelectEvent={(event) => {
           setMoreEvents(null);
-          window.location.href = buildCalendarHref(query, { appointmentId: event.id });
+          if (isCalendarBlock(event.resource)) onSelectBlock(event.resource);
+          else window.location.href = buildCalendarHref(query, { appointmentId: event.id });
         }}
         onShowMore={(dayEvents, day) => setMoreEvents({ date: day, events: dayEvents as CalendarEvent[] })}
         components={{
           eventWrapper: FullWidthEventWrapper,
           event: ({ event }) => {
-            const item = event.resource as AppointmentCalendarItem;
+            const item = event.resource;
+            if (isCalendarBlock(item)) return <div className={`calendar-event-card calendar-block-event calendar-block-${item.type}`}><span className="calendar-event-time">{format(event.start, 'HH:mm')}</span><span className="calendar-event-patient">{item.type === 'BREAK' ? 'Перерва' : item.type === 'DAY_OFF' ? 'Вихідний' : 'Недоступно'}</span></div>;
             return (
               <div className="calendar-event-card">
                 <span className="calendar-event-time">{format(event.start, 'HH:mm')}</span>
@@ -184,7 +193,7 @@ export function SchedulingCalendar({
               <div><h2 className="text-base font-semibold text-text-primary">{format(moreEvents.date, 'EEEE, d MMMM', { locale: uk })}</h2><p className="mt-1 text-xs text-text-secondary">{moreEvents.events.length} записів</p></div>
               <button type="button" className="calendar-more-close" aria-label="Закрити" onClick={() => setMoreEvents(null)}>×</button>
             </header>
-            <div className="mt-3 max-h-[55vh] space-y-2 overflow-y-auto">{moreEvents.events.map((event) => <button type="button" key={event.id} className="calendar-more-row" onClick={() => { setMoreEvents(null); window.location.href = buildCalendarHref(query, { appointmentId: event.id }); }}><span className="calendar-more-time">{format(event.start, 'HH:mm')}</span><span className="min-w-0 text-left"><strong className="block truncate text-sm text-text-primary">{event.resource.patient.displayName}</strong><span className="block truncate text-xs text-text-secondary">{event.resource.appointmentType?.name ?? 'Запис'}</span></span><AppointmentStatusBadge status={event.resource.status} /></button>)}</div>
+            <div className="mt-3 max-h-[55vh] space-y-2 overflow-y-auto">{moreEvents.events.map((event) => isCalendarBlock(event.resource) ? <button type="button" key={event.id} className="calendar-more-row" onClick={() => { setMoreEvents(null); onSelectBlock(event.resource); }}><span className="calendar-more-time">{format(event.start, 'HH:mm')}</span><span className="min-w-0 text-left"><strong className="block text-sm text-text-primary">{event.resource.type === 'BREAK' ? 'Перерва' : event.resource.type === 'DAY_OFF' ? 'Вихідний' : 'Недоступно'}</strong><span className="block text-xs text-text-secondary">Calendar block</span></span></button> : <button type="button" key={event.id} className="calendar-more-row" onClick={() => { setMoreEvents(null); window.location.href = buildCalendarHref(query, { appointmentId: event.id }); }}><span className="calendar-more-time">{format(event.start, 'HH:mm')}</span><span className="min-w-0 text-left"><strong className="block truncate text-sm text-text-primary">{event.resource.patient.displayName}</strong><span className="block truncate text-xs text-text-secondary">{event.resource.appointmentType?.name ?? 'Запис'}</span></span><AppointmentStatusBadge status={event.resource.status} /></button>)}</div>
           </section>
         </div>
       ) : null}

@@ -6,6 +6,7 @@ import type {
   EncounterResponse,
   PatientAppointmentSummary,
   SchedulingCatalogResponse,
+  CalendarBlockListResponse,
 } from '@repo/contracts';
 import { serverApiFetch } from '../../../lib/api/server-api-client';
 import type { EncounterExerciseLog } from '../types';
@@ -87,6 +88,12 @@ export async function listAppointments(
     params.set('status', query.status);
   }
   return serverApiFetch<AppointmentCalendarResponse>(`/api/v1/appointments?${params.toString()}`);
+}
+
+export async function listCalendarBlocks(query: { from: string; to: string; practitionerId?: string }): Promise<CalendarBlockListResponse> {
+  const params = new URLSearchParams({ from: query.from, to: query.to });
+  if (query.practitionerId) params.set('practitionerId', query.practitionerId);
+  return serverApiFetch<CalendarBlockListResponse>(`/api/v1/calendar-blocks?${params.toString()}`);
 }
 
 export async function getAppointment(id: string): Promise<AppointmentDetailResponse> {

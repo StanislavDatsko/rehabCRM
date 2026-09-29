@@ -38,6 +38,7 @@ import type {
   VersionCommand,
 } from './appointment.schemas';
 import { normalizePhone } from '../patients/phone';
+import { acquireSchedulingLock } from './scheduling-lock';
 
 type Tx = Prisma.TransactionClient;
 
@@ -187,6 +188,9 @@ export class AppointmentsService {
 
     try {
       const created = await this.prisma.$transaction(async (tx) => {
+        await acquireSchedulingLock(tx, principal.organizationId, body.practitionerId);
+        const blocked = await tx.calendarBlock.findFirst({ where: { organizationId: principal.organizationId, practitionerId: body.practitionerId, startsAt: { lt: endsAt }, endsAt: { gt: startsAt } }, select: { id: true } });
+        if (blocked) throw new ConflictException({ code: 'CALENDAR_BLOCK_CONFLICT', message: 'Цей час позначений як недоступний для фізичного терапевта.' });
         const appointment = await tx.appointment.create({
           data: {
             organizationId: principal.organizationId,
@@ -335,6 +339,9 @@ export class AppointmentsService {
 
     try {
       const updated = await this.prisma.$transaction(async (tx) => {
+        await acquireSchedulingLock(tx, principal.organizationId, nextPractitionerId);
+        const blocked = await tx.calendarBlock.findFirst({ where: { organizationId: principal.organizationId, practitionerId: nextPractitionerId, startsAt: { lt: nextEndsAt }, endsAt: { gt: nextStartsAt } }, select: { id: true } });
+        if (blocked) throw new ConflictException({ code: 'CALENDAR_BLOCK_CONFLICT', message: 'Цей час позначений як недоступний для фізичного терапевта.' });
         const appointment = await this.applyVersionedUpdate(
           tx,
           principal.organizationId,

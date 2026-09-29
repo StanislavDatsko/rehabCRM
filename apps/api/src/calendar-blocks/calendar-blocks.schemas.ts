@@ -1,0 +1,10 @@
+import { z } from 'zod';
+const iso = z.string().datetime({ offset: true });
+const type = z.enum(['BREAK', 'UNAVAILABLE', 'DAY_OFF']);
+const text = (max: number) => z.union([z.string().trim().max(max), z.null(), z.undefined()]);
+export const blockQuerySchema = z.object({ from: iso, to: iso, practitionerId: z.string().uuid().optional() }).strict();
+export const createBlockSchema = z.object({ practitionerId: z.string().uuid(), type, startsAt: iso, endsAt: iso, title: text(150), note: text(1000) }).strict().superRefine((v, c) => { if (new Date(v.endsAt) <= new Date(v.startsAt)) c.addIssue({ code: 'custom', path: ['endsAt'], message: 'Invalid time range' }); });
+export const updateBlockSchema = z.object({ practitionerId: z.string().uuid(), type, startsAt: iso, endsAt: iso, title: text(150), note: text(1000), version: z.number().int().positive() }).strict().superRefine((v, c) => { if (new Date(v.endsAt) <= new Date(v.startsAt)) c.addIssue({ code: 'custom', path: ['endsAt'], message: 'Invalid time range' }); });
+export type BlockQuery = z.infer<typeof blockQuerySchema>;
+export type CreateBlock = z.infer<typeof createBlockSchema>;
+export type UpdateBlock = z.infer<typeof updateBlockSchema>;

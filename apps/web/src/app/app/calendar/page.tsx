@@ -5,6 +5,7 @@ import {
   getAppointment,
   getSchedulingCatalog,
   listAppointments,
+  listCalendarBlocks,
 } from '../../../features/scheduling/api/scheduling-api';
 import { listResponsiblePractitioners } from '../../../features/patients/api/patients-api';
 import { parseCalendarQuery } from '../../../features/scheduling/calendar-query';
@@ -67,6 +68,7 @@ export default async function CalendarPage({
   const range = calendarQueryRange(query.view, anchor, timezone);
 
   let items: Awaited<ReturnType<typeof listAppointments>>['items'] = [];
+  let blocks: Awaited<ReturnType<typeof listCalendarBlocks>>['items'] = [];
   try {
     const response = await listAppointments({
       from: range.from,
@@ -76,6 +78,7 @@ export default async function CalendarPage({
       patientId: typeof raw.patient === 'string' ? raw.patient : undefined,
     });
     items = response.items;
+    blocks = (await listCalendarBlocks({ from: range.from, to: range.to, practitionerId: query.practitionerId || undefined })).items;
   } catch (error) {
     const message =
       error instanceof ServerApiError
@@ -122,6 +125,7 @@ export default async function CalendarPage({
       catalog={catalog}
       practitioners={practitioners}
       items={items}
+      blocks={blocks}
       timezone={timezone}
       selectedAppointment={selectedAppointment}
       flashMessage={flashMessage}

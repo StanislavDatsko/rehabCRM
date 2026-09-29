@@ -96,6 +96,13 @@ export type SchedulingCatalogResponse = {
   locations: (SchedulingLocationRef & { rooms: SchedulingRoomRef[] })[];
 };
 
+export const CALENDAR_BLOCK_TYPES = ['BREAK', 'UNAVAILABLE', 'DAY_OFF'] as const;
+export type CalendarBlockType = (typeof CALENDAR_BLOCK_TYPES)[number];
+export type CalendarBlockResponse = { id: string; practitionerId: string; type: CalendarBlockType; startsAt: string; endsAt: string; title: string | null; note: string | null; version: number; };
+export type CalendarBlockListResponse = { items: CalendarBlockResponse[]; from: string; to: string };
+export type CreateCalendarBlockInput = { practitionerId: string; type: CalendarBlockType; startsAt: string; endsAt: string; title?: string | null; note?: string | null };
+export type UpdateCalendarBlockInput = CreateCalendarBlockInput & { version: number };
+
 /** Maximum calendar query window in days. */
 export const CALENDAR_MAX_RANGE_DAYS = 90;
 

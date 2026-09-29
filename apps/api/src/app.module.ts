@@ -21,6 +21,7 @@ import { PatientPortalModule } from './patient-portal/patient-portal.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PatientMediaModule } from './patient-media/media.module';
 import { WorkAnalyticsModule } from './work-analytics/work-analytics.module';
+import { CalendarBlocksModule } from './calendar-blocks/calendar-blocks.module';
 
 const env = parseApiEnv();
 
@@ -91,6 +92,7 @@ const env = parseApiEnv();
     NotificationsModule,
     PatientMediaModule,
     WorkAnalyticsModule,
+    CalendarBlocksModule,
     RedisModule,
     IdentityModule,
     StaffModule,

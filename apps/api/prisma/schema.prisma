@@ -94,6 +94,12 @@ enum AppointmentPriceType {
   UNSPECIFIED
 }
 
+enum CalendarBlockType {
+  BREAK
+  UNAVAILABLE
+  DAY_OFF
+}
+
 enum PatientSex {
   FEMALE
   MALE
@@ -346,6 +352,7 @@ model Organization {
   clinicalAlerts              ClinicalAlert[]
   patientMedia                PatientMedia[]
   staffInvitations            StaffInvitation[]
+  calendarBlocks              CalendarBlock[]
 
   @@map("organizations")
 }
@@ -372,6 +379,8 @@ model User {
   auditEvents                        AuditEvent[]
   createdAppointments                Appointment[]                 @relation("AppointmentCreatedBy")
   updatedAppointments                Appointment[]                 @relation("AppointmentUpdatedBy")
+  createdCalendarBlocks              CalendarBlock[]                @relation("CalendarBlockCreatedBy")
+  updatedCalendarBlocks              CalendarBlock[]                @relation("CalendarBlockUpdatedBy")
   createdEncounters                  Encounter[]                   @relation("EncounterCreatedBy")
   updatedEncounters                  Encounter[]                   @relation("EncounterUpdatedBy")
   createdAssessments                 Assessment[]                  @relation("AssessmentCreatedBy")
@@ -480,6 +489,7 @@ model Practitioner {
   user                     User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
   responsibleFor           Patient[]
   appointments             Appointment[]
+  calendarBlocks           CalendarBlock[]
   encounters               Encounter[]
   assessments              Assessment[]
   rehabilitationPlans      RehabilitationPlan[]
@@ -838,6 +848,31 @@ model Appointment {
   @@index([organizationId, patientId, startsAt])
   @@index([organizationId, status, startsAt])
   @@map("appointments")
+}
+
+model CalendarBlock {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  practitionerId String            @db.Uuid
+  type           CalendarBlockType
+  startsAt       DateTime          @db.Timestamptz(3)
+  endsAt         DateTime          @db.Timestamptz(3)
+  title          String?           @db.VarChar(150)
+  note           String?           @db.VarChar(1000)
+  version        Int               @default(1)
+  createdByUserId String            @db.Uuid
+  updatedByUserId String            @db.Uuid
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  practitioner Practitioner @relation(fields: [practitionerId], references: [id], onDelete: Restrict)
+  createdBy User @relation("CalendarBlockCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User @relation("CalendarBlockUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, practitionerId, startsAt])
+  @@index([organizationId, startsAt, endsAt])
+  @@map("calendar_blocks")
 }
 
 /// Actual rehabilitation-center interaction. May originate from an Appointment.

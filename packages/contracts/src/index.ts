@@ -191,6 +191,12 @@ export {
   type PatientAppointmentSummary,
   type EncounterResponse,
   type SchedulingCatalogResponse,
+  CALENDAR_BLOCK_TYPES,
+  type CalendarBlockType,
+  type CalendarBlockResponse,
+  type CalendarBlockListResponse,
+  type CreateCalendarBlockInput,
+  type UpdateCalendarBlockInput,
 } from './scheduling';
 export {
   ASSESSMENT_STATUSES,

@@ -65,8 +65,10 @@ describe('AppointmentsService', () => {
     location: { findFirst: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
     room: { findFirst: ReturnType<typeof vi.fn> };
     encounter: { create: ReturnType<typeof vi.fn> };
+    calendarBlock: { findFirst: ReturnType<typeof vi.fn> };
     auditEvent: { create: ReturnType<typeof vi.fn> };
     $transaction: ReturnType<typeof vi.fn>;
+    $executeRaw: ReturnType<typeof vi.fn>;
   };
   let service: AppointmentsService;
 
@@ -84,8 +86,10 @@ describe('AppointmentsService', () => {
       location: { findFirst: vi.fn(), findMany: vi.fn() },
       room: { findFirst: vi.fn() },
       encounter: { create: vi.fn() },
+      calendarBlock: { findFirst: vi.fn().mockResolvedValue(null) },
       auditEvent: { create: vi.fn() },
       $transaction: vi.fn(async (fn: (tx: typeof prisma) => unknown) => fn(prisma)),
+      $executeRaw: vi.fn().mockResolvedValue(1),
     };
     service = new AppointmentsService(prisma as never);
   });
