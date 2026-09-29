@@ -118,7 +118,7 @@ export function AppointmentDetailPanel({
       role="dialog"
       aria-modal="true"
       aria-labelledby="appointment-detail-title"
-      className="fixed inset-y-0 right-0 z-40 flex w-full max-w-lg flex-col border-l border-success/30 bg-[#120d1f] shadow-[-24px_0_80px_rgba(0,0,0,.35)]"
+      className="fixed inset-0 z-40 m-auto flex h-[min(88vh,760px)] w-[min(680px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-success/30 bg-[#120d1f] shadow-[0_0_0_100vmax_rgba(0,0,0,.48),0_24px_90px_rgba(0,0,0,.5)]"
     >
       <div className="border-b border-border bg-gradient-to-br from-success/10 via-surface to-surface px-5 py-5">
         <div className="flex items-start justify-between">

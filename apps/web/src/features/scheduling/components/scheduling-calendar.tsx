@@ -153,6 +153,7 @@ export function SchedulingCalendar({
         max={new Date(1970, 0, 1, 21, 0, 0)}
         messages={messages}
         popup={false}
+        onDrillDown={() => undefined}
         selectable
         onSelectSlot={onSelectSlot}
         onSelectEvent={(event) => {

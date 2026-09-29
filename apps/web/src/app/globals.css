@@ -950,6 +950,15 @@ table tbody tr:hover {
 .calendar-more-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; width: 100%; gap: 10px; border: 1px solid var(--color-border); border-radius: 12px; background: rgb(255 255 255 / .025); padding: 10px; text-align: left; }
 .calendar-more-row:hover { border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); background: rgb(199 243 107 / .07); }
 .calendar-more-time { color: var(--color-accent); font-size: .8rem; font-weight: 700; }
+.rc-scheduling-calendar .rbc-month-view .calendar-event-card { display: flex; align-items: baseline; gap: 4px; min-height: 18px; overflow: hidden; white-space: nowrap; }
+.rc-scheduling-calendar .rbc-month-view .calendar-event-time { flex: 0 0 auto; font-size: .62rem; }
+.rc-scheduling-calendar .rbc-month-view .calendar-event-patient { min-width: 0; font-size: .66rem; line-height: 1.2; text-overflow: ellipsis; }
+.rc-scheduling-calendar .rbc-month-view .calendar-event-type,
+.rc-scheduling-calendar .rbc-month-view .calendar-event-status { display: none; }
+.rc-scheduling-calendar .rbc-month-view .rbc-event { min-height: 18px; margin: 1px 2px; padding: 1px 3px; border-radius: 5px; overflow: hidden; }
+.rc-scheduling-calendar .rbc-month-view .rbc-event-content { overflow: hidden; }
+.rc-scheduling-calendar .rbc-month-view .rbc-row-segment { padding: 0 1px 1px; }
+.rc-scheduling-calendar .rbc-month-view .rbc-show-more { display: inline-block; margin: 1px 3px; color: var(--color-accent); font-size: .67rem; font-weight: 700; }
 .ui-segmented button { min-height: 38px; border: 1px solid transparent; border-radius: 9px; padding: 8px 13px; color: var(--color-text-secondary); font-size: .82rem; }
 .ui-segmented button:hover { background: rgb(255 255 255 / .04); color: var(--color-text-primary); }
 .ui-segmented button[aria-pressed='true'] { border-color: rgb(199 243 107 / .3); background: rgb(199 243 107 / .1); color: var(--color-accent); font-weight: 600; }
