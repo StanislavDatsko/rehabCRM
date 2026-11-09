@@ -1,5 +1,6 @@
 import type { ExerciseLibraryResponse } from '@repo/contracts';
 import React from 'react';
+import { categoryLabel, EXERCISE_CATEGORY_LABELS, REGION_LABELS, regionLabel } from '../labels';
 
 export function ExerciseLibrary({
   result,
@@ -32,11 +33,9 @@ export function ExerciseLibrary({
           Категорія
           <select name="category" defaultValue={filters.category ?? ''} className="field">
             <option value="">Усі</option>
-            <option value="MOBILITY">Мобільність</option>
-            <option value="STRENGTH">Сила</option>
-            <option value="BALANCE">Баланс</option>
-            <option value="FUNCTIONAL">Функціональні</option>
-            <option value="BREATHING">Дихання</option>
+            {Object.entries(EXERCISE_CATEGORY_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
         </label>
         <label className="text-xs text-text-secondary">
@@ -47,10 +46,9 @@ export function ExerciseLibrary({
             className="field"
           >
             <option value="">Усі</option>
-            <option value="knee">Коліно</option>
-            <option value="hip">Кульшовий суглоб</option>
-            <option value="ankle">Гомілковостопний суглоб</option>
-            <option value="shoulder">Плече</option>
+            {Object.entries(REGION_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
         </label>
         <label className="text-xs text-text-secondary md:col-span-2">
@@ -80,13 +78,13 @@ export function ExerciseLibrary({
             >
               <div className="flex justify-between gap-3">
                 <strong>{exercise.name}</strong>
-                <span className="text-xs text-text-secondary">{exercise.category}</span>
+                <span className="text-xs text-text-secondary">{categoryLabel(exercise.category)}</span>
               </div>
               <p className="mt-2 text-sm text-text-secondary">{exercise.description}</p>
               <div className="mt-4 flex flex-wrap gap-1">
                 {exercise.anatomicalRegions.map((region) => (
                   <span key={region} className="rounded-full bg-surface-muted px-2 py-1 text-xs">
-                    {region}
+                    {regionLabel(region)}
                   </span>
                 ))}
                 {exercise.equipment.map((item) => (

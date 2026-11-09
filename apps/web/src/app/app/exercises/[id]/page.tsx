@@ -1,4 +1,5 @@
 import type { CurrentUserResponse } from '@repo/contracts';
+import { categoryLabel, muscleLabel, regionLabel } from '../../../../features/rehabilitation/labels';
 import { PageHeader } from '@repo/ui/workspace';
 import { getExercise } from '../../../../features/rehabilitation/api/rehabilitation-api';
 import { canReadExercises } from '../../../../features/rehabilitation/permissions';
@@ -15,7 +16,7 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
       <a href="/app/exercises" className="text-sm text-info underline">
         ← До бібліотеки
       </a>
-      <PageHeader eyebrow={`${exercise.code} · ${exercise.category}`} title={exercise.name} description={exercise.description} actions={<a href="/app/exercises" className="rc-btn rc-btn-secondary">← До бібліотеки</a>} />
+      <PageHeader eyebrow={`${exercise.code} · ${categoryLabel(exercise.category)}`} title={exercise.name} description={exercise.description} actions={<a href="/app/exercises" className="rc-btn rc-btn-secondary">← До бібліотеки</a>} />
       <section className="ui-surface p-5">
         <h2 className="font-sans text-xl">Інструкція</h2>
         <p className="mt-3 whitespace-pre-line text-sm leading-6">{exercise.instructions}</p>
@@ -23,11 +24,11 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
       <dl className="ui-surface grid gap-4 p-5 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-text-secondary">Ділянки</dt>
-          <dd>{exercise.anatomicalRegions.join(', ') || '—'}</dd>
+          <dd>{exercise.anatomicalRegions.map(regionLabel).join(', ') || '—'}</dd>
         </div>
         <div>
           <dt className="text-text-secondary">Цільові групи мʼязів</dt>
-          <dd>{exercise.targetMuscleGroups.join(', ') || '—'}</dd>
+          <dd>{exercise.targetMuscleGroups.map(muscleLabel).join(', ') || '—'}</dd>
         </div>
         <div>
           <dt className="text-text-secondary">Обладнання</dt>

@@ -1,5 +1,6 @@
 'use client';
 
+import { categoryLabel } from '../labels';
 import {
   ANATOMICAL_REGION_CODES,
   LATERALITIES,
@@ -629,7 +630,7 @@ function DraftEditor({
                   <option value="">Не вибрано</option>
                   {exercises.map((exercise) => (
                     <option key={exercise.id} value={exercise.id}>
-                      {exercise.name} · {exercise.category}
+                      {exercise.name} · {categoryLabel(exercise.category)}
                     </option>
                   ))}
                 </select>
