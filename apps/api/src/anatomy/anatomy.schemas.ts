@@ -26,7 +26,7 @@ export const surfaceAnchorSchema = z
   })
   .strict()
   .refine(
-    (value) => Math.abs(value.barycentric.reduce((sum, item) => sum + item, 0) - 1) < 0.0001,
+    (value) => Math.abs(value.barycentric.map(Number).reduce((sum: number, item: number) => sum + item, 0) - 1) < 0.0001,
     { path: ['barycentric'], message: 'Barycentric coordinates must sum to 1' },
   );
 
@@ -34,7 +34,8 @@ export const surfaceAnchorSchema = z
  * Typed findings (PAIN, WEAKNESS, ...) carry meaning through type and severity alone.
  * An OTHER annotation is a free-text point note, so it must not be saved empty.
  */
-function hasClinicalContent(value: { type: string; title?: string | null; note?: string | null }) {
+// `type` is optional here only so the check also compiles under non-strict type checking (Vercel's NestJS build).
+function hasClinicalContent(value: { type?: string; title?: string | null; note?: string | null }) {
   return value.type !== 'OTHER' || Boolean(value.title) || Boolean(value.note);
 }
 
