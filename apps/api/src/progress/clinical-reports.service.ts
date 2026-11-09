@@ -169,7 +169,8 @@ export class ClinicalReportsService {
         patientName: [patient.lastName, patient.firstName, patient.middleName]
           .filter(Boolean)
           .join(' '),
-        period: body.period,
+        // Explicit strings keep this valid under Vercel's non-strict NestJS type check.
+        period: { from: body.period.from as string, to: body.period.to as string },
         generatedAt: new Date(),
         generatedBy: principal.displayName,
         professionalSummary: body.professionalSummary,
