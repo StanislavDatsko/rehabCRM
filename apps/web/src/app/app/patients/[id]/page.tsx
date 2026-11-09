@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- exercise-log and media payloads are not yet typed in @repo/contracts */
 import type { CurrentUserResponse } from '@repo/contracts';
 import { getPatient, getPatientHistory } from '../../../../features/patients/api/patients-api';
 import { PatientHistoryList } from '../../../../features/patients/components/patient-history-list';

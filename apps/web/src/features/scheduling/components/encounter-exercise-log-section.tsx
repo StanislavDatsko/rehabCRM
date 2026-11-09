@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any -- exercise-log and media payloads are not yet typed in @repo/contracts */
 import { useActionState, useState } from 'react';
 import type { ExerciseLibraryItem } from '@repo/contracts';
 import { addEncounterExerciseAction, type EncounterExerciseState } from '../actions/encounter-exercise-actions';

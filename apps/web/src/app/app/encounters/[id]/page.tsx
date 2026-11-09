@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- exercise-log and media payloads are not yet typed in @repo/contracts */
 import type { CurrentUserResponse } from '@repo/contracts';
 import { EncounterWorkspace } from '../../../../features/scheduling/components/encounter-workspace';
 import {
