@@ -27,10 +27,12 @@ import { RequirePermissions } from '../common/auth/require-permissions.decorator
 import { ZodValidationPipe } from '../common/validation/zod-validation.pipe';
 import {
   changePatientStatusBodySchema,
+  createDraftPatientBodySchema,
   createPatientBodySchema,
   listPatientsQuerySchema,
   updatePatientBodySchema,
   type ChangePatientStatusBody,
+  type CreateDraftPatientBody,
   type CreatePatientBody,
   type ListPatientsQuery,
   type UpdatePatientBody,
@@ -71,6 +73,17 @@ export class PatientsController {
     @Headers('x-request-id') requestId?: string,
   ): Promise<PatientAdministrativeResponse> {
     return this.patients.create(principal, body, requestId ?? 'unknown');
+  }
+
+  @Post('draft')
+  @RequirePermissions(PERMISSIONS.PATIENT_CREATE)
+  @ApiOperation({ summary: 'Create draft patient (full name + phone) from the calendar' })
+  createDraft(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Body(new ZodValidationPipe(createDraftPatientBodySchema)) body: CreateDraftPatientBody,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<PatientAdministrativeResponse> {
+    return this.patients.createDraft(principal, body, requestId ?? 'unknown');
   }
 
   @Get(':id')

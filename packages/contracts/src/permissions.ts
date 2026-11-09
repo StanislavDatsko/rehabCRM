@@ -113,7 +113,7 @@ export type CurrentUserResponse = {
   permissions: Permission[];
 };
 
-export const PATIENT_STATUSES = ['ACTIVE', 'INACTIVE', 'COMPLETED', 'ARCHIVED'] as const;
+export const PATIENT_STATUSES = ['DRAFT', 'ACTIVE', 'INACTIVE', 'COMPLETED', 'ARCHIVED'] as const;
 export type PatientStatus = (typeof PATIENT_STATUSES)[number];
 
 export const PATIENT_SEX_VALUES = ['FEMALE', 'MALE', 'OTHER', 'UNKNOWN'] as const;

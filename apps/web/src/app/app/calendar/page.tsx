@@ -5,6 +5,7 @@ import {
   getAppointment,
   getSchedulingCatalog,
   listAppointments,
+  listCalendarBlocks,
 } from '../../../features/scheduling/api/scheduling-api';
 import { listResponsiblePractitioners } from '../../../features/patients/api/patients-api';
 import { parseCalendarQuery } from '../../../features/scheduling/calendar-query';
@@ -89,6 +90,13 @@ export default async function CalendarPage({
     );
   }
 
+  let blocks: Awaited<ReturnType<typeof listCalendarBlocks>>['items'] = [];
+  try {
+    blocks = (await listCalendarBlocks(range)).items;
+  } catch {
+    blocks = [];
+  }
+
   let practitioners: Awaited<ReturnType<typeof listResponsiblePractitioners>> = [];
   try {
     practitioners = await listResponsiblePractitioners();
@@ -122,6 +130,7 @@ export default async function CalendarPage({
       catalog={catalog}
       practitioners={practitioners}
       items={items}
+      blocks={blocks}
       timezone={timezone}
       selectedAppointment={selectedAppointment}
       flashMessage={flashMessage}

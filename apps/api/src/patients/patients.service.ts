@@ -24,6 +24,7 @@ import {
 } from './patient.mapper';
 import type {
   ChangePatientStatusBody,
+  CreateDraftPatientBody,
   CreatePatientBody,
   ListPatientsQuery,
   UpdatePatientBody,
@@ -83,6 +84,7 @@ export class PatientsService {
     principal: AuthenticatedPrincipal,
     body: CreatePatientBody,
     requestId: string,
+    status: 'ACTIVE' | 'DRAFT' = 'ACTIVE',
   ): Promise<PatientAdministrativeResponse> {
     await this.assertResponsiblePractitioner(
       principal.organizationId,
@@ -116,6 +118,7 @@ export class PatientsService {
           emergencyContactRelationship: body.emergencyContact?.relationship ?? null,
           responsiblePractitionerId: body.responsiblePractitionerId ?? null,
           internalReferenceNumber: body.internalReferenceNumber ?? null,
+          status,
           createdByUserId: principal.userId,
           updatedByUserId: principal.userId,
         },
@@ -135,6 +138,25 @@ export class PatientsService {
     });
 
     return toPatientAdministrativeResponse(created);
+  }
+
+  async createDraft(
+    principal: AuthenticatedPrincipal,
+    body: CreateDraftPatientBody,
+    requestId: string,
+  ): Promise<PatientAdministrativeResponse> {
+    const [lastName, firstName, ...rest] = body.fullName.split(/\s+/);
+    return this.create(
+      principal,
+      {
+        lastName: lastName ?? '',
+        firstName: firstName ?? '',
+        middleName: rest.length > 0 ? rest.join(' ') : null,
+        phone: body.phone,
+      } as CreatePatientBody,
+      requestId,
+      'DRAFT',
+    );
   }
 
   async updateAdministrative(

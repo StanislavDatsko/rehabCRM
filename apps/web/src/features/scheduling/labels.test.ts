@@ -11,8 +11,12 @@ describe('scheduling labels', () => {
     expect(appointmentStatusLabel('NO_SHOW')).toContain('явився');
   });
 
+  it('explains blocked time', () => {
+    expect(mapSchedulingErrorToMessage('CALENDAR_BLOCKED')).toContain('закритий');
+  });
+
   it('maps scheduling API error codes to Ukrainian copy', () => {
-    expect(mapSchedulingErrorToMessage('APPOINTMENT_TIME_CONFLICT')).toContain('реабілітолог');
+    expect(mapSchedulingErrorToMessage('APPOINTMENT_TIME_CONFLICT')).toContain('фахівця');
     expect(mapSchedulingErrorToMessage('APPOINTMENT_UPDATE_CONFLICT')).toContain('змінений');
     expect(mapSchedulingErrorToMessage('PATIENT_NOT_SCHEDULABLE')).toContain('записати');
     expect(mapSchedulingErrorToMessage('ENCOUNTER_ALREADY_EXISTS')).toContain('вже існує');

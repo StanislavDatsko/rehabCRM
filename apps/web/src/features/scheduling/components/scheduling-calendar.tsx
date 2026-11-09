@@ -1,47 +1,127 @@
 'use client';
 
 import type { AppointmentCalendarItem } from '@repo/contracts';
-import { cloneElement, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Calendar, dateFnsLocalizer, type View } from 'react-big-calendar';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
 import { uk } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Calendar,
+  dateFnsLocalizer,
+  type EventPropGetter,
+  type ToolbarProps,
+  type View,
+} from 'react-big-calendar';
 import { t } from '../../../i18n/messages';
+import { appointmentTone } from '../appointment-tone';
+import { blockSegments, isDayOff, overlapsBlock, type BlockSegment } from '../calendar-blocks';
 import type { CalendarQuery } from '../calendar-query';
 import { buildCalendarHref } from '../calendar-query';
+import { formatPrice } from '../price';
 import { parseCalendarDate } from '../timezone';
-import { AppointmentStatusBadge } from './appointment-status-badge';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-
-const locales = { uk };
+import './calendar.css';
 
 const localizer = dateFnsLocalizer({
   format,
   parse,
   startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
   getDay,
-  locales,
+  locales: { uk },
 });
 
-type CalendarEvent = {
+export type CalendarEvent = {
   id: string;
   title: string;
   start: Date;
   end: Date;
-  resource: AppointmentCalendarItem;
+  resource: AppointmentCalendarItem | BlockSegment;
 };
 
-function FullWidthEventWrapper(props: object) {
-  const children = 'children' in props ? (props as { children?: ReactNode }).children : undefined;
-  if (!isValidElement<{ style?: CSSProperties }>(children)) return <>{children}</>;
-  return cloneElement(children, {
-    style: {
-      ...children.props.style,
-      left: '3px',
-      right: '3px',
-      width: 'auto',
-    },
-  });
+function isBlock(resource: CalendarEvent['resource']): resource is BlockSegment {
+  return 'kind' in resource;
+}
+
+const formats = {
+  timeGutterFormat: 'HH:mm',
+  eventTimeRangeFormat: () => '',
+  dayFormat: (date: Date) => format(date, 'EEE, d', { locale: uk }),
+  weekdayFormat: (date: Date) => format(date, 'EEE', { locale: uk }),
+  dayHeaderFormat: (date: Date) => format(date, 'EEEE, d MMMM', { locale: uk }),
+  monthHeaderFormat: (date: Date) => format(date, 'LLLL yyyy', { locale: uk }),
+  dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
+    start.getMonth() === end.getMonth()
+      ? `${format(start, 'd', { locale: uk })} – ${format(end, 'd MMMM yyyy', { locale: uk })}`
+      : `${format(start, 'd MMM', { locale: uk })} – ${format(end, 'd MMM yyyy', { locale: uk })}`,
+};
+
+const VIEWS: { id: CalendarQuery['view']; label: string }[] = [
+  { id: 'day', label: t('calendarViewDay') },
+  { id: 'week', label: t('calendarViewWeek') },
+  { id: 'month', label: t('calendarViewMonth') },
+];
+
+function CalendarToolbar({
+  label,
+  view,
+  onNavigate,
+  onView,
+}: ToolbarProps<CalendarEvent>) {
+  return (
+    <div className="cal-toolbar">
+      <div className="cal-toolbar-nav">
+        <button type="button" className="cal-nav-btn" onClick={() => onNavigate('PREV')} aria-label={t('calendarPrevious')}>
+          ‹
+        </button>
+        <button type="button" className="cal-nav-btn cal-nav-today" onClick={() => onNavigate('TODAY')}>
+          {t('calendarToday')}
+        </button>
+        <button type="button" className="cal-nav-btn" onClick={() => onNavigate('NEXT')} aria-label={t('calendarNext')}>
+          ›
+        </button>
+      </div>
+      <h2 className="cal-toolbar-title" aria-live="polite">
+        {label}
+      </h2>
+      <div className="cal-segmented" role="group" aria-label="Вигляд календаря">
+        {VIEWS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-pressed={view === item.id}
+            onClick={() => onView(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EventCard({ event }: { event: CalendarEvent }) {
+  const resource = event.resource;
+  if (isBlock(resource)) {
+    return (
+      <span className="cal-block-label">
+        {resource.kind === 'DAY_OFF' ? 'Вихідний' : 'Перерва'}
+        {resource.note ? ` · ${resource.note}` : ''}
+      </span>
+    );
+  }
+  const tone = appointmentTone(resource);
+  const price = formatPrice(resource.priceAmount);
+  return (
+    <div className="cal-event">
+      <span className="cal-event-time">{format(event.start, 'HH:mm')}</span>
+      <span className="cal-event-patient">{resource.patient.displayName}</span>
+      {resource.appointmentType ? <span className="cal-event-meta">{resource.appointmentType.name}</span> : null}
+      {price ? <span className="cal-event-meta cal-event-price">{price}</span> : null}
+      {tone === 'cancelled' ? <span className="cal-event-tag">Скасовано</span> : null}
+      {tone === 'moved' ? <span className="cal-event-tag">Перенесено</span> : null}
+    </div>
+  );
 }
 
 export function SchedulingCalendar({
@@ -49,20 +129,22 @@ export function SchedulingCalendar({
   date,
   timezone,
   events,
+  blocks,
   query,
+  canBook,
   onSelectSlot,
 }: {
-  view: 'day' | 'week';
+  view: CalendarQuery['view'];
   date: string;
   timezone: string;
   events: CalendarEvent[];
+  blocks: ReturnType<typeof blockSegments>;
   query: CalendarQuery;
+  canBook: boolean;
   onSelectSlot: (slot: { start: Date; end: Date }) => void;
 }) {
+  const router = useRouter();
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
-  const calendarView: View = view === 'day' ? 'day' : 'week';
-  const calendarContainer = useRef<HTMLDivElement>(null);
-  const [a11yReady, setA11yReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -73,25 +155,27 @@ export function SchedulingCalendar({
     return () => mediaQuery.removeEventListener('change', update);
   }, []);
 
-  // Keep the week overview on mobile too; the responsive layout below turns it
-  // into a horizontally scrollable week board instead of collapsing to a day.
-  const effectiveView: View = calendarView;
+  const go = (overrides: Partial<CalendarQuery>) => router.push(buildCalendarHref(query, overrides));
+  const ymd = (value: Date) => format(value, 'yyyy-MM-dd');
 
-  useLayoutEffect(() => {
-    // react-big-calendar emits an incomplete ARIA grid hierarchy in time views.
-    // Keep its native interactive controls, but remove the invalid structural
-    // roles so assistive technology does not receive a misleading table model.
-    const container = calendarContainer.current;
-    if (!container) return;
-    container.querySelectorAll('[role="columnheader"]').forEach((element) => {
-      element.removeAttribute('role');
-      element.removeAttribute('aria-sort');
-    });
-    container
-      .querySelectorAll('.rbc-allday-cell[role="rowgroup"], .rbc-row-content[role="row"]')
-      .forEach((element) => element.removeAttribute('role'));
-    setA11yReady(true);
-  }, [calendarView, currentDate, events]);
+  const blockEvents: CalendarEvent[] = useMemo(
+    () =>
+      blocks.map((segment) => ({
+        id: segment.id,
+        title: segment.kind === 'DAY_OFF' ? 'Вихідний' : 'Перерва',
+        start: segment.start,
+        end: segment.end,
+        resource: segment,
+      })),
+    [blocks],
+  );
+
+  const eventPropGetter: EventPropGetter<CalendarEvent> = (event) => {
+    if (isBlock(event.resource)) {
+      return { className: `cal-block cal-block-${event.resource.kind.toLowerCase()}` };
+    }
+    return { className: `cal-appt cal-tone-${appointmentTone(event.resource)}` };
+  };
 
   const messages = useMemo(
     () => ({
@@ -100,69 +184,53 @@ export function SchedulingCalendar({
       next: t('calendarNext'),
       day: t('calendarViewDay'),
       week: t('calendarViewWeek'),
+      month: t('calendarViewMonth'),
       date: t('calendarFieldDate'),
       time: t('calendarFieldTime'),
       event: t('calendarFieldEvent'),
       noEventsInRange: t('calendarNoEvents'),
+      showMore: (total: number) => `+${total} ще`,
     }),
     [],
   );
 
   return (
-    <div
-      ref={calendarContainer}
-      data-a11y-ready={a11yReady ? 'true' : 'false'}
-      className={`rc-scheduling-calendar rounded-[var(--radius-lg)] border border-border bg-surface p-5 shadow-md${isMobile ? ' calendar-mobile' : ''}`}
-    >
-      {/*
-        react-big-calendar: chosen for MIT license, mature day/week views, date-fns
-        localizer (matches our stack), and accessible toolbar navigation without
-        building a custom grid. FullCalendar was heavier; native grid would cost more
-        to maintain for drag-resize and timezone display.
-      */}
-      <Calendar
+    <div className={`rc-cal rc-cal-${view}${isMobile ? ' rc-cal-mobile' : ''}`}>
+      <Calendar<CalendarEvent>
         localizer={localizer}
         culture="uk"
-        events={events}
-        view={effectiveView}
+        formats={formats}
+        events={events.filter((event) => !isBlock(event.resource))}
+        backgroundEvents={blockEvents}
+        view={view as View}
+        views={['day', 'week', 'month']}
         date={currentDate}
-        onNavigate={(nextDate) => {
-          const y = nextDate.getFullYear();
-          const m = String(nextDate.getMonth() + 1).padStart(2, '0');
-          const d = String(nextDate.getDate()).padStart(2, '0');
-          window.location.href = buildCalendarHref(query, { date: `${y}-${m}-${d}` });
-        }}
-        onView={(nextView) => {
-          const mapped = nextView === 'day' ? 'day' : 'week';
-          window.location.href = buildCalendarHref(query, { view: mapped });
-        }}
-        views={['day', 'week']}
-        step={60}
-        timeslots={1}
+        onNavigate={(next) => go({ date: ymd(next), appointmentId: '' })}
+        onView={(next) => go({ view: next as CalendarQuery['view'] })}
+        onDrillDown={(next) => go({ date: ymd(next), view: 'day' })}
+        step={30}
+        timeslots={2}
         min={new Date(1970, 0, 1, 7, 0, 0)}
         max={new Date(1970, 0, 1, 21, 0, 0)}
+        scrollToTime={new Date(1970, 0, 1, 8, 0, 0)}
         messages={messages}
         popup
-        selectable
-        onSelectSlot={onSelectSlot}
+        selectable={canBook ? 'ignoreEvents' : false}
+        onSelectSlot={(slot) => {
+          if (view === 'month') {
+            go({ date: ymd(slot.start), view: 'day' });
+            return;
+          }
+          if (overlapsBlock(slot.start, slot.end, blocks)) return;
+          onSelectSlot(slot);
+        }}
         onSelectEvent={(event) => {
-          window.location.href = buildCalendarHref(query, { appointmentId: event.id });
+          if (!isBlock(event.resource)) go({ appointmentId: event.id });
         }}
-        components={{
-          eventWrapper: FullWidthEventWrapper,
-          event: ({ event }) => {
-            const item = event.resource as AppointmentCalendarItem;
-            return (
-              <div className="calendar-event-card">
-                <span className="calendar-event-time">{format(event.start, 'HH:mm')}</span>
-                <span className="calendar-event-patient">{item.patient.displayName}</span>
-                {item.appointmentType ? <span className="calendar-event-type">{item.appointmentType.name}</span> : null}
-                <span className="calendar-event-status"><AppointmentStatusBadge status={item.status} /></span>
-              </div>
-            );
-          },
-        }}
-        style={{ minHeight: isMobile ? '600px' : '680px' }}
+        eventPropGetter={eventPropGetter}
+        dayPropGetter={(day) => (isDayOff(day, blocks) ? { className: 'cal-day-off' } : {})}
+        components={{ toolbar: CalendarToolbar, event: EventCard }}
+        style={{ minHeight: isMobile ? 560 : 700 }}
       />
     </div>
   );

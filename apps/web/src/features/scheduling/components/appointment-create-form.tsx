@@ -1,16 +1,24 @@
 'use client';
 
-import type { ResponsiblePractitionerResponse, SchedulingCatalogResponse } from '@repo/contracts';
+import {
+  APPOINTMENT_PRICE_PRESETS,
+  type ResponsiblePractitionerResponse,
+  type SchedulingCatalogResponse,
+} from '@repo/contracts';
 import { Button } from '@repo/ui/button';
-import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { t } from '../../../i18n/messages';
 import {
   createAppointmentAction,
   searchPatientsForSchedulingAction,
   type SchedulingFormState,
 } from '../actions/scheduling-actions';
+import { PRICE_PRESET_LABELS } from '../price';
 
 const initialState: SchedulingFormState = { error: null };
+const inputClass = 'field mt-1 block w-full bg-background text-sm';
+
+type PriceChoice = '' | 'free' | 'custom' | `p${number}`;
 
 export function AppointmentCreateForm({
   catalog,
@@ -30,13 +38,36 @@ export function AppointmentCreateForm({
   onClose: () => void;
 }) {
   const [state, formAction, pending] = useActionState(createAppointmentAction, initialState);
+  const [mode, setMode] = useState<'existing' | 'new'>('existing');
   const [patientQuery, setPatientQuery] = useState('');
   const [patientResults, setPatientResults] = useState<{ id: string; displayName: string }[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState(prefillPatientId);
+  const [selectedPatientName, setSelectedPatientName] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [selectedTypeId, setSelectedTypeId] = useState('');
-  const [selectedLocationId, setSelectedLocationId] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('60');
+  const [priceChoice, setPriceChoice] = useState<PriceChoice>('');
+  const [customPrice, setCustomPrice] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+  const handledState = useRef<SchedulingFormState | null>(null);
+
+  // Saving only closes the dialog; the calendar behind it already shows the new record.
+  useEffect(() => {
+    if (state.ok) onClose();
+  }, [state.ok, onClose]);
+
+  // If the booking failed after a draft patient was created, reuse that draft on retry
+  // instead of creating a duplicate.
+  useEffect(() => {
+    if (state.draftPatientId && handledState.current !== state) {
+      handledState.current = state;
+      setMode('existing');
+      setSelectedPatientId(state.draftPatientId);
+      setSelectedPatientName(state.draftPatientName ?? '');
+      setPatientQuery(state.draftPatientName ?? '');
+    }
+  }, [state]);
 
   useEffect(() => {
     searchRef.current?.focus();
@@ -47,225 +78,270 @@ export function AppointmentCreateForm({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const selectedLocation = useMemo(
-    () => catalog.locations.find((location) => location.id === selectedLocationId) ?? null,
-    [catalog.locations, selectedLocationId],
-  );
-
-  const rooms = selectedLocation?.rooms ?? [];
-
   useEffect(() => {
     const handle = window.setTimeout(async () => {
-      if (patientQuery.trim().length < 2) {
+      if (mode !== 'existing' || patientQuery.trim().length < 2 || patientQuery === selectedPatientName) {
         setPatientResults([]);
         return;
       }
-      const results = await searchPatientsForSchedulingAction(patientQuery);
-      setPatientResults(results);
+      setPatientResults(await searchPatientsForSchedulingAction(patientQuery));
     }, 300);
     return () => window.clearTimeout(handle);
-  }, [patientQuery]);
+  }, [patientQuery, mode, selectedPatientName]);
 
   useEffect(() => {
     const type = catalog.appointmentTypes.find((item) => item.id === selectedTypeId);
-    if (type) {
-      setDurationMinutes(String(type.defaultDurationMinutes));
-    }
+    if (type) setDurationMinutes(String(type.defaultDurationMinutes));
   }, [catalog.appointmentTypes, selectedTypeId]);
+
+  const priceValue =
+    priceChoice === 'free'
+      ? '0'
+      : priceChoice === 'custom'
+        ? customPrice
+        : priceChoice.startsWith('p')
+          ? priceChoice.slice(1)
+          : '';
+
+  const patientReady =
+    mode === 'existing' ? Boolean(selectedPatientId) : newName.trim().split(/\s+/).length >= 2;
+  const showPatientSearchError = mode === 'existing' && !selectedPatientId;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Створення нового прийому"
       aria-labelledby="appointment-create-title"
-      aria-describedby="appointment-create-description"
-      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      className="cal-modal-backdrop"
     >
-      <div className="ui-surface max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
-        <div className="flex items-start justify-between gap-4">
-          <h2 id="appointment-create-title" className="font-sans text-2xl text-text-primary">
-            {t('appointmentCreateTitle')}
-          </h2>
-          <p id="appointment-create-description" className="sr-only">Створення нового прийому для пацієнта.</p>
-          <button type="button" className="text-sm text-text-secondary underline" onClick={onClose}>
-            {t('appointmentClose')}
+      <div className="cal-modal">
+        <header className="cal-modal-header">
+          <h2 id="appointment-create-title">{t('appointmentCreateTitle')}</h2>
+          <button type="button" className="cal-modal-close" onClick={onClose} aria-label={t('appointmentClose')}>
+            ✕
           </button>
-        </div>
+        </header>
 
-        <form action={formAction} className="mt-6 space-y-4">
+        <form action={formAction} className="cal-modal-body">
           <input type="hidden" name="timezone" value={timezone} />
-          <input type="hidden" name="patientId" value={selectedPatientId} />
+          <input type="hidden" name="patientId" value={mode === 'existing' ? selectedPatientId : ''} />
+          <input type="hidden" name="newPatient" value={mode === 'new' ? '1' : '0'} />
+          <input type="hidden" name="priceAmount" value={priceValue} />
 
-          <div>
-            <label
-              htmlFor="patient-search"
-              className="block text-xs font-medium text-text-secondary"
-            >
-              {t('appointmentFieldPatient')}
-            </label>
-            <input
-              id="patient-search"
-              ref={searchRef}
-              type="search"
-              value={patientQuery}
-              onChange={(event) => setPatientQuery(event.target.value)}
-              placeholder={t('appointmentPatientSearchPlaceholder')}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              autoComplete="off"
-            />
-            {patientResults.length > 0 ? (
-              <ul className="mt-2 max-h-40 overflow-y-auto rounded-md border border-border">
-                {patientResults.map((patient) => (
-                  <li key={patient.id}>
-                    <button
-                      type="button"
-                      className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                      onClick={() => {
-                        setSelectedPatientId(patient.id);
-                        setPatientQuery(patient.displayName);
-                        setPatientResults([]);
-                      }}
-                    >
-                      {patient.displayName}
+          <fieldset className="cal-field-group">
+            <legend className="cal-label">{t('appointmentFieldPatient')}</legend>
+            <div className="cal-toggle" role="group" aria-label="Тип пацієнта">
+              <button type="button" aria-pressed={mode === 'existing'} onClick={() => setMode('existing')}>
+                Існуючий пацієнт
+              </button>
+              <button type="button" aria-pressed={mode === 'new'} onClick={() => setMode('new')}>
+                Новий пацієнт
+              </button>
+            </div>
+
+            {mode === 'existing' ? (
+              <div className="mt-3">
+                <input
+                  id="patient-search"
+                  ref={searchRef}
+                  type="search"
+                  value={patientQuery}
+                  onChange={(event) => {
+                    setPatientQuery(event.target.value);
+                    if (selectedPatientId) {
+                      setSelectedPatientId('');
+                      setSelectedPatientName('');
+                    }
+                  }}
+                  placeholder={t('appointmentPatientSearchPlaceholder')}
+                  className={inputClass}
+                  autoComplete="off"
+                  aria-label={t('appointmentFieldPatient')}
+                />
+                {patientResults.length > 0 ? (
+                  <ul className="cal-results">
+                    {patientResults.map((patient) => (
+                      <li key={patient.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPatientId(patient.id);
+                            setSelectedPatientName(patient.displayName);
+                            setPatientQuery(patient.displayName);
+                            setPatientResults([]);
+                          }}
+                        >
+                          {patient.displayName}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {selectedPatientId ? (
+                  <p className="cal-hint cal-hint-ok">
+                    ✓ {selectedPatientName ? `Обрано: ${selectedPatientName}` : 'Пацієнта обрано'}
+                  </p>
+                ) : showPatientSearchError && patientQuery.trim().length >= 2 && patientResults.length === 0 ? (
+                  <p className="cal-hint">
+                    Не знайдено.{' '}
+                    <button type="button" className="cal-link" onClick={() => { setMode('new'); setNewName(patientQuery); }}>
+                      Створити нового пацієнта
                     </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {selectedPatientId ? (
-              <p className="mt-1 text-xs text-text-secondary">
-                {t('appointmentSelectedPatient')}: {selectedPatientId}
-              </p>
-            ) : null}
-          </div>
-
-          <label className="block text-xs font-medium text-text-secondary">
-            {t('appointmentFieldType')}
-            <select
-              name="appointmentTypeId"
-              value={selectedTypeId}
-              onChange={(event) => setSelectedTypeId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="">{t('calendarFilterAll')}</option>
-              {catalog.appointmentTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block text-xs font-medium text-text-secondary">
-            {t('appointmentFieldPractitioner')}
-            <select
-              name="practitionerId"
-              required
-              defaultValue=""
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="" disabled>
-                {t('appointmentSelectPractitioner')}
-              </option>
-              {practitioners.map((practitioner) => (
-                <option key={practitioner.id} value={practitioner.id}>
-                  {practitioner.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <label className="cal-label sm:col-span-2">
+                  ПІБ
+                  <input
+                    name="newPatientName"
+                    value={newName}
+                    onChange={(event) => setNewName(event.target.value)}
+                    placeholder="Прізвище Ім’я По батькові"
+                    autoComplete="off"
+                    required
+                    autoFocus
+                    className={inputClass}
+                  />
+                </label>
+                <label className="cal-label sm:col-span-2">
+                  Номер телефону
+                  <input
+                    name="newPatientPhone"
+                    type="tel"
+                    value={newPhone}
+                    onChange={(event) => setNewPhone(event.target.value)}
+                    placeholder="+380 …"
+                    autoComplete="off"
+                    className={inputClass}
+                  />
+                </label>
+                <p className="cal-hint sm:col-span-2">
+                  Буде створено чернетку картки в розділі «Пацієнти». Решту даних можна заповнити, коли пацієнт прийде.
+                </p>
+              </div>
+            )}
+          </fieldset>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-xs font-medium text-text-secondary">
+            <label className="cal-label">
               {t('appointmentFieldDate')}
+              <input name="date" type="date" required defaultValue={initialDate} className={inputClass} />
+            </label>
+            <label className="cal-label">
+              {t('appointmentFieldStartTime')}
+              <input name="startTime" type="time" required defaultValue={initialStartTime} className={inputClass} />
+            </label>
+            <label className="cal-label">
+              {t('appointmentFieldDuration')}
               <input
-                name="date"
-                type="date"
+                name="durationMinutes"
+                type="number"
+                min={10}
+                max={480}
+                step={5}
                 required
-                defaultValue={initialDate}
-                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                value={durationMinutes}
+                onChange={(event) => setDurationMinutes(event.target.value)}
+                className={inputClass}
               />
             </label>
-            <label className="block text-xs font-medium text-text-secondary">
-              {t('appointmentFieldStartTime')}
-              <input
-                name="startTime"
-                type="time"
+            <label className="cal-label">
+              {t('appointmentFieldPractitioner')}
+              <select
+                name="practitionerId"
                 required
-                defaultValue={initialStartTime}
-                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              />
+                defaultValue={practitioners.length === 1 ? practitioners[0]?.id : ''}
+                className={inputClass}
+              >
+                <option value="" disabled>
+                  {t('appointmentSelectPractitioner')}
+                </option>
+                {practitioners.map((practitioner) => (
+                  <option key={practitioner.id} value={practitioner.id}>
+                    {practitioner.displayName}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
-          <label className="block text-xs font-medium text-text-secondary">
-            {t('appointmentFieldDuration')}
-            <input
-              name="durationMinutes"
-              type="number"
-              min={10}
-              max={480}
-              required
-              value={durationMinutes}
-              onChange={(event) => setDurationMinutes(event.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-
-          <label className="block text-xs font-medium text-text-secondary">
-            {t('appointmentFieldLocation')}
-            <select
-              name="locationId"
-              value={selectedLocationId}
-              onChange={(event) => setSelectedLocationId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="">{t('calendarFilterAll')}</option>
-              {catalog.locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {rooms.length > 0 ? (
-            <label className="block text-xs font-medium text-text-secondary">
-              {t('appointmentFieldRoom')}
+          {catalog.appointmentTypes.length > 0 ? (
+            <label className="cal-label">
+              {t('appointmentFieldType')}
               <select
-                name="roomId"
-                defaultValue=""
-                className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                name="appointmentTypeId"
+                value={selectedTypeId}
+                onChange={(event) => setSelectedTypeId(event.target.value)}
+                className={inputClass}
               >
-                <option value="">{t('calendarFilterAll')}</option>
-                {rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name}
+                <option value="">Не вказано</option>
+                {catalog.appointmentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
                   </option>
                 ))}
               </select>
             </label>
           ) : null}
 
-          <label className="block text-xs font-medium text-text-secondary">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="cal-label">
+              Вартість
+              <select
+                value={priceChoice}
+                onChange={(event) => setPriceChoice(event.target.value as PriceChoice)}
+                className={inputClass}
+              >
+                <option value="">Не вказано</option>
+                {APPOINTMENT_PRICE_PRESETS.map((amount) => (
+                  <option key={amount} value={`p${amount}`}>
+                    {amount} ₴ — {PRICE_PRESET_LABELS[amount] ?? 'тариф'}
+                  </option>
+                ))}
+                <option value="free">Безкоштовно</option>
+                <option value="custom">Інша сума…</option>
+              </select>
+            </label>
+            {priceChoice === 'custom' ? (
+              <label className="cal-label">
+                Сума, ₴
+                <input
+                  type="number"
+                  min={0}
+                  max={1000000}
+                  step={10}
+                  required
+                  value={customPrice}
+                  onChange={(event) => setCustomPrice(event.target.value)}
+                  className={inputClass}
+                  autoFocus
+                />
+              </label>
+            ) : null}
+          </div>
+
+          <label className="cal-label">
             {t('appointmentFieldNote')}
-            <textarea
-              name="administrativeNote"
-              rows={3}
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            />
+            <textarea name="administrativeNote" rows={2} className={inputClass} />
           </label>
 
-          {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
+          {state.error ? (
+            <p role="alert" className="cal-error">
+              {state.error}
+            </p>
+          ) : null}
 
-          <div className="ui-form-actions">
-            <Button type="submit" disabled={pending || !selectedPatientId}>
-              {t('appointmentSave')}
-            </Button>
+          <div className="cal-modal-actions">
             <Button type="button" variant="secondary" onClick={onClose}>
               {t('appointmentCancel')}
+            </Button>
+            <Button type="submit" disabled={pending || !patientReady}>
+              {pending ? 'Збереження…' : t('appointmentSave')}
             </Button>
           </div>
         </form>

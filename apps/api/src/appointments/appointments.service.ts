@@ -6,6 +6,9 @@ import {
 } from '@nestjs/common';
 import type {
   AppointmentCalendarResponse,
+  AppointmentRevenueResponse,
+  CalendarBlockItem,
+  CalendarBlocksResponse,
   AppointmentDetailResponse,
   EncounterResponse,
   PatientAppointmentSummary,
@@ -19,7 +22,10 @@ import {
   writeAuditEvent,
 } from '../common/audit/write-audit';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
-import { canTransitionAppointment } from './appointment-transitions';
+import {
+  BLOCKING_APPOINTMENT_STATUSES,
+  canTransitionAppointment,
+} from './appointment-transitions';
 import {
   APPOINTMENT_INCLUDE,
   ENCOUNTER_INCLUDE,
@@ -33,13 +39,31 @@ import type {
   CalendarQuery,
   CancelAppointmentBody,
   CreateAppointmentBody,
+  CreateCalendarBlockBody,
+  RangeQuery,
   UpdateAppointmentBody,
   VersionCommand,
 } from './appointment.schemas';
 
 type Tx = Prisma.TransactionClient;
 
-const SCHEDULABLE_PATIENT_STATUSES: readonly PatientStatus[] = ['ACTIVE', 'INACTIVE'];
+function toBlockItem(row: {
+  id: string;
+  kind: CalendarBlockItem['kind'];
+  startsAt: Date;
+  endsAt: Date;
+  note: string | null;
+}): CalendarBlockItem {
+  return {
+    id: row.id,
+    kind: row.kind,
+    startsAt: row.startsAt.toISOString(),
+    endsAt: row.endsAt.toISOString(),
+    note: row.note,
+  };
+}
+
+const SCHEDULABLE_PATIENT_STATUSES: readonly PatientStatus[] = ['DRAFT', 'ACTIVE', 'INACTIVE'];
 const UPDATABLE_APPOINTMENT_STATUSES: readonly AppointmentStatus[] = [
   'SCHEDULED',
   'CONFIRMED',
@@ -182,6 +206,7 @@ export class AppointmentsService {
 
     const startsAt = new Date(body.startsAt);
     const endsAt = new Date(body.endsAt);
+    await this.assertNotBlocked(principal.organizationId, startsAt, endsAt);
 
     try {
       const created = await this.prisma.$transaction(async (tx) => {
@@ -197,6 +222,7 @@ export class AppointmentsService {
             endsAt,
             reason: body.reason ?? null,
             administrativeNote: body.administrativeNote ?? null,
+            priceAmount: body.priceAmount ?? null,
             createdByUserId: principal.userId,
             updatedByUserId: principal.userId,
           },
@@ -281,6 +307,7 @@ export class AppointmentsService {
     if (body.administrativeNote !== undefined) {
       data.administrativeNote = body.administrativeNote;
     }
+    if (body.priceAmount !== undefined) data.priceAmount = body.priceAmount;
 
     const rescheduleFields = ['startsAt', 'endsAt', 'practitionerId'] as const;
     const rescheduled = rescheduleFields.some((field) => {
@@ -295,6 +322,13 @@ export class AppointmentsService {
       }
       return nextPractitionerId !== existing.practitionerId;
     });
+
+    const startMoved =
+      body.startsAt !== undefined && nextStartsAt.getTime() !== existing.startsAt.getTime();
+    if (startMoved) {
+      data.rescheduledFromAt = existing.rescheduledFromAt ?? existing.startsAt;
+      await this.assertNotBlocked(principal.organizationId, nextStartsAt, nextEndsAt);
+    }
 
     const changedFields = Object.keys(data).filter(
       (key) => key !== 'updatedByUserId' && key !== 'version',
@@ -530,6 +564,141 @@ export class AppointmentsService {
       }
       this.rethrowConflict(error);
       throw error;
+    }
+  }
+
+  async listBlocks(
+    principal: AuthenticatedPrincipal,
+    query: RangeQuery,
+  ): Promise<CalendarBlocksResponse> {
+    const rows = await this.prisma.calendarBlock.findMany({
+      where: {
+        organizationId: principal.organizationId,
+        startsAt: { lt: new Date(query.to) },
+        endsAt: { gt: new Date(query.from) },
+      },
+      orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
+    });
+    return { items: rows.map(toBlockItem) };
+  }
+
+  async createBlock(
+    principal: AuthenticatedPrincipal,
+    body: CreateCalendarBlockBody,
+    requestId: string,
+  ): Promise<CalendarBlockItem> {
+    const startsAt = new Date(body.startsAt);
+    const endsAt = new Date(body.endsAt);
+
+    const clash = await this.prisma.appointment.findFirst({
+      where: {
+        organizationId: principal.organizationId,
+        status: { in: [...BLOCKING_APPOINTMENT_STATUSES] },
+        startsAt: { lt: endsAt },
+        endsAt: { gt: startsAt },
+      },
+      select: { id: true },
+    });
+    if (clash) {
+      throw new ConflictException({
+        code: 'CALENDAR_BLOCK_HAS_APPOINTMENTS',
+        message: 'There are appointments in this period. Move or cancel them first.',
+      });
+    }
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const block = await tx.calendarBlock.create({
+        data: {
+          organizationId: principal.organizationId,
+          kind: body.kind,
+          startsAt,
+          endsAt,
+          note: body.note ?? null,
+          createdByUserId: principal.userId,
+        },
+      });
+      await writeAuditEvent(tx, {
+        organizationId: principal.organizationId,
+        actorUserId: principal.userId,
+        action: 'CALENDAR_BLOCK_CREATED',
+        entityType: 'CalendarBlock',
+        entityId: block.id,
+        requestId,
+        metadata: {
+          kind: body.kind,
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
+        },
+      });
+      return block;
+    });
+    return toBlockItem(created);
+  }
+
+  async deleteBlock(
+    principal: AuthenticatedPrincipal,
+    id: string,
+    requestId: string,
+  ): Promise<void> {
+    const block = await this.prisma.calendarBlock.findFirst({
+      where: { id, organizationId: principal.organizationId },
+    });
+    if (!block) {
+      throw new NotFoundException({
+        code: 'CALENDAR_BLOCK_NOT_FOUND',
+        message: 'Calendar block was not found.',
+      });
+    }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.calendarBlock.delete({ where: { id } });
+      await writeAuditEvent(tx, {
+        organizationId: principal.organizationId,
+        actorUserId: principal.userId,
+        action: 'CALENDAR_BLOCK_DELETED',
+        entityType: 'CalendarBlock',
+        entityId: id,
+        requestId,
+        metadata: { kind: block.kind },
+      });
+    });
+  }
+
+  async revenue(
+    principal: AuthenticatedPrincipal,
+    query: RangeQuery,
+  ): Promise<AppointmentRevenueResponse> {
+    const result = await this.prisma.appointment.aggregate({
+      where: {
+        organizationId: principal.organizationId,
+        startsAt: { gte: new Date(query.from), lt: new Date(query.to) },
+        status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+        priceAmount: { not: null },
+      },
+      _sum: { priceAmount: true },
+      _count: { _all: true },
+    });
+    return {
+      total: result._sum.priceAmount ?? 0,
+      count: result._count._all,
+      from: query.from,
+      to: query.to,
+    };
+  }
+
+  private async assertNotBlocked(
+    organizationId: string,
+    startsAt: Date,
+    endsAt: Date,
+  ): Promise<void> {
+    const block = await this.prisma.calendarBlock.findFirst({
+      where: { organizationId, startsAt: { lt: endsAt }, endsAt: { gt: startsAt } },
+      select: { id: true },
+    });
+    if (block) {
+      throw new ConflictException({
+        code: 'CALENDAR_BLOCKED',
+        message: 'This time is closed for appointments (break or day off).',
+      });
     }
   }
 

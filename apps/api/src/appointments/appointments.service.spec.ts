@@ -33,6 +33,8 @@ function appointmentRow(overrides: Record<string, unknown> = {}) {
     reason: null,
     administrativeNote: null,
     cancellationReason: null,
+    priceAmount: null,
+    rescheduledFromAt: null,
     version: 2,
     createdByUserId: 'user-a',
     updatedByUserId: 'user-a',
@@ -58,6 +60,12 @@ describe('AppointmentsService', () => {
       findMany: ReturnType<typeof vi.fn>;
       create: ReturnType<typeof vi.fn>;
       updateMany: ReturnType<typeof vi.fn>;
+      aggregate: ReturnType<typeof vi.fn>;
+    };
+    calendarBlock: {
+      findFirst: ReturnType<typeof vi.fn>;
+      findMany: ReturnType<typeof vi.fn>;
+      create: ReturnType<typeof vi.fn>;
     };
     patient: { findFirst: ReturnType<typeof vi.fn> };
     practitioner: { findFirst: ReturnType<typeof vi.fn> };
@@ -77,7 +85,9 @@ describe('AppointmentsService', () => {
         findMany: vi.fn(),
         create: vi.fn(),
         updateMany: vi.fn(),
+        aggregate: vi.fn(),
       },
+      calendarBlock: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn(), create: vi.fn() },
       patient: { findFirst: vi.fn() },
       practitioner: { findFirst: vi.fn() },
       appointmentType: { findFirst: vi.fn() },
@@ -107,6 +117,101 @@ describe('AppointmentsService', () => {
           startsAt: { lt: new Date('2026-09-30T00:00:00.000Z') },
           endsAt: { gt: new Date('2026-09-01T00:00:00.000Z') },
         }),
+      }),
+    );
+  });
+
+  it('rejects booking into a break or day off with CALENDAR_BLOCKED', async () => {
+    prisma.patient.findFirst.mockResolvedValue({ id: 'patient-1', status: 'ACTIVE' });
+    prisma.practitioner.findFirst.mockResolvedValue({ id: 'prac-1' });
+    prisma.calendarBlock.findFirst.mockResolvedValue({ id: 'block-1' });
+
+    await expect(
+      service.create(
+        principal,
+        {
+          patientId: 'patient-1',
+          practitionerId: 'prac-1',
+          startsAt: '2099-09-10T09:00:00.000Z',
+          endsAt: '2099-09-10T10:00:00.000Z',
+        } as never,
+        'req-1',
+      ),
+    ).rejects.toMatchObject({ response: { code: 'CALENDAR_BLOCKED' } });
+    expect(prisma.appointment.create).not.toHaveBeenCalled();
+  });
+
+  it('allows scheduling a draft patient created from the calendar', async () => {
+    prisma.patient.findFirst.mockResolvedValue({ id: 'patient-1', status: 'DRAFT' });
+    prisma.practitioner.findFirst.mockResolvedValue({ id: 'prac-1' });
+    prisma.appointment.create.mockResolvedValue(appointmentRow({ priceAmount: 300 }));
+
+    const result = await service.create(
+      principal,
+      {
+        patientId: 'patient-1',
+        practitionerId: 'prac-1',
+        startsAt: '2099-09-10T09:00:00.000Z',
+        endsAt: '2099-09-10T10:00:00.000Z',
+        priceAmount: 300,
+      } as never,
+      'req-1',
+    );
+
+    expect(prisma.appointment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ priceAmount: 300 }) }),
+    );
+    expect(result.priceAmount).toBe(300);
+  });
+
+  it('sums revenue excluding cancelled and no-show appointments', async () => {
+    prisma.appointment.aggregate.mockResolvedValue({ _sum: { priceAmount: 1100 }, _count: { _all: 3 } });
+
+    const result = await service.revenue(principal, {
+      from: '2026-11-01T00:00:00.000Z',
+      to: '2026-11-30T23:59:59.000Z',
+    });
+
+    expect(result).toMatchObject({ total: 1100, count: 3 });
+    expect(prisma.appointment.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organizationId: 'org-a',
+          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+        }),
+      }),
+    );
+  });
+
+  it('refuses to close a period that still has appointments', async () => {
+    prisma.appointment.findFirst.mockResolvedValue({ id: 'appt-1' });
+
+    await expect(
+      service.createBlock(
+        principal,
+        { kind: 'DAY_OFF', startsAt: '2026-11-10T00:00:00.000Z', endsAt: '2026-11-11T00:00:00.000Z', note: null },
+        'req-1',
+      ),
+    ).rejects.toMatchObject({ response: { code: 'CALENDAR_BLOCK_HAS_APPOINTMENTS' } });
+    expect(prisma.calendarBlock.create).not.toHaveBeenCalled();
+  });
+
+  it('marks the original start when an appointment is moved', async () => {
+    prisma.appointment.findFirst
+      .mockResolvedValueOnce(appointmentRow())
+      .mockResolvedValue(appointmentRow({ rescheduledFromAt: new Date('2026-09-10T09:00:00.000Z') }));
+    prisma.appointment.updateMany.mockResolvedValue({ count: 1 });
+
+    await service.update(
+      principal,
+      'appt-1',
+      { version: 2, startsAt: '2026-09-11T09:00:00.000Z', endsAt: '2026-09-11T10:00:00.000Z' } as never,
+      'req-1',
+    );
+
+    expect(prisma.appointment.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ rescheduledFromAt: new Date('2026-09-10T09:00:00.000Z') }),
       }),
     );
   });

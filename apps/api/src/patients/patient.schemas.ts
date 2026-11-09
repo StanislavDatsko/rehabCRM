@@ -96,6 +96,21 @@ export const createPatientBodySchema = z
   })
   .strict();
 
+/** Minimal data to reserve a slot for a patient who has not visited yet. */
+export const createDraftPatientBodySchema = z
+  .object({
+    fullName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(300)
+      .refine((value) => value.split(/\s+/).length >= 2, {
+        message: 'Full name must contain at least last name and first name',
+      }),
+    phone: optionalText(50),
+  })
+  .strict();
+
 export const updatePatientBodySchema = createPatientBodySchema
   .partial()
   .extend({
@@ -133,6 +148,7 @@ export const listPatientsQuerySchema = z
   .strict();
 
 export type CreatePatientBody = z.infer<typeof createPatientBodySchema>;
+export type CreateDraftPatientBody = z.infer<typeof createDraftPatientBodySchema>;
 export type UpdatePatientBody = z.infer<typeof updatePatientBodySchema>;
 export type ChangePatientStatusBody = z.infer<typeof changePatientStatusBodySchema>;
 export type ListPatientsQuery = z.infer<typeof listPatientsQuerySchema>;

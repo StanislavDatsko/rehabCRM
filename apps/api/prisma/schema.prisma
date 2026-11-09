@@ -79,6 +79,7 @@ enum ClinicalAlertStatus {
 }
 
 enum PatientStatus {
+  DRAFT
   ACTIVE
   INACTIVE
   COMPLETED
@@ -105,6 +106,11 @@ enum RoomStatus {
 enum AppointmentTypeStatus {
   ACTIVE
   INACTIVE
+}
+
+enum CalendarBlockKind {
+  BREAK
+  DAY_OFF
 }
 
 enum AppointmentStatus {
@@ -315,6 +321,7 @@ model Organization {
   rooms                       Room[]
   appointmentTypes            AppointmentType[]
   appointments                Appointment[]
+  calendarBlocks              CalendarBlock[]
   encounters                  Encounter[]
   encounterExerciseLogs       EncounterExerciseLog[]
   measurementDefinitions      MeasurementDefinition[]
@@ -362,6 +369,7 @@ model User {
   updatedPatients                    Patient[]                     @relation("PatientUpdatedBy")
   auditEvents                        AuditEvent[]
   createdAppointments                Appointment[]                 @relation("AppointmentCreatedBy")
+  createdCalendarBlocks              CalendarBlock[]               @relation("CalendarBlockCreatedBy")
   updatedAppointments                Appointment[]                 @relation("AppointmentUpdatedBy")
   createdEncounters                  Encounter[]                   @relation("EncounterCreatedBy")
   updatedEncounters                  Encounter[]                   @relation("EncounterUpdatedBy")
@@ -803,6 +811,10 @@ model Appointment {
   reason             String?           @db.VarChar(500)
   administrativeNote String?           @db.VarChar(2000)
   cancellationReason String?           @db.VarChar(500)
+  /// Price in UAH. null = not set, 0 = free.
+  priceAmount        Int?
+  /// Original start when the appointment was moved to another time.
+  rescheduledFromAt  DateTime?         @db.Timestamptz(3)
   version            Int               @default(1)
   createdByUserId    String            @db.Uuid
   updatedByUserId    String            @db.Uuid
@@ -1492,4 +1504,22 @@ model ClinicalReport {
   @@index([organizationId, patientId, createdAt])
   @@index([organizationId, status, createdAt])
   @@map("clinical_reports")
+}
+
+/// Time closed for appointments: a break within a day or a whole day off.
+model CalendarBlock {
+  id              String            @id @default(uuid()) @db.Uuid
+  organizationId  String            @db.Uuid
+  kind            CalendarBlockKind
+  startsAt        DateTime          @db.Timestamptz(3)
+  endsAt          DateTime          @db.Timestamptz(3)
+  note            String?           @db.VarChar(200)
+  createdByUserId String            @db.Uuid
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  createdBy    User         @relation("CalendarBlockCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, startsAt])
+  @@map("calendar_blocks")
 }

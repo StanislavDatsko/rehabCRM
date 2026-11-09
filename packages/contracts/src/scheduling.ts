@@ -46,6 +46,10 @@ export type AppointmentCalendarItem = {
   status: AppointmentStatus;
   location: SchedulingLocationRef | null;
   room: SchedulingRoomRef | null;
+  /** Price in UAH. null = not set, 0 = free. */
+  priceAmount: number | null;
+  /** Original start when the appointment was moved to another time. */
+  rescheduledFromAt: string | null;
   version: number;
 };
 
@@ -99,3 +103,29 @@ export const APPOINTMENT_MIN_DURATION_MINUTES = 10;
 
 /** Maximum appointment duration in minutes (8 hours). */
 export const APPOINTMENT_MAX_DURATION_MINUTES = 480;
+
+export const CALENDAR_BLOCK_KINDS = ['BREAK', 'DAY_OFF'] as const;
+export type CalendarBlockKind = (typeof CALENDAR_BLOCK_KINDS)[number];
+
+export type CalendarBlockItem = {
+  id: string;
+  kind: CalendarBlockKind;
+  startsAt: string;
+  endsAt: string;
+  note: string | null;
+};
+
+export type CalendarBlocksResponse = {
+  items: CalendarBlockItem[];
+};
+
+export type AppointmentRevenueResponse = {
+  /** Sum of prices in UAH, excluding cancelled and no-show appointments. */
+  total: number;
+  count: number;
+  from: string;
+  to: string;
+};
+
+/** Suggested prices (UAH) offered in the appointment form. */
+export const APPOINTMENT_PRICE_PRESETS = [300, 500] as const;

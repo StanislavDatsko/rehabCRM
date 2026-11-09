@@ -1,9 +1,11 @@
 import {
   endOfDay,
+  endOfMonth,
   endOfWeek,
   isValid,
   parseISO,
   startOfDay,
+  startOfMonth,
   startOfWeek,
 } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
@@ -47,19 +49,24 @@ export function formatCalendarDate(date: Date, timezone: string): string {
 }
 
 export function calendarQueryRange(
-  view: 'day' | 'week',
+  view: 'day' | 'week' | 'month',
   anchor: Date,
   timezone: string,
 ): { from: string; to: string } {
   const zoned = toZonedTime(anchor, timezone);
+  // Month view renders whole weeks, so the window covers the visible grid.
   const rangeStart =
     view === 'day'
       ? startOfDay(zoned)
-      : startOfWeek(zoned, { weekStartsOn: 1 });
+      : view === 'week'
+        ? startOfWeek(zoned, { weekStartsOn: 1 })
+        : startOfWeek(startOfMonth(zoned), { weekStartsOn: 1 });
   const rangeEnd =
     view === 'day'
       ? endOfDay(zoned)
-      : endOfWeek(zoned, { weekStartsOn: 1 });
+      : view === 'week'
+        ? endOfWeek(zoned, { weekStartsOn: 1 })
+        : endOfWeek(endOfMonth(zoned), { weekStartsOn: 1 });
   return {
     from: fromZonedTime(rangeStart, timezone).toISOString(),
     to: fromZonedTime(rangeEnd, timezone).toISOString(),
@@ -107,4 +114,31 @@ export function combineDateAndTimeToIso(
 
 export function addMinutesToIso(iso: string, minutes: number): string {
   return new Date(new Date(iso).getTime() + minutes * 60_000).toISOString();
+}
+
+/** Exact calendar week (Mon–Sun) or month containing the anchor, for totals. */
+export function periodRange(
+  period: 'week' | 'month',
+  anchor: Date,
+  timezone: string,
+): { from: string; to: string } {
+  const zoned = toZonedTime(anchor, timezone);
+  const start =
+    period === 'week' ? startOfWeek(zoned, { weekStartsOn: 1 }) : startOfMonth(zoned);
+  const end = period === 'week' ? endOfWeek(zoned, { weekStartsOn: 1 }) : endOfMonth(zoned);
+  return {
+    from: fromZonedTime(start, timezone).toISOString(),
+    to: fromZonedTime(end, timezone).toISOString(),
+  };
+}
+
+/** Local calendar date and time (yyyy-MM-dd / HH:mm) of an instant in a timezone. */
+export function instantToLocalParts(
+  iso: string,
+  timezone: string,
+): { date: string; time: string } {
+  return {
+    date: formatInTimeZone(new Date(iso), timezone, 'yyyy-MM-dd'),
+    time: formatInTimeZone(new Date(iso), timezone, 'HH:mm'),
+  };
 }
