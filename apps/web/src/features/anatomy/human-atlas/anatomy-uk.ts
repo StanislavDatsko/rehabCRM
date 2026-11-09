@@ -1,0 +1,835 @@
+/**
+ * Ukrainian display names for Human Atlas (BodyParts3D) structures.
+ *
+ * Source data is English only. Names are matched case-insensitively with the
+ * "left"/"right" qualifier removed and re-attached as "(ліва)/(права)".
+ * Anything not covered falls back to the original English name, so a missing
+ * translation never hides a structure. Search matches both languages.
+ */
+
+// "english = українська", one per line. Keys are lowercase.
+const DICTIONARY = `
+atlas = Атлант (C1)
+axis = Осьовий хребець (C2)
+clavicle = Ключиця
+scapula = Лопатка
+humerus = Плечова кістка
+radius = Променева кістка
+ulna = Ліктьова кістка
+femur = Стегнова кістка
+tibia = Великогомілкова кістка
+fibula = Малогомілкова кістка
+patella = Надколінок
+sacrum = Крижова кістка
+sternum = Груднина
+manubrium = Рукоятка груднини
+body of sternum = Тіло груднини
+xiphoid process = Мечоподібний відросток
+hip bone = Кульшова (тазова) кістка
+calcaneus = П'яткова кістка
+talus = Надп'яткова кістка
+cuboid bone = Кубоподібна кістка
+navicular bone of foot = Човноподібна кістка стопи
+medial cuneiform bone = Присередня клиноподібна кістка
+intermediate cuneiform bone = Проміжна клиноподібна кістка
+lateral cuneiform bone = Бічна клиноподібна кістка
+scaphoid = Човноподібна кістка (зап'ястка)
+lunate = Півмісяцева кістка
+triquetral = Тригранна кістка
+pisiform = Горохоподібна кістка
+trapezium = Кістка-трапеція
+trapezoid = Кістка-трапецоїд
+capitate = Головчаста кістка
+hamate = Гачкувата кістка
+mandible = Нижня щелепа
+maxilla = Верхня щелепа
+frontal bone = Лобова кістка
+parietal bone = Тім'яна кістка
+occipital bone = Потилична кістка
+temporal bone = Скронева кістка
+sphenoid bone = Клиноподібна кістка (черепа)
+ethmoid = Решітчаста кістка
+zygomatic bone = Вилицева кістка
+nasal bone = Носова кістка
+palatine bone = Піднебінна кістка
+lacrimal bone = Слізна кістка
+vomer = Леміш
+hyoid bone = Під'язикова кістка
+thyroid cartilage = Щитоподібний хрящ
+cricoid cartilage = Перснеподібний хрящ
+arytenoid cartilage = Черпакуватий хрящ
+corniculate cartilage = Ріжкоподібний хрящ
+cuneiform cartilage = Клиноподібний хрящ (гортані)
+laryngeal cartilage = Хрящ гортані
+epiglottis = Надгортанник
+costal cartilage = Реберний хрящ
+rib = Ребро
+true rib = Справжнє ребро
+false rib = Несправжнє ребро
+floating rib = Хитке ребро
+typical rib = Типове ребро
+atypical rib = Атипове ребро
+rib cage = Грудна клітка
+vertebra = Хребець
+cervical vertebra = Шийний хребець
+thoracic vertebra = Грудний хребець
+lumbar vertebra = Поперековий хребець
+vertebral column = Хребет
+cervical vertebral column = Шийний відділ хребта
+thoracic vertebral column = Грудний відділ хребта
+lumbar vertebral column = Поперековий відділ хребта
+set of cervical vertebrae = Шийні хребці
+set of thoracic vertebrae = Грудні хребці
+set of lumbar vertebrae = Поперекові хребці
+intervertebral disk = Міжхребцевий диск
+intervertebral symphysis = Міжхребцевий симфіз
+metacarpal bone = П'ясткова кістка
+metatarsal bone = Плеснова кістка
+carpal bone = Кістка зап'ястка
+proximal carpal bone = Проксимальна кістка зап'ястка
+distal carpal bone = Дистальна кістка зап'ястка
+tarsal bone = Кістка передплесна
+sesamoid bone = Сесамоподібна кістка
+sesamoid bone of foot = Сесамоподібна кістка стопи
+long bone = Довга кістка
+short bone = Коротка кістка
+flat bone = Плоска кістка
+irregular bone = Неправильна кістка
+pneumatized bone = Повітроносна кістка
+skeleton = Скелет
+skeletal system = Скелетна система
+axial skeleton = Осьовий скелет
+axial skeletal system = Осьова скелетна система
+pelvic skeleton = Скелет таза
+pelvic girdle = Тазовий пояс
+bony pelvis = Кістковий таз
+bony pectoral girdle = Кістковий плечовий пояс
+skeleton of pectoral girdle = Скелет плечового пояса
+pectoral girdle = Плечовий пояс
+skull = Череп
+neurocranium = Мозковий череп
+viscerocranium = Лицевий череп
+basicranium = Основа черепа
+tooth = Зуб
+canine tooth = Ікло
+incisor tooth = Різець
+premolar tooth = Премоляр
+molar tooth = Моляр
+gingiva = Ясна
+upper jaw = Верхня щелепа (ділянка)
+lower jaw = Нижня щелепа (ділянка)
+foot = Стопа
+foot proper = Стопа (власне)
+hand = Кисть
+hand proper = Кисть (власне)
+forearm = Передпліччя
+arm = Плече
+leg = Гомілка
+thigh = Стегно
+knee = Колінна ділянка
+hip = Кульшова ділянка
+shoulder = Надпліччя
+wrist = Зап'ясток
+neck = Шия
+head = Голова
+abdomen = Живіт
+thorax = Грудна клітка
+thoracic wall = Стінка грудної клітки
+chest wall = Стінка грудної клітки
+anterior thoracic wall = Передня стінка грудної клітки
+posterior thoracic wall = Задня стінка грудної клітки
+anterior abdominal wall = Передня черевна стінка
+posterior abdominal wall = Задня черевна стінка
+wall of abdomen = Стінка живота
+body wall = Стінка тулуба
+upper limb = Верхня кінцівка
+lower limb = Нижня кінцівка
+free upper limb = Вільна верхня кінцівка
+free lower limb = Вільна нижня кінцівка
+thumb = Великий палець кисті
+index finger = Вказівний палець
+middle finger = Середній палець
+ring finger = Безіменний палець
+little finger = Мізинець кисті
+big toe = Великий палець стопи
+second toe = Другий палець стопи
+third toe = Третій палець стопи
+fourth toe = Четвертий палець стопи
+little toe = Мізинець стопи
+back of neck = Задня ділянка шиї
+back of thorax = Спина (грудний відділ)
+iliotibial tract = Клубово-великогомілковий тракт
+fascia lata of thigh = Широка фасція стегна
+tensor fasciae latae = Натягувач широкої фасції
+abductor digiti minimi of foot = Відвідний м'яз мізинця стопи
+abductor digiti minimi of hand = Відвідний м'яз мізинця кисті
+abductor hallucis = Відвідний м'яз великого пальця стопи
+abductor pollicis brevis = Короткий відвідний м'яз великого пальця кисті
+abductor pollicis longus = Довгий відвідний м'яз великого пальця кисті
+adductor brevis = Короткий привідний м'яз
+adductor longus = Довгий привідний м'яз
+adductor magnus = Великий привідний м'яз
+adductor minimus = Малий привідний м'яз
+anconeus = Ліктьовий м'яз
+brachialis = Плечовий м'яз
+brachioradialis = Плечопроменевий м'яз
+coracobrachialis = Дзьобоплечовий м'яз
+coccygeus = Куприковий м'яз
+acromial part of deltoid = Акромінальна частина дельтоподібного м'яза
+clavicular part of deltoid = Ключична частина дельтоподібного м'яза
+spinal part of deltoid = Остьова частина дельтоподібного м'яза
+zone of deltoid = Дельтоподібний м'яз
+diaphragm = Діафрагма
+digastric = Двочеревцевий м'яз
+extensor carpi radialis brevis = Короткий променевий розгинач зап'ястка
+extensor carpi radialis longus = Довгий променевий розгинач зап'ястка
+extensor carpi ulnaris = Ліктьовий розгинач зап'ястка
+extensor digiti minimi = Розгинач мізинця
+extensor digitorum = Розгинач пальців
+extensor digitorum longus = Довгий розгинач пальців
+extensor hallucis brevis = Короткий розгинач великого пальця стопи
+extensor hallucis longus = Довгий розгинач великого пальця стопи
+extensor indicis = Розгинач вказівного пальця
+extensor pollicis brevis = Короткий розгинач великого пальця кисті
+extensor pollicis longus = Довгий розгинач великого пальця кисті
+external anal sphincter = Зовнішній сфінктер заднього проходу
+external intercostal muscle = Зовнішній міжреберний м'яз
+internal intercostal muscle = Внутрішній міжреберний м'яз
+innermost intercostal muscle = Найглибший міжреберний м'яз
+intercostal muscle = Міжреберний м'яз
+external oblique = Зовнішній косий м'яз живота
+flexor accessorius = Квадратний м'яз підошви
+flexor carpi radialis = Променевий згинач зап'ястка
+flexor digiti minimi brevis of foot = Короткий згинач мізинця стопи
+flexor digiti minimi brevis of hand = Короткий згинач мізинця кисті
+flexor digitorum brevis = Короткий згинач пальців стопи
+flexor digitorum longus = Довгий згинач пальців стопи
+flexor digitorum profundus = Глибокий згинач пальців
+flexor digitorum superficialis = Поверхневий згинач пальців
+flexor hallucis longus = Довгий згинач великого пальця стопи
+flexor pollicis brevis = Короткий згинач великого пальця кисті
+flexor pollicis longus = Довгий згинач великого пальця кисті
+gemellus = Близнюковий м'яз
+gemellus inferior = Нижній близнюковий м'яз
+gemellus superior = Верхній близнюковий м'яз
+genioglossus = Підборідно-язиковий м'яз
+geniohyoid = Підборідно-під'язиковий м'яз
+gluteus maximus = Великий сідничний м'яз
+gluteus medius = Середній сідничний м'яз
+gluteus minimus = Малий сідничний м'яз
+gluteal muscle = Сідничний м'яз
+gracilis = Тонкий м'яз
+hyoglossus = Під'язиково-язиковий м'яз
+iliacus = Клубовий м'яз
+iliococcygeus = Клубово-куприковий м'яз
+iliocostalis = Клубово-реберний м'яз
+iliocostalis cervicis = Клубово-реберний м'яз шиї
+iliocostalis lumborum = Клубово-реберний м'яз попереку
+iliocostalis thoracis = Клубово-реберний м'яз грудей
+infraspinatus = Підостьовий м'яз
+infraspinatus muscle = Підостьовий м'яз
+interspinalis muscle = Міжостьовий м'яз
+interspinalis thoracis = Міжостьовий м'яз грудей
+intertransversarius muscle = Міжпоперечний м'яз
+lumbar intertransversarius = Поперековий міжпоперечний м'яз
+levator scapulae = М'яз-підіймач лопатки
+levator palpebrae superioris = М'яз-підіймач верхньої повіки
+levator veli palatini = М'яз-підіймач піднебінної завіски
+tensor veli palatini = М'яз-натягувач піднебінної завіски
+long head of biceps brachii = Довга головка двоголового м'яза плеча
+short head of biceps brachii = Коротка головка двоголового м'яза плеча
+long head of biceps femoris = Довга головка двоголового м'яза стегна
+short head of biceps femoris = Коротка головка двоголового м'яза стегна
+head of biceps femoris = Двоголовий м'яз стегна
+long head of triceps brachii = Довга головка триголового м'яза плеча
+lateral head of triceps brachii = Бічна головка триголового м'яза плеча
+medial head of triceps brachii = Присередня головка триголового м'яза плеча
+lateral head of gastrocnemius = Бічна головка литкового м'яза
+medial head of gastrocnemius = Присередня головка литкового м'яза
+head of gastrocnemius = Литковий м'яз
+longissimus = Найдовший м'яз
+longissimus capitis = Найдовший м'яз голови
+longissimus cervicis = Найдовший м'яз шиї
+longissimus thoracis = Найдовший м'яз грудей
+longus capitis = Довгий м'яз голови
+mylohyoid = Щелепно-під'язиковий м'яз
+obliquus capitis inferior = Нижній косий м'яз голови
+obliquus capitis superior = Верхній косий м'яз голови
+obturator externus = Зовнішній затульний м'яз
+obturator internus = Внутрішній затульний м'яз
+omohyoid = Лопатково-під'язиковий м'яз
+opponens digiti minimi of foot = Протиставний м'яз мізинця стопи
+opponens digiti minimi of hand = Протиставний м'яз мізинця кисті
+opponens pollicis = Протиставний м'яз великого пальця
+palmaris longus = Довгий долонний м'яз
+pectineus = Гребінний м'яз
+pectoralis major = Великий грудний м'яз
+pectoralis minor = Малий грудний м'яз
+abdominal part of pectoralis major = Черевна частина великого грудного м'яза
+clavicular part of pectoralis major = Ключична частина великого грудного м'яза
+sternocostal part of pectoralis major = Груднинно-реберна частина великого грудного м'яза
+piriformis = Грушоподібний м'яз
+plantaris = Підошвовий м'яз
+platysma = Підшкірний м'яз шиї
+popliteus = Підколінний м'яз
+pronator quadratus = Квадратний привертач
+humeral head of pronator teres = Плечова головка круглого привертача
+ulnar head of pronator teres = Ліктьова головка круглого привертача
+humeral head of flexor carpi ulnaris = Плечова головка ліктьового згинача зап'ястка
+ulnar head of flexor carpi ulnaris = Ліктьова головка ліктьового згинача зап'ястка
+psoas major = Великий поперековий м'яз
+pubococcygeus = Лобково-куприковий м'яз
+puborectalis = Лобково-прямокишковий м'яз
+quadratus femoris = Квадратний м'яз стегна
+rectus capitis anterior = Передній прямий м'яз голови
+rectus capitis lateralis = Бічний прямий м'яз голови
+rectus capitis posterior major = Великий задній прямий м'яз голови
+rectus capitis posterior minor = Малий задній прямий м'яз голови
+rectus femoris = Прямий м'яз стегна
+rhomboid major = Великий ромбоподібний м'яз
+rhomboid minor = Малий ромбоподібний м'яз
+rotator muscle = М'яз-обертач
+sartorius = Кравецький м'яз
+scalene muscle = Драбинчастий м'яз
+scalenus anterior = Передній драбинчастий м'яз
+scalenus medius = Середній драбинчастий м'яз
+scalenus posterior = Задній драбинчастий м'яз
+semimembranosus = Півперетинчастий м'яз
+semitendinosus = Півсухожилковий м'яз
+semispinalis = Напівостьовий м'яз
+semispinalis capitis = Напівостьовий м'яз голови
+semispinalis cervicis = Напівостьовий м'яз шиї
+semispinalis thoracis = Напівостьовий м'яз грудей
+serratus anterior = Передній зубчастий м'яз
+serratus posterior = Задній зубчастий м'яз
+serratus posterior inferior = Нижній задній зубчастий м'яз
+serratus posterior superior = Верхній задній зубчастий м'яз
+soleus = Камбалоподібний м'яз
+spinalis = Остьовий м'яз
+spinalis thoracis = Остьовий м'яз грудей
+splenius = Ремінний м'яз
+splenius capitis = Ремінний м'яз голови
+splenius cervicis = Ремінний м'яз шиї
+sternocleidomastoid = Груднинно-ключично-соскоподібний м'яз
+sternohyoid = Груднинно-під'язиковий м'яз
+sternothyroid = Груднинно-щитоподібний м'яз
+stylohyoid = Шилопід'язиковий м'яз
+subclavius = Підключичний м'яз
+subscapularis = Підлопатковий м'яз
+supinator = Супінатор
+supraspinatus = Надостьовий м'яз
+teres major = Великий круглий м'яз
+teres minor = Малий круглий м'яз
+thyrohyoid = Щитопід'язиковий м'яз
+thyro-arytenoid = Щиточерпакуватий м'яз
+transversus thoracis = Поперечний м'яз грудей
+vastus intermedius = Проміжний широкий м'яз стегна
+vastus lateralis = Бічний широкий м'яз стегна
+vastus medialis = Присередній широкий м'яз стегна
+zone of quadriceps femoris = Чотириголовий м'яз стегна
+vocalis = Голосовий м'яз
+ascending part of trapezius = Висхідна частина трапецієподібного м'яза
+descending part of trapezius = Низхідна частина трапецієподібного м'яза
+transverse part of trapezius = Поперечна частина трапецієподібного м'яза
+zone of trapezius = Трапецієподібний м'яз
+tibialis anterior = Передній великогомілковий м'яз
+tibialis posterior = Задній великогомілковий м'яз
+fibularis brevis = Короткий малогомілковий м'яз
+fibularis longus = Довгий малогомілковий м'яз
+fibularis tertius = Третій малогомілковий м'яз
+muscle of lateral compartment of leg = М'язи бічного відділу гомілки
+head of adductor hallucis = Привідний м'яз великого пальця стопи
+oblique head of adductor hallucis = Коса головка привідного м'яза великого пальця стопи
+transverse head of adductor hallucis = Поперечна головка привідного м'яза великого пальця стопи
+oblique head of adductor pollicis = Коса головка привідного м'яза великого пальця кисті
+transverse head of adductor pollicis = Поперечна головка привідного м'яза великого пальця кисті
+head of flexor hallucis brevis = Короткий згинач великого пальця стопи
+lateral head of flexor hallucis brevis = Бічна головка короткого згинача великого пальця стопи
+medial head of flexor hallucis brevis = Присередня головка короткого згинача великого пальця стопи
+superficial head of flexor pollicis brevis = Поверхнева головка короткого згинача великого пальця кисті
+thenar muscle = М'язи підвищення великого пальця
+hypothenar muscle = М'язи підвищення мізинця
+perineal muscle = М'язи промежини
+superficial perineal muscle = Поверхневі м'язи промежини
+perineum = Промежина
+pelvis = Таз
+pelvic wall = Стінка таза
+mouth = Ротова порожнина
+tongue = Язик
+soft palate = М'яке піднебіння
+uvula = Язичок
+upper eyelid = Верхня повіка
+lower eyelid = Нижня повіка
+face = Обличчя
+cheek = Щока
+lip = Губа
+nose = Ніс
+external nose = Зовнішній ніс
+internal nose = Порожнина носа
+nasal septum = Носова перегородка
+brain = Головний мозок
+brainstem = Стовбур мозку
+cerebellum = Мозочок
+cerebral hemisphere = Півкуля великого мозку
+cerebral white matter = Біла речовина великого мозку
+cerebral aqueduct = Водогін мозку
+cerebral cortex = Кора великого мозку
+corpus callosum = Мозолисте тіло
+frontal lobe = Лобова частка
+parietal lobe = Тім'яна частка
+temporal lobe = Скронева частка
+occipital lobe = Потилична частка
+limbic lobe = Лімбічна частка
+insula = Острівець
+forebrain = Передній мозок
+midbrain = Середній мозок
+hindbrain = Задній мозок
+diencephalon = Проміжний мозок
+telencephalon = Кінцевий мозок
+metencephalon = Задній мозок (metencephalon)
+medulla oblongata = Довгастий мозок
+pons = Міст
+thalamus = Таламус
+epithalamus = Епіталамус
+hypothalamus = Гіпоталамус
+amygdala = Мигдалеподібне тіло
+hippocampus = Гіпокамп
+hippocampal formation = Гіпокампова формація
+caudate nucleus = Хвостате ядро
+putamen = Шкаралупа
+globus pallidus = Бліда куля
+internal capsule = Внутрішня капсула
+habenula = Повідець
+mammillary body = Сосочкове тіло
+optic chiasm = Зорове перехрестя
+optic tract = Зоровий тракт
+optic nerve = Зоровий нерв
+inferior colliculus = Нижній горбок
+superior colliculus = Верхній горбок
+lateral geniculate body = Бічне колінчасте тіло
+medial geniculate body = Присереднє колінчасте тіло
+anterior commissure = Передня спайка
+posterior commissure = Задня спайка
+fornix of forebrain = Склепіння мозку
+precentral gyrus = Передцентральна звивина
+postcentral gyrus = Післяцентральна звивина
+angular gyrus = Кутова звивина
+cingulate gyrus = Поясна звивина
+fusiform gyrus = Веретеноподібна звивина
+supramarginal gyrus = Надкраєва звивина
+superior frontal gyrus = Верхня лобова звивина
+middle frontal gyrus = Середня лобова звивина
+inferior frontal gyrus = Нижня лобова звивина
+superior temporal gyrus = Верхня скронева звивина
+middle temporal gyrus = Середня скронева звивина
+inferior temporal gyrus = Нижня скронева звивина
+parahippocampal gyrus = Парагіпокампальна звивина
+orbital gyrus = Орбітальна звивина
+superior parietal lobule = Верхня тім'яна часточка
+prefrontal cortex = Префронтальна кора
+spinal cord = Спинний мозок
+central canal of spinal cord = Центральний канал спинного мозку
+tentorium cerebelli = Намет мозочка
+nervous system = Нервова система
+nerve = Нерв
+cranial nerve = Черепний нерв
+ganglion = Ганглій
+autonomic ganglion = Вегетативний ганглій
+ciliary ganglion = Війковий ганглій
+trochlear nerve = Блоковий нерв
+ophthalmic nerve = Очний нерв
+frontal nerve = Лобовий нерв
+lacrimal nerve = Слізний нерв
+nasociliary nerve = Носово-війковий нерв
+supra-orbital nerve = Надочноямковий нерв
+supratrochlear nerve = Надблоковий нерв
+infratrochlear nerve = Підблоковий нерв
+anterior ethmoidal nerve = Передній решітчастий нерв
+posterior ethmoidal nerve = Задній решітчастий нерв
+long ciliary nerve = Довгий війковий нерв
+short ciliary nerve = Короткий війковий нерв
+ventricle = Шлуночок
+lateral ventricle = Бічний шлуночок мозку
+third ventricle = Третій шлуночок мозку
+fourth ventricle = Четвертий шлуночок мозку
+atrium = Передсердя
+heart = Серце
+mitral valve = Мітральний клапан
+tricuspid valve = Тристулковий клапан
+aortic valve = Аортальний клапан
+pulmonary valve = Клапан легеневого стовбура
+fibrous skeleton of heart = Фіброзний скелет серця
+myocardium of ventricle = Міокард шлуночка
+papillary muscle of ventricle = Сосочковий м'яз шлуночка
+interventricular foramen = Міжшлуночковий отвір
+lung = Легеня
+trachea = Трахея
+bronchus = Бронх
+main bronchus = Головний бронх
+bronchial tree = Бронхіальне дерево
+tracheobronchial tree = Трахеобронхіальне дерево
+respiratory system = Дихальна система
+respiratory tract = Дихальні шляхи
+lower lobe of lung = Нижня частка легені
+inferior nasal concha = Нижня носова раковина
+nasal cartilage = Хрящ носа
+septal nasal cartilage = Хрящ носової перегородки
+lateral nasal cartilage = Бічний хрящ носа
+major alar cartilage = Великий крилоподібний хрящ носа
+posterior mediastinum = Заднє середостіння
+anterior mediastinum = Переднє середостіння
+palatopharyngeus = Піднебінно-глотковий м'яз
+salpingopharyngeus = Трубно-глотковий м'яз
+stylopharyngeus = Шилоглотковий м'яз
+superior pharyngeal constrictor = Верхній констриктор глотки
+middle pharyngeal constrictor = Середній констриктор глотки
+inferior pharyngeal constrictor = Нижній констриктор глотки
+muscle of pharynx = М'язи глотки
+stomach = Шлунок
+esophagus = Стравохід
+duodenum = Дванадцятипала кишка
+jejunum = Порожня кишка
+ileum = Клубова кишка
+small intestine = Тонка кишка
+large intestine = Товста кишка
+cecum = Сліпа кишка
+appendix = Апендикс (червоподібний відросток)
+ascending colon = Висхідна ободова кишка
+transverse colon = Поперечна ободова кишка
+descending colon = Низхідна ободова кишка
+rectum = Пряма кишка
+liver = Печінка
+gallbladder = Жовчний міхур
+bile duct = Жовчна протока
+cystic duct = Міхурова протока
+common hepatic duct = Спільна печінкова протока
+hepatic duct = Печінкова протока
+pancreas = Підшлункова залоза
+pancreatic duct = Протока підшлункової залози
+peritoneum = Очеревина
+visceral peritoneum = Вісцеральна очеревина
+mesentery of small intestine = Брижа тонкої кишки
+mesentery of large intestine = Брижа товстої кишки
+mesoappendix = Брижа апендикса
+transverse mesocolon = Брижа поперечної ободової кишки
+ileocecal junction = Клубово-сліпокишковий перехід
+alimentary system = Травна система
+gastrointestinal tract = Шлунково-кишковий тракт
+upper gastrointestinal tract = Верхній відділ ШКТ
+lower gastrointestinal tract = Нижній відділ ШКТ
+salivary gland = Слинна залоза
+major salivary gland = Велика слинна залоза
+sublingual gland = Під'язикова слинна залоза
+submandibular gland = Піднижньощелепна слинна залоза
+kidney = Нирка
+ureter = Сечовід
+urethra = Сечівник
+urinary bladder = Сечовий міхур
+urinary system = Сечова система
+upper urinary tract = Верхні сечові шляхи
+lower urinary tract = Нижні сечові шляхи
+adrenal gland = Надниркова залоза
+pituitary gland = Гіпофіз
+pineal body = Шишкоподібна залоза
+thymus = Тимус (вилочкова залоза)
+spleen = Селезінка
+prostate = Передміхурова залоза
+testis = Яєчко
+epididymis = Придаток яєчка
+seminal vesicle = Сім'яний міхурець
+deferent duct = Сім'явиносна протока
+glans penis = Головка статевого члена
+genital system = Статева система
+skin = Шкіра
+hair = Волосся
+hair of head = Волосся голови
+eyebrow = Брова
+integument = Покриви тіла
+integumentary system = Покривна система
+eye = Око
+eyeball = Очне яблуко
+cornea = Рогівка
+sclera = Склера
+iris = Райдужка
+lens = Кришталик
+choroid = Судинна оболонка ока
+vitreous body = Скловидне тіло
+orbit = Очна ямка
+lacrimal gland = Слізна залоза
+lacrimal sac = Слізний мішок
+nasolacrimal duct = Носослізна протока
+external ear = Зовнішнє вухо
+tendon = Сухожилля
+calcaneal tendon = Ахіллове сухожилля
+interosseous membrane of forearm = Міжкісткова перетинка передпліччя
+interosseous membrane of leg = Міжкісткова перетинка гомілки
+interosseous membrane = Міжкісткова перетинка
+flexor retinaculum of wrist = Утримувач згиначів зап'ястка
+retinaculum = Утримувач
+linea alba = Біла лінія живота
+long plantar ligament = Довга підошвова зв'язка
+plantar tarsal ligament = Підошвова передплесново-плеснова зв'язка
+stylohyoid ligament = Шилопід'язикова зв'язка
+vocal ligament = Голосова зв'язка
+ligament of larynx = Зв'язка гортані
+ligament organ = Зв'язка
+cricothyroid ligament = Перснещитоподібна зв'язка
+thyrohyoid ligament = Щитопід'язикова зв'язка
+thyrohyoid membrane = Щитопід'язикова мембрана
+conus elasticus = Еластичний конус
+investing fascia of thigh = Фасція стегна
+investing fascia of lower limb = Фасція нижньої кінцівки
+investing fascia of free lower limb = Фасція вільної нижньої кінцівки
+investing fascia of forearm = Фасція передпліччя
+investing fascia of upper limb = Фасція верхньої кінцівки
+investing fascia of free upper limb = Фасція вільної верхньої кінцівки
+investing fascia of wrist = Фасція зап'ястка
+deep fascial system = Глибока фасціальна система
+musculoskeletal system = Опорно-руховий апарат
+gingiva of upper jaw = Ясна верхньої щелепи
+gingiva of lower jaw = Ясна нижньої щелепи
+anterior chamber of eyeball = Передня камера ока
+check ligament of lateral rectus = Стримувальна зв'язка бічного прямого м'яза ока
+check ligament of medial rectus = Стримувальна зв'язка присереднього прямого м'яза ока
+corona ciliaris = Війковий вінець
+common tendinous ring = Спільне сухожилкове кільце
+inferior oblique = Нижній косий м'яз ока
+superior oblique = Верхній косий м'яз ока
+inferior rectus = Нижній прямий м'яз ока
+superior rectus = Верхній прямий м'яз ока
+lateral rectus = Бічний прямий м'яз ока
+medial rectus = Присередній прямий м'яз ока
+lacrimal canaliculus = Слізний канальчик
+lacrimal lake = Слізне озеро
+optic part of retina = Зорова частина сітківки
+suspensory ligament of lens = Війковий пояс (зв'язка кришталика)
+tarsal plate of upper eyelid = Хрящ верхньої повіки
+tarsal plate of lower eyelid = Хрящ нижньої повіки
+trochlea of superior oblique = Блок верхнього косого м'яза
+tendon of levator palpebrae superioris = Сухожилля підіймача верхньої повіки
+set of levatores costarum breves = Короткі м'язи-підіймачі ребер
+set of levatores costarum longi = Довгі м'язи-підіймачі ребер
+tendinous arch of levator ani = Сухожилкова дуга м'яза-підіймача заднього проходу
+set of dorsal interossei of hand = Тильні міжкісткові м'язи кисті
+set of palmar interossei of hand = Долонні міжкісткові м'язи кисті
+set of lumbricals of hand = Червоподібні м'язи кисті
+lumbar rotator = Поперековий м'яз-обертач
+cervical rotator = Шийний м'яз-обертач
+thoracic rotator = Грудний м'яз-обертач
+lateral lumbar intertransversarius = Бічний поперековий міжпоперечний м'яз
+medial lumbar intertransversarius = Присередній поперековий міжпоперечний м'яз
+set of anterior cervical intertransversarii = Передні шийні міжпоперечні м'язи
+set of posterior cervical intertransversarii = Задні шийні міжпоперечні м'язи
+set of interspinales lumborum = Міжостьові м'язи попереку
+set of interspinales cervicis = Міжостьові м'язи шиї
+inferior oblique part of longus colli = Нижня коса частина довгого м'яза шиї
+superior oblique part of longus colli = Верхня коса частина довгого м'яза шиї
+vertical intermediate part of longus colli = Вертикальна проміжна частина довгого м'яза шиї
+zone of longus colli = Довгий м'яз шиї
+intermediate tendon = Проміжне сухожилля
+brachium of superior colliculus = Ручка верхнього горбка
+brachium of inferior colliculus = Ручка нижнього горбка
+commissure of fornix of forebrain = Спайка склепіння
+white matter of cerebral hemisphere = Біла речовина півкулі великого мозку
+interpeduncular fossa = Міжніжкова ямка
+lamina terminalis = Кінцева пластинка
+peduncle of midbrain = Ніжка середнього мозку
+stria medullaris of thalamus = Мозкова смужка таламуса
+stria terminalis = Кінцева смужка
+tuber cinereum = Сірий горб
+septum of telencephalon = Перегородка кінцевого мозку
+anterior part of superior temporal gyrus = Передня частина верхньої скроневої звивини
+posterior part of superior temporal gyrus = Задня частина верхньої скроневої звивини
+descending thoracic aorta = Низхідна грудна аорта
+abdominal aorta = Черевна аорта
+ascending aorta = Висхідна аорта
+arch of aorta = Дуга аорти
+descending aorta = Низхідна аорта
+aorta = Аорта
+pulmonary trunk = Легеневий стовбур
+celiac trunk = Черевний стовбур
+costocervical trunk = Реберно-шийний стовбур
+thyrocervical trunk = Щитошийний стовбур
+inferior vena cava = Нижня порожниста вена
+superior vena cava = Верхня порожниста вена
+coronary sinus = Вінцева пазуха
+plantar arch = Підошвова артеріальна дуга
+deep palmar arch = Глибока долонна дуга
+superficial palmar arterial arch = Поверхнева долонна артеріальна дуга
+dorsal venous arch of foot = Тильна венозна дуга стопи
+plantar venous arch of foot = Підошвова венозна дуга стопи
+deep palmar venous arch = Глибока долонна венозна дуга
+superficial palmar venous arch = Поверхнева долонна венозна дуга
+dorsal venous network of hand = Тильна венозна сітка кисті
+posterior intercostal arteries = Задні міжреброві артерії
+anterior cusp of aortic valve = Передня стулка аортального клапана
+posterior cusp of aortic valve = Задня стулка аортального клапана
+anterior cusp of pulmonary valve = Передня стулка клапана легеневого стовбура
+posterior cusp of pulmonary valve = Задня стулка клапана легеневого стовбура
+anterior leaflet of mitral valve = Передня стулка мітрального клапана
+posterior leaflet of mitral valve = Задня стулка мітрального клапана
+anterior leaflet of tricuspid valve = Передня стулка тристулкового клапана
+posterior leaflet of tricuspid valve = Задня стулка тристулкового клапана
+septal leaflet of tricuspid valve = Перегородкова стулка тристулкового клапана
+anterior papillary muscle of ventricle = Передній сосочковий м'яз шлуночка
+posterior papillary muscle of ventricle = Задній сосочковий м'яз шлуночка
+lateral papillary muscle of ventricle = Бічний сосочковий м'яз шлуночка
+septal papillary muscle of ventricle = Перегородковий сосочковий м'яз шлуночка
+cavity of ventricle = Порожнина шлуночка
+cavity of atrium = Порожнина передсердя
+wall of ventricle = Стінка шлуночка
+wall of atrium = Стінка передсердя
+inferior lingular bronchial tree = Нижні язичкові бронхи
+superior lingular bronchial tree = Верхні язичкові бронхи
+main bronchus proper = Головний бронх (власне)
+taenia libera = Вільна стрічка ободової кишки
+taenia mesocolica = Брижова стрічка ободової кишки
+taenia omentalis = Сальникова стрічка ободової кишки
+proximal part of ileum = Проксимальна частина клубової кишки
+middle part of ileum = Середня частина клубової кишки
+distal part of ileum = Дистальна частина клубової кишки
+proximal part of jejunum = Проксимальна частина порожньої кишки
+middle part of jejunum = Середня частина порожньої кишки
+distal part of jejunum = Дистальна частина порожньої кишки
+parenchyma of pancreas = Паренхіма підшлункової залози
+pterygomandibular raphe = Крилощелепний шов
+pharyngeal raphe = Глотковий шов
+uvular muscle = М'яз язичка
+hyo-epiglottic ligament = Під'язиково-надгортанна зв'язка
+aryepiglotticus = Черпакувато-надгортанний м'яз
+lateral crico-arytenoid = Бічний персне-черпакуватий м'яз
+posterior crico-arytenoid = Задній персне-черпакуватий м'яз
+oblique arytenoid = Косий черпакуватий м'яз
+transverse arytenoid = Поперечний черпакуватий м'яз
+oblique part of cricothyroid = Коса частина персне-щитоподібного м'яза
+straight part of cricothyroid = Пряма частина персне-щитоподібного м'яза
+median cricothyroid ligament = Серединна персне-щитоподібна зв'язка
+median thyrohyoid ligament = Серединна щито-під'язикова зв'язка
+lateral thyrohyoid ligament = Бічна щито-під'язикова зв'язка
+thyro-epiglottic ligament = Щито-надгортанна зв'язка
+pubic hair = Лобкове волосся
+caudate lobe of liver = Хвостата частка печінки
+lobe of liver = Частка печінки
+lobe of thymus = Частка тимуса
+corpus cavernosum of penis = Печеристе тіло статевого члена
+corpus spongiosum of penis = Губчасте тіло статевого члена
+musculature = Мускулатура
+muscle organ = М'яз
+`;
+
+const index = new Map<string, string>();
+for (const line of DICTIONARY.split('\n')) {
+  const cut = line.indexOf(' = ');
+  if (cut > 0) index.set(line.slice(0, cut).trim(), line.slice(cut + 3).trim());
+}
+
+const ORDINAL_M = ['', 'перший', 'другий', 'третій', 'четвертий', "п'ятий", 'шостий', 'сьомий', 'восьмий', "дев'ятий", 'десятий', 'одинадцятий', 'дванадцятий'];
+const ORDINAL_F = ['', 'перша', 'друга', 'третя', 'четверта', "п'ята", 'шоста', 'сьома', 'восьма', "дев'ята", 'десята', 'одинадцята', 'дванадцята'];
+const ORDINAL_N = ['', 'перше', 'друге', 'третє', 'четверте', "п'яте", 'шосте', 'сьоме', 'восьме', "дев'яте", 'десяте', 'одинадцяте', 'дванадцяте'];
+const ORDINALS: Record<string, number> = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10, eleventh: 11, twelfth: 12 };
+const ORD = '(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)';
+const REGION: Record<string, { name: string; code: string }> = {
+  cervical: { name: 'шийний', code: 'C' },
+  thoracic: { name: 'грудний', code: 'Th' },
+  lumbar: { name: 'поперековий', code: 'L' },
+};
+const POSITION: Record<string, string> = { proximal: 'Проксимальна', middle: 'Середня', distal: 'Дистальна' };
+const DIGIT: Record<string, string> = {
+  thumb: 'великого пальця кисті',
+  'index finger': 'вказівного пальця',
+  'middle finger': 'середнього пальця',
+  'ring finger': 'безіменного пальця',
+  'little finger': 'мізинця кисті',
+  'big toe': 'великого пальця стопи',
+  'second toe': 'II пальця стопи',
+  'third toe': 'III пальця стопи',
+  'fourth toe': 'IV пальця стопи',
+  'little toe': 'мізинця стопи',
+};
+const AREA: Record<string, string> = {
+  arm: 'плеча', forearm: 'передпліччя', hand: 'кисті', foot: 'стопи', leg: 'гомілки', thigh: 'стегна', neck: 'шиї', face: 'обличчя',
+  head: 'голови', tongue: 'язика', larynx: 'гортані', palate: 'піднебіння', pelvis: 'таза', thorax: 'грудної клітки', trunk: 'тулуба',
+  abdomen: 'живота', shoulder: 'надпліччя', 'lower limb': 'нижньої кінцівки', 'upper limb': 'верхньої кінцівки',
+  'free lower limb': 'вільної нижньої кінцівки', 'free upper limb': 'вільної верхньої кінцівки', 'pectoral girdle': 'плечового пояса',
+  'pelvic girdle': 'тазового пояса', 'vertebral column': 'хребта',
+};
+const COMPARTMENT: Record<string, string> = { anterior: 'переднього', posterior: 'заднього', medial: 'присереднього', lateral: 'бічного' };
+const TOOTH: Record<string, string> = { incisor: 'різець', canine: 'ікло', premolar: 'премоляр', molar: 'моляр' };
+
+function vertebraCode(region: string, ordinal: number): string {
+  return `${REGION[region]!.code}${ordinal}`;
+}
+
+function byRule(key: string): string | null {
+  let m: RegExpExecArray | null;
+  if ((m = new RegExp(`^${ORD} (cervical|thoracic|lumbar) vertebra$`).exec(key)))
+    return `${cap(ORDINAL_M[ORDINALS[m[1]!]!]!)} ${REGION[m[2]!]!.name} хребець (${vertebraCode(m[2]!, ORDINALS[m[1]!]!)})`;
+  if ((m = new RegExp(`^intervertebral disk of ${ORD} (cervical|thoracic|lumbar) vertebra$`).exec(key)))
+    return `Міжхребцевий диск ${vertebraCode(m[2]!, ORDINALS[m[1]!]!)}`;
+  if ((m = new RegExp(`^${ORD} (cervical|thoracic|lumbar) intervertebral symphysis$`).exec(key)))
+    return `Міжхребцевий симфіз ${vertebraCode(m[2]!, ORDINALS[m[1]!]!)}`;
+  if ((m = /^intervertebral (?:disk|symphysis) of (axis)$/.exec(key))) return key.includes('disk') ? 'Міжхребцевий диск C2' : 'Міжхребцевий симфіз C2';
+  if ((m = /^intervertebral disk of (cervical|thoracic|lumbar) vertebra$/.exec(key))) return `Міжхребцевий диск (${REGION[m[1]!]!.name} відділ)`;
+  if ((m = new RegExp(`^${ORD} rib$`).exec(key))) return `${cap(ORDINAL_N[ORDINALS[m[1]!]!]!)} ребро`;
+  if ((m = new RegExp(`^${ORD} costal cartilage$`).exec(key))) return `Реберний хрящ ${ORDINALS[m[1]!]!} ребра`;
+  if ((m = new RegExp(`^${ORD} metacarpal bone$`).exec(key))) return `${cap(ORDINAL_F[ORDINALS[m[1]!]!]!)} п'ясткова кістка`;
+  if ((m = new RegExp(`^${ORD} metatarsal bone$`).exec(key))) return `${cap(ORDINAL_F[ORDINALS[m[1]!]!]!)} плеснова кістка`;
+  if ((m = new RegExp(`^${ORD} (lumbrical|plantar interosseous) of foot$`).exec(key)))
+    return `${cap(ORDINAL_M[ORDINALS[m[1]!]!]!)} ${m[2] === 'lumbrical' ? 'червоподібний м\'яз' : 'підошвовий міжкістковий м\'яз'} стопи`;
+  if ((m = /^(proximal|middle|distal) phalanx of (thumb|index finger|middle finger|ring finger|little finger|big toe|second toe|third toe|fourth toe|little toe)$/.exec(key)))
+    return `${POSITION[m[1]!]} фаланга ${DIGIT[m[2]!]}`;
+  if ((m = /^phalanx of (thumb|index finger|middle finger|ring finger|little finger|big toe|second toe|third toe|fourth toe|little toe)$/.exec(key)))
+    return `Фаланга ${DIGIT[m[1]!]}`;
+  if (key === 'phalanx of finger') return 'Фаланга пальця кисті';
+  if (key === 'phalanx of toe') return 'Фаланга пальця стопи';
+  if ((m = /^(upper|lower) (?:(central|lateral|first|second) )?(?:secondary )?(incisor|canine|premolar|molar) tooth$/.exec(key))) {
+    const jaw = m[1] === 'upper' ? 'Верхній' : 'Нижній';
+    const kind = m[3]!;
+    const which = m[2];
+    const adjective = which === 'central' ? 'центральний ' : which === 'lateral' ? 'бічний ' : which === 'first' ? 'перший ' : which === 'second' ? 'другий ' : '';
+    const noun = TOOTH[kind]!;
+    if (kind === 'canine') return `${m[1] === 'upper' ? 'Верхнє' : 'Нижнє'} ікло`;
+    return `${jaw} ${adjective}${noun}`;
+  }
+  if ((m = /^(?:muscle|musculature) of (?:the )?(.+)$/.exec(key)) && AREA[m[1]!]) return `${key.startsWith('muscle') ? "М'язи" : 'Мускулатура'} ${AREA[m[1]!]}`;
+  if ((m = /^muscle of (anterior|posterior|medial|lateral) compartment of (arm|forearm|leg|thigh)$/.exec(key)))
+    return `М'язи ${COMPARTMENT[m[1]!]} відділу ${AREA[m[2]!]}`;
+  if ((m = /^intrinsic muscle of (hand|foot|larynx)$/.exec(key))) return `Власні м'язи ${AREA[m[1]!]}`;
+  return null;
+}
+
+function cap(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Splits off "left"/"right" so one translation serves both sides. */
+function splitSide(name: string): { key: string; side: 'left' | 'right' | null } {
+  const match = /\b(left|right)\b/i.exec(name);
+  const side = match ? (match[1]!.toLowerCase() as 'left' | 'right') : null;
+  const key = name.replace(/\b(left|right)\b ?/gi, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return { key, side };
+}
+
+const cache = new Map<string, string>();
+
+/** Ukrainian display name, or the original English name when no translation is known. */
+export function ukrainianName(name: string): string {
+  const cached = cache.get(name);
+  if (cached) return cached;
+  const { key, side } = splitSide(name);
+  const translated = index.get(key) ?? byRule(key);
+  const result = translated ? (side ? `${translated} (${side === 'left' ? 'ліва' : 'права'})` : translated) : name;
+  cache.set(name, result);
+  return result;
+}
+
+/** True when the query matches either the English or the Ukrainian name. */
+export function matchesAnatomyQuery(name: string, query: string): boolean {
+  const term = query.trim().toLowerCase();
+  if (!term) return true;
+  return name.toLowerCase().includes(term) || ukrainianName(name).toLowerCase().includes(term);
+}
+
+export function isTranslated(name: string): boolean {
+  return ukrainianName(name) !== name;
+}
