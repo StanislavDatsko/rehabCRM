@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function AnatomyIndex() {
   const me = await serverApiFetch<CurrentUserResponse>('/api/v1/me');
   const canReadPatients = hasPermission(me.permissions, PERMISSIONS.PATIENT_READ_ADMIN) || hasPermission(me.permissions, PERMISSIONS.PATIENT_READ_CLINICAL);
-  const patients = canReadPatients ? await listPatients({
+  const patients = canReadPatients ? await listPatients({ tab: 'patients',
     page: 1,
     pageSize: 50,
     sort: 'updatedAt',

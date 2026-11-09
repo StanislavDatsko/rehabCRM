@@ -16,7 +16,7 @@ export async function Overview({ user }: { user: CurrentUserResponse }) {
   const range = calendarQueryRange('day', parseCalendarDate(today, DEFAULT_TIMEZONE), DEFAULT_TIMEZONE);
   const anchor = parseCalendarDate(today, DEFAULT_TIMEZONE);
   const [patients, schedule, weekRevenue, monthRevenue, alerts] = await Promise.all([
-    patientsAllowed ? listPatients({ page: 1, pageSize: 6, sort: 'updatedAt', sortDir: 'desc', search: '', status: 'ACTIVE', responsiblePractitionerId: '' }).catch(() => null) : null,
+    patientsAllowed ? listPatients({ tab: 'patients', page: 1, pageSize: 6, sort: 'updatedAt', sortDir: 'desc', search: '', status: 'ACTIVE', responsiblePractitionerId: '' }).catch(() => null) : null,
     scheduleAllowed ? listAppointments(range).catch(() => null) : null,
     scheduleAllowed ? getAppointmentRevenue(periodRange('week', anchor, DEFAULT_TIMEZONE)).catch(() => null) : null,
     scheduleAllowed ? getAppointmentRevenue(periodRange('month', anchor, DEFAULT_TIMEZONE)).catch(() => null) : null,

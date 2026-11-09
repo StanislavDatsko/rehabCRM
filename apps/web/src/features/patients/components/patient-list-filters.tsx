@@ -25,6 +25,7 @@ export function PatientListFilters({
 }) {
   return (
     <form method="get" action="/app/patients" className="ui-filter-bar">
+      {query.tab === 'drafts' ? <input type="hidden" name="tab" value="drafts" /> : null}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <label htmlFor="patient-search" className="block text-xs font-medium text-text-secondary">
@@ -39,7 +40,7 @@ export function PatientListFilters({
             className="field mt-1 bg-background py-2.5 text-text-primary focus:border-info focus:ring-2 focus:ring-info/20"
           />
         </div>
-        <div>
+        {query.tab === 'drafts' ? null : <div>
           <label htmlFor="patient-status" className="block text-xs font-medium text-text-secondary">
             {t('patientsFilterStatus')}
           </label>
@@ -50,13 +51,13 @@ export function PatientListFilters({
             className="field mt-1 bg-background py-2.5 focus:border-info focus:ring-2 focus:ring-info/20"
           >
             <option value="">{t('patientsFilterAll')}</option>
-            {PATIENT_STATUSES.map((status) => (
+            {PATIENT_STATUSES.filter((status) => status !== 'DRAFT').map((status) => (
               <option key={status} value={status}>
                 {patientStatusLabel(status)}
               </option>
             ))}
           </select>
-        </div>
+        </div>}
         <div>
           <label
             htmlFor="patient-practitioner"

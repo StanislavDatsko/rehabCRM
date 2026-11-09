@@ -72,11 +72,14 @@ export function PatientForm({
   patient,
   practitioners,
   cancelHref,
+  activate = false,
 }: {
   mode: 'create' | 'edit';
   patient?: PatientAdministrativeResponse;
   practitioners: ResponsiblePractitionerResponse[];
   cancelHref: string;
+  /** Saving also moves a draft patient into the main patient list. */
+  activate?: boolean;
 }) {
   const action = mode === 'create' ? createPatientAction : updatePatientAction;
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -119,6 +122,7 @@ export function PatientForm({
         <>
           <input type="hidden" name="patientId" value={patient.id} />
           <input type="hidden" name="version" value={patient.version} />
+          {activate ? <input type="hidden" name="activate" value="1" /> : null}
         </>
       ) : null}
 
@@ -310,7 +314,7 @@ export function PatientForm({
 
       <div className="ui-form-actions">
         <Button type="submit" disabled={pending}>
-          {t('patientSave')}
+          {activate ? 'Додати до списку пацієнтів' : t('patientSave')}
         </Button>
         <a href={cancelHref}>
           <Button type="button" variant="secondary">

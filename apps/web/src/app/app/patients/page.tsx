@@ -4,6 +4,7 @@ import {
   listPatients,
   listResponsiblePractitioners,
 } from '../../../features/patients/api/patients-api';
+import { buildPatientsListHref } from '../../../features/patients/list-query';
 import { PatientListFilters } from '../../../features/patients/components/patient-list-filters';
 import { PatientListTable } from '../../../features/patients/components/patient-list-table';
 import {
@@ -65,17 +66,62 @@ export default async function PatientsPage({
   }
 
   const filtered = Boolean(query.search || query.status || query.responsiblePractitionerId);
+  const onDrafts = query.tab === 'drafts';
+
+  // The other tab's count, so both tabs can show how many patients they hold.
+  let otherTotal: number | null = null;
+  try {
+    const other = await listPatients({
+      ...query,
+      tab: onDrafts ? 'patients' : 'drafts',
+      status: '',
+      search: '',
+      responsiblePractitionerId: '',
+      page: 1,
+      pageSize: 1,
+    });
+    otherTotal = other.total;
+  } catch {
+    otherTotal = null;
+  }
+  const patientsCount = onDrafts ? otherTotal : (list?.total ?? null);
+  const draftsCount = onDrafts ? (list?.total ?? null) : otherTotal;
 
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Клінічна практика" title={t('patientsTitle')} description={t('patientsSubtitle')} metadata={list ? <span className="ui-count" aria-label={`${t('patientsTotal')}: ${list.total}`}>{list.total}</span> : null} actions={canCreate ? <a className="rc-btn rc-btn-primary inline-flex items-center gap-2" href="/app/patients/new"><span aria-hidden="true">+</span>{t('patientsCreate')}</a> : null} />
+
+      <nav className="ui-segmented w-fit" aria-label="Розділи списку пацієнтів">
+        <a
+          aria-current={onDrafts ? undefined : 'page'}
+          href={buildPatientsListHref({ ...query, tab: 'patients', page: 1, status: '' })}
+        >
+          Пацієнти{patientsCount !== null ? ` · ${patientsCount}` : ''}
+        </a>
+        <a
+          aria-current={onDrafts ? 'page' : undefined}
+          href={buildPatientsListHref({ ...query, tab: 'drafts', page: 1, status: '' })}
+        >
+          Чернетки{draftsCount !== null ? ` · ${draftsCount}` : ''}
+        </a>
+      </nav>
+
+      {onDrafts ? (
+        <p className="text-sm text-text-secondary">
+          Тут пацієнти, яких записали з календаря за ПІБ і телефоном. Коли пацієнт прийде, натисніть «Додати до списку пацієнтів», дозаповніть дані — і він з’явиться у загальному списку.
+        </p>
+      ) : null}
 
       <PatientListFilters query={query} practitioners={practitioners} />
 
       {listError ? <PatientsErrorState message={listError} /> : null}
 
       {!listError && list && list.items.length === 0 ? (
-        <PatientsEmptyState filtered={filtered} canCreate={canCreate} />
+        onDrafts && !filtered ? (
+          <p className="overview-empty">Чернеток немає. Нові пацієнти з календаря з’являться тут.</p>
+        ) : (
+          <PatientsEmptyState filtered={filtered} canCreate={canCreate} />
+        )
       ) : null}
 
       {!listError && list && list.items.length > 0 ? (
@@ -84,6 +130,7 @@ export default async function PatientsPage({
           query={query}
           totalPages={list.totalPages}
           canEdit={canEdit}
+          draftMode={onDrafts}
         />
       ) : null}
     </div>

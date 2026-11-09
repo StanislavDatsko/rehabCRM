@@ -59,7 +59,7 @@ export default async function PatientProfilePage({
   searchParams: Promise<{
     created?: string;
     updated?: string;
-    statusUpdated?: string;
+    statusUpdated?: string; activated?: string;
     assessmentStatus?: 'DRAFT' | 'COMPLETED' | 'VOIDED';
     assessmentTemplate?: string;
     assessmentFrom?: string;
@@ -161,7 +161,9 @@ export default async function PatientProfilePage({
     try { visitMedia = await serverApiFetch(`/api/v1/patients/${id}/media?page=1&pageSize=100&encounterOnly=true`); } catch { visitMedia = { items: [], total: 0 }; }
   }
 
-  const flashMessage = flash.created
+  const flashMessage = flash.activated
+    ? 'Пацієнта додано до списку.'
+    : flash.created
     ? t('patientCreatedFlash')
     : flash.updated
       ? t('patientUpdatedFlash')
@@ -185,6 +187,13 @@ export default async function PatientProfilePage({
           className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success"
         >
           {flashMessage}
+        </div>
+      ) : null}
+
+      {patient.status === 'DRAFT' && canUpdatePatient(me) ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/30 bg-warning/5 px-4 py-3 text-sm">
+          <span className="text-warning">Це чернетка з календаря: пацієнта ще немає у загальному списку.</span>
+          <a className="rc-btn rc-btn-primary" href={`/app/patients/${id}/edit?activate=1`}>Додати до списку пацієнтів</a>
         </div>
       ) : null}
 

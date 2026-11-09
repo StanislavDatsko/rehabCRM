@@ -144,6 +144,25 @@ describe('PatientsService', () => {
     );
   });
 
+  it('hides draft patients from the main list but lets the drafts tab ask for them', async () => {
+    prisma.patient.count.mockResolvedValue(0);
+    prisma.patient.findMany.mockResolvedValue([]);
+
+    await service.list(principal, { excludeDrafts: 'true' });
+    expect(prisma.patient.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: { not: 'DRAFT' } }),
+      }),
+    );
+
+    await service.list(principal, { status: 'DRAFT', excludeDrafts: 'true' });
+    expect(prisma.patient.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'DRAFT' }),
+      }),
+    );
+  });
+
   it('rejects responsible practitioner outside org or not ACTIVE', async () => {
     prisma.practitioner.findFirst.mockResolvedValue(null);
 

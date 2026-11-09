@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function RehabilitationPlansIndex() {
   const me = await serverApiFetch<CurrentUserResponse>('/api/v1/me');
   if (!canReadPatients(me)) return <p className="ui-surface p-6 text-sm text-text-secondary">Доступ до пацієнтів для цієї ролі недоступний.</p>;
-  const patients = await listPatients({
+  const patients = await listPatients({ tab: 'patients',
     page: 1,
     pageSize: 50,
     sort: 'updatedAt',
