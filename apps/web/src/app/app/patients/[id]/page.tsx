@@ -203,7 +203,7 @@ export default async function PatientProfilePage({
         actions={<>
           {canReadAssessments(me) && canCreateAssessment(me) ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/assessments/new`}>+ Оцінювання</a> : null}
           {canReadPlans(me) && canCreatePlan(me) ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/rehabilitation/new`}>+ План</a> : null}
-          {canReadBodyMap(me) && bodyMap ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/body-map`}>Body map</a> : null}
+          {canReadBodyMap(me) && bodyMap ? <a className="rc-btn rc-btn-secondary" href={`/app/patients/${id}/body-map`}>Карта тіла</a> : null}
         </>}
       />
       <nav aria-label="Розділи картки пацієнта" className="patient-section-nav">
@@ -285,7 +285,7 @@ export default async function PatientProfilePage({
         <section id="body-map" className="patient-workspace-section ui-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-sans text-lg text-text-primary">Clinical body map</h2>
+              <h2 className="font-sans text-lg text-text-primary">Клінічна карта тіла</h2>
               <p className="mt-1 text-sm text-text-secondary">
                 {bodyMap.summary.active} active · {bodyMap.summary.resolved} resolved
                 {bodyMap.summary.maximumSeverity === null
@@ -303,7 +303,7 @@ export default async function PatientProfilePage({
               href={`/app/patients/${id}/body-map`}
               className="rc-btn rc-btn-primary"
             >
-              Open body map
+              Відкрити карту тіла
             </a>
           </div>
         </section>

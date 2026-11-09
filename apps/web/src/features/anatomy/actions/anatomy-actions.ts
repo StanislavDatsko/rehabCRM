@@ -23,7 +23,7 @@ import {
 
 export type AnatomyActionState = { error: string | null; ok: boolean };
 const denied: AnatomyActionState = {
-  error: 'You do not have permission for this action.',
+  error: 'У вас немає дозволу на цю дію.',
   ok: false,
 };
 const text = (data: FormData, key: string) =>
@@ -60,7 +60,7 @@ export async function createBodyAnnotationAction(
     return { error: null, ok: true };
   } catch {
     return {
-      error: 'The annotation could not be saved. Review the selected surface and fields.',
+      error: 'Не вдалося зберегти позначку. Перевірте вибрану поверхню й поля.',
       ok: false,
     };
   }
@@ -85,7 +85,7 @@ export async function updateBodyAnnotationAction(
     return { error: null, ok: true };
   } catch {
     return {
-      error: 'The annotation changed or could not be updated. Refresh and retry.',
+      error: 'Позначку змінено або її не вдалося оновити. Оновіть сторінку й повторіть.',
       ok: false,
     };
   }
@@ -112,7 +112,7 @@ export async function transitionBodyAnnotationAction(
     revalidatePath(`/app/patients/${text(data, 'patientId')}/body-map`);
     return { error: null, ok: true };
   } catch {
-    return { error: 'The status could not be changed. Refresh and retry.', ok: false };
+    return { error: 'Не вдалося змінити статус. Оновіть сторінку й повторіть.', ok: false };
   }
 }
 

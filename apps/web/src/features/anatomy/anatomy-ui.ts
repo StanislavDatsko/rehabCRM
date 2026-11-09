@@ -13,15 +13,15 @@ export const BODY_ANNOTATION_TYPES: BodyAnnotationType[] = [
 ];
 
 export const BODY_ANNOTATION_TYPE_LABELS: Record<BodyAnnotationType, string> = {
-  PAIN: 'Pain',
-  MOBILITY_LIMITATION: 'Mobility limitation',
-  WEAKNESS: 'Weakness',
-  TENSION: 'Tension',
-  INFLAMMATION: 'Inflammation',
-  POST_SURGERY: 'Post-surgery observation',
-  INJURY: 'Injury',
-  SENSITIVITY: 'Sensitivity',
-  OTHER: 'Other',
+  PAIN: 'Біль',
+  MOBILITY_LIMITATION: 'Обмеження рухливості',
+  WEAKNESS: 'Слабкість',
+  TENSION: 'Напруження',
+  INFLAMMATION: 'Запалення',
+  POST_SURGERY: 'Післяопераційне спостереження',
+  INJURY: 'Травма',
+  SENSITIVITY: 'Чутливість',
+  OTHER: 'Інше',
 };
 
 export const ANATOMY_LAYER_LABELS: Record<string, string> = {
@@ -29,3 +29,11 @@ export const ANATOMY_LAYER_LABELS: Record<string, string> = {
   SKELETAL: 'Кістки',
   JOINTS: 'Суглоби',
 };
+
+export const BODY_ANNOTATION_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Активна',
+  RESOLVED: 'Вирішена',
+  VOIDED: 'Скасована',
+  CREATED: 'Створена',
+};
+export const annotationStatusLabel = (status: string): string => BODY_ANNOTATION_STATUS_LABELS[status] ?? status;

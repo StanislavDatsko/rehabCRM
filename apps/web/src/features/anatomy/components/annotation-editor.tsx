@@ -1,6 +1,7 @@
 'use client';
 
 import type { BodyAnnotationResponse } from '@repo/contracts';
+import { annotationStatusLabel } from '../anatomy-ui';
 import { useActionState } from 'react';
 import {
   transitionBodyAnnotationAction,
@@ -32,12 +33,12 @@ export function AnnotationEditor({
   return (
     <div className="ui-surface space-y-4 p-4">
       <div>
-        <p className="text-xs uppercase tracking-wide text-text-secondary">Selected annotation</p>
+        <p className="text-xs uppercase tracking-wide text-text-secondary">Вибрана позначка</p>
         <h3 className="font-medium text-text-primary">
           {annotation.title ?? BODY_ANNOTATION_TYPE_LABELS[annotation.type]}
         </h3>
         <p className="text-sm text-text-secondary">
-          {annotation.structure.name} · {annotation.status.toLowerCase()} ·{' '}
+          {annotation.structure.name} · {annotationStatusLabel(annotation.status).toLowerCase()} ·{' '}
           {new Date(annotation.createdAt).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' })}
         </p>
       </div>
@@ -46,9 +47,7 @@ export function AnnotationEditor({
           <input type="hidden" name="annotationId" value={annotation.id} />
           <input type="hidden" name="patientId" value={patientId} />
           <input type="hidden" name="version" value={annotation.version} />
-          <label className="text-sm">
-            Title
-            <input
+          <label className="text-sm">Заголовок<input
               name="title"
               defaultValue={annotation.title ?? ''}
               maxLength={200}
@@ -56,9 +55,7 @@ export function AnnotationEditor({
             />
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm">
-              Type
-              <select
+            <label className="text-sm">Тип<select
                 name="type"
                 defaultValue={annotation.type}
                 className="field mt-1 w-full"
@@ -83,7 +80,7 @@ export function AnnotationEditor({
             </label>
           </div>
           <label className="text-sm">
-            Clinical note
+            Клінічна примітка
             <textarea
               name="note"
               defaultValue={annotation.note ?? ''}
@@ -98,11 +95,11 @@ export function AnnotationEditor({
             </p>
           ) : null}
           <button disabled={updating} className="rc-btn rc-btn-primary">
-            Save annotation
+            Зберегти позначку
           </button>
         </form>
       ) : (
-        <p className="text-sm text-text-secondary">Historical annotations are read-only.</p>
+        <p className="text-sm text-text-secondary">Історичні позначки доступні лише для перегляду.</p>
       )}
       {annotation.status !== 'VOIDED' && (canResolve || canVoid) ? (
         <form action={transitionAction} className="grid gap-2 border-t border-border pt-3">
@@ -110,7 +107,7 @@ export function AnnotationEditor({
           <input type="hidden" name="patientId" value={patientId} />
           <input type="hidden" name="version" value={annotation.version} />
           <label className="text-sm">
-            Status reason
+            Причина зміни статусу
             <input
               name="reason"
               minLength={3}
@@ -124,9 +121,7 @@ export function AnnotationEditor({
                 value="resolve"
                 disabled={transitioning}
                 className="rounded border border-success px-3 py-2 text-sm text-success"
-              >
-                Resolve
-              </button>
+              >Позначити вирішеним</button>
             ) : null}
             {canVoid ? (
               <button
@@ -134,9 +129,7 @@ export function AnnotationEditor({
                 value="void"
                 disabled={transitioning}
                 className="rounded border border-danger px-3 py-2 text-sm text-danger"
-              >
-                Void
-              </button>
+              >Скасувати</button>
             ) : null}
           </div>
           {transitionState.error ? (
@@ -147,12 +140,12 @@ export function AnnotationEditor({
         </form>
       ) : null}
       <details>
-        <summary className="cursor-pointer text-sm text-info">Status history</summary>
+        <summary className="cursor-pointer text-sm text-info">Історія статусів</summary>
         <ol className="mt-2 space-y-1 text-xs text-text-secondary">
           {annotation.history.map((item) => (
             <li key={item.id}>
-              {new Date(item.changedAt).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' })} · {item.fromStatus ?? 'CREATED'} →{' '}
-              {item.toStatus} · {item.changedBy.displayName}
+              {new Date(item.changedAt).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short', timeZone: 'UTC' })} · {annotationStatusLabel(item.fromStatus ?? 'CREATED')} →{' '}
+              {annotationStatusLabel(item.toStatus)} · {item.changedBy.displayName}
               {item.reason ? ` · ${item.reason}` : ''}
             </li>
           ))}

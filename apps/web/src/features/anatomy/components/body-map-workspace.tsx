@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts';
 import { useActionState, useMemo, useState } from 'react';
 import { createBodyAnnotationAction, type AnatomyActionState } from '../actions/anatomy-actions';
-import { BODY_ANNOTATION_TYPE_LABELS, BODY_ANNOTATION_TYPES } from '../anatomy-ui';
+import { annotationStatusLabel, BODY_ANNOTATION_TYPE_LABELS, BODY_ANNOTATION_TYPES } from '../anatomy-ui';
 import {
   filterBodyAnnotations,
   renderTargetForStructure,
@@ -154,13 +154,13 @@ export function BodyMapWorkspace({
 
   return (
     <div className="space-y-5">
-      <PageHeader eyebrow="Clinical body map" title={data.patient.fullName} description="Versioned anatomical surface annotations. Not a diagnostic imaging tool." actions={<a href={`/app/patients/${data.patient.id}`} className="rc-btn rc-btn-secondary">Back to patient</a>} />
+      <PageHeader eyebrow="Клінічна карта тіла" title={data.patient.fullName} description="Версійні анатомічні позначки на поверхні. Не є засобом діагностичної візуалізації." actions={<a href={`/app/patients/${data.patient.id}`} className="rc-btn rc-btn-secondary">До пацієнта</a>} />
       <div className={`grid gap-4 lg:grid-cols-[minmax(0,1fr)] min-[1800px]:grid-cols-[minmax(0,1fr)_340px] ${clinicalHeatmapMode ? 'body-map-clinical-mode' : ''}`}>
-        <main className="ui-surface space-y-3 p-4 lg:p-5" aria-label="Interactive clinical body map">
+        <main className="ui-surface space-y-3 p-4 lg:p-5" aria-label="Інтерактивна клінічна карта тіла">
           <section aria-labelledby="human-atlas-primary-title" className="space-y-2">
             <div>
-              <h2 id="human-atlas-primary-title" className="font-medium">Human Atlas · primary source</h2>
-              <p className="text-sm text-text-secondary">Source geometry is selectable for inspection. Clinical annotations require a verified RehabMIS mapping.</p>
+              <h2 id="human-atlas-primary-title" className="font-medium">Human Atlas · основне джерело</h2>
+              <p className="text-sm text-text-secondary">Геометрію джерела можна вибирати для огляду. Клінічні позначки потребують підтвердженого зіставлення RehabMIS.</p>
             </div>
             <HumanAtlasExplorer
               onSelect={chooseHumanAtlas}
@@ -195,7 +195,7 @@ export function BodyMapWorkspace({
               }
             />
           </section>
-          <div className="atlas-toolbar"><p className="text-xs text-text-secondary">Human Atlas is the only anatomy source for this workspace.</p></div>
+          <div className="atlas-toolbar"><p className="text-xs text-text-secondary">Human Atlas — єдине джерело анатомії в цьому розділі.</p></div>
           {viewerMessage ? (
             <p
               role="status"
@@ -217,25 +217,21 @@ export function BodyMapWorkspace({
               action={createAction}
               className="ui-surface grid gap-3 border-info/30 p-4"
             >
-              <h2 className="font-medium">New annotation</h2>
+              <h2 className="font-medium">Нова позначка</h2>
               <input type="hidden" name="patientId" value={data.patient.id} />
               <input type="hidden" name="encounterId" value={encounterId ?? ''} />
               <input type="hidden" name="structureId" value={selection.mapping.structureId} />
               <input type="hidden" name="modelVersionId" value={selection.modelVersionId} />
               <input type="hidden" name="mappingId" value={selection.mapping.id} />
               <input type="hidden" name="anchor" value={JSON.stringify(selection.anchor)} />
-              <label className="text-sm">
-                Title
-                <input
+              <label className="text-sm">Заголовок<input
                   name="title"
                   maxLength={200}
                   className="field mt-1 w-full"
                 />
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-sm">
-                  Type
-                  <select
+                <label className="text-sm">Тип<select
                     name="type"
                     className="field mt-1 w-full"
                   >
@@ -246,9 +242,7 @@ export function BodyMapWorkspace({
                     ))}
                   </select>
                 </label>
-                <label className="text-sm">
-                  Severity
-                  <input
+                <label className="text-sm">Тяжкість<input
                     name="severity"
                     type="number"
                     min={0}
@@ -257,9 +251,9 @@ export function BodyMapWorkspace({
                   />
                 </label>
               </div>
-              <label className="text-sm">Problem color<input name="colorHex" type="color" defaultValue="#ff4d6d" className="mt-1 h-11 w-full cursor-pointer rounded-md border border-border bg-background p-1" /></label>
+              <label className="text-sm">Колір проблеми<input name="colorHex" type="color" defaultValue="#ff4d6d" className="mt-1 h-11 w-full cursor-pointer rounded-md border border-border bg-background p-1" /></label>
               <label className="text-sm">
-                  Clinical note
+                  Клінічна примітка
                 <textarea
                   name="note"
                   maxLength={3000}
@@ -274,11 +268,11 @@ export function BodyMapWorkspace({
               ) : null}
               {createState.ok ? (
                 <p role="status" className="text-sm text-success">
-                  Annotation saved.
+                  Позначку збережено.
                 </p>
               ) : null}
               <button disabled={creating} className="rc-btn rc-btn-primary">
-                Add annotation
+                Додати позначку
               </button>
             </form>
           ) : null}
@@ -287,39 +281,35 @@ export function BodyMapWorkspace({
       <section className="ui-surface p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <h2 className="font-medium">Annotations and timeline</h2>
+            <h2 className="font-medium">Позначки та хронологія</h2>
             <p className="text-sm text-text-secondary">
-              Active findings and immutable resolved/voided history.
+              Активні знахідки та незмінна історія вирішених і скасованих.
             </p>
           </div>
-          <label className="text-xs">
-            Status
-            <select
+          <label className="text-xs">Статус<select
               value={status}
               onChange={(event) => setStatus(event.target.value as typeof status)}
               className="field ml-2 px-2 py-1 text-xs"
             >
-              <option>ALL</option>
+              <option value="ALL">Усі</option>
               {(['ACTIVE', 'RESOLVED', 'VOIDED'] as const).map((item) => (
-                <option key={item}>{item}</option>
+                <option key={item} value={item}>{annotationStatusLabel(item)}</option>
               ))}
             </select>
           </label>
-          <label className="text-xs">
-            Type
-            <select
+          <label className="text-xs">Тип<select
               value={type}
               onChange={(event) => setType(event.target.value as typeof type)}
               className="field ml-2 px-2 py-1 text-xs"
             >
-              <option>ALL</option>
+              <option value="ALL">Усі</option>
               {BODY_ANNOTATION_TYPES.map((item) => (
-                <option key={item}>{item}</option>
+                <option key={item} value={item}>{BODY_ANNOTATION_TYPE_LABELS[item]}</option>
               ))}
             </select>
           </label>
           <label className="text-xs">
-            From{' '}
+            Від{' '}
             <input
               type="date"
               value={from}
@@ -328,7 +318,7 @@ export function BodyMapWorkspace({
             />
           </label>
           <label className="text-xs">
-            To{' '}
+            До{' '}
             <input
               type="date"
               value={to}
@@ -339,8 +329,8 @@ export function BodyMapWorkspace({
         </div>
         {data.annotationWindow.truncated ? (
           <p role="status" className="mt-3 text-xs text-warning">
-            Showing the {data.annotationWindow.returned} most recent of{' '}
-            {data.annotationWindow.total} annotations. Use API filters for older records.
+            Показано {data.annotationWindow.returned} останніх із{' '}
+            {data.annotationWindow.total} позначок. Для старіших записів використовуйте фільтри.
           </p>
         ) : null}
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -355,13 +345,13 @@ export function BodyMapWorkspace({
                     {annotation.title ?? BODY_ANNOTATION_TYPE_LABELS[annotation.type]}
                   </span>
                   <span className="ml-2 rounded bg-background px-2 py-0.5 text-xs">
-                    {annotation.status}
+                    {annotationStatusLabel(annotation.status)}
                   </span>
                   <p className="text-sm text-text-secondary">
                     {annotation.structure.name} · {BODY_ANNOTATION_TYPE_LABELS[annotation.type]}
                     {annotation.severity === null
                       ? ''
-                      : ` · severity ${annotation.severity}/10`} ·{' '}
+                      : ` · тяжкість ${annotation.severity}/10`} ·{' '}
                     {new Date(annotation.createdAt).toLocaleString('uk-UA', {
                       dateStyle: 'short',
                       timeStyle: 'short',
@@ -382,7 +372,7 @@ export function BodyMapWorkspace({
             />
           ) : (
             <div className="ui-empty-state border-dashed p-5 text-sm text-text-secondary">
-              Choose an annotation to inspect its status history or edit an active finding.
+              Оберіть позначку, щоб переглянути історію статусів або змінити активну знахідку.
             </div>
           )}
         </div>

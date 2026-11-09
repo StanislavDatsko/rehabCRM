@@ -2,16 +2,16 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { signIn } from './helpers';
 
 const PATIENT = 'd1000000-0000-4000-8000-000000000001';
-const STRUCTURE = 'Long head of right biceps brachii';
+const STRUCTURE = "Довга головка двоголового м'яза плеча (праворуч)";
 
 async function openIsolatedBiceps(page: Page): Promise<Locator> {
   await page.setViewportSize({ width: 1400, height: 1000 });
   await page.goto(`/app/patients/${PATIENT}/body-map`);
   const canvas = page.getByTestId('human-atlas-canvas');
   await expect(canvas).toHaveAttribute('data-atlas-complete', 'true', { timeout: 60_000 });
-  await page.getByPlaceholder('Femur, heart…').fill(STRUCTURE);
+  await page.getByPlaceholder('Стегнова кістка, серце…').fill('Long head of right biceps brachii');
+  // Picking a structure from the list isolates it and frames the camera.
   await page.getByRole('button', { name: STRUCTURE }).first().click();
-  await page.getByRole('button', { name: 'Isolate', exact: true }).click();
   await expect(page.getByTestId('point-annotations-layer')).toHaveAttribute('data-isolated', 'true');
   await canvas.scrollIntoViewIfNeeded();
   await page.waitForTimeout(700); // camera damping settles on the isolated structure
@@ -133,10 +133,10 @@ test.describe('point annotations on an isolated structure', () => {
     await page.getByPlaceholder('Додайте коментар до цієї ділянки...').fill('Друга точка');
     await page.getByRole('button', { name: 'Зберегти' }).click();
     await expect(markers).toHaveCount(1, { timeout: 15_000 });
-    await page.getByRole('button', { name: 'Show all', exact: true }).click();
+    await page.getByRole('button', { name: 'Показати все', exact: true }).click();
     await expect(layer).toHaveAttribute('data-isolated', 'false');
     await expect(markers).toHaveCount(0);
-    await page.getByRole('button', { name: 'Isolate', exact: true }).click();
+    await page.getByRole('button', { name: 'Ізолювати', exact: true }).click();
     await canvas.scrollIntoViewIfNeeded();
     await expect(markers).toHaveCount(1);
     await expect(markers.first()).toHaveAttribute('data-visible', 'true');

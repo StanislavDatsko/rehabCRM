@@ -105,7 +105,7 @@ export function combineDateAndTimeToIso(
   const match = CALENDAR_DATE_RE.exec(dateYmd);
   const [hours, minutes] = timeHm.split(':').map(Number);
   if (!match || !Number.isFinite(hours) || !Number.isFinite(minutes)) {
-    throw new Error('Invalid date or time');
+    throw new Error('Некоректна дата чи час');
   }
   const [, year, month, day] = match;
   const local = new Date(Number(year), Number(month) - 1, Number(day), hours, minutes, 0);

@@ -1,5 +1,6 @@
 'use client';
 
+import { annotationStatusLabel } from '../anatomy-ui';
 import type {
   AnatomicalStructureResponse,
   BodyAnnotationResponse,
@@ -35,7 +36,7 @@ export function StructureInspector({
     : [];
   return (
     <section className="ui-surface p-4">
-      <h2 className="font-medium">Structure inspector</h2>
+      <h2 className="font-medium">Інспектор структури</h2>
       {!structure ? (
         unmappedSelection ? (
           <div className="mt-3 space-y-3 text-sm">
@@ -47,25 +48,25 @@ export function StructureInspector({
               анатомічного зіставлення. Створення клінічної анотації недоступне.
             </p>
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-              <dt className="text-text-secondary">Mesh</dt>
+              <dt className="text-text-secondary">Деталь моделі</dt>
               <dd className="break-all">{unmappedSelection.meshName}</dd>
-              <dt className="text-text-secondary">Stable key</dt>
+              <dt className="text-text-secondary">Стабільний ключ</dt>
               <dd className="break-all font-mono text-xs">{unmappedSelection.meshKey}</dd>
-              <dt className="text-text-secondary">Primitive</dt>
+              <dt className="text-text-secondary">Примітив</dt>
               <dd>{unmappedSelection.primitiveIndex}</dd>
-              <dt className="text-text-secondary">Model version</dt>
+              <dt className="text-text-secondary">Версія моделі</dt>
               <dd className="break-all font-mono text-xs">{unmappedSelection.modelVersionId}</dd>
             </dl>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-text-secondary">Select a mapped surface or structure.</p>
+          <p className="mt-2 text-sm text-text-secondary">Оберіть зіставлену поверхню або структуру.</p>
         )
       ) : (
         <>
           <div
             className="mt-3 flex gap-1 overflow-x-auto"
             role="tablist"
-            aria-label="Structure context"
+            aria-label="Контекст структури"
           >
             {tabs.map((item) => (
               <button
@@ -82,15 +83,15 @@ export function StructureInspector({
           <div className="mt-3 space-y-2 text-sm" role="tabpanel">
             {tab === 'overview' ? (
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-                <dt className="text-text-secondary">Name</dt>
+                <dt className="text-text-secondary">Назва</dt>
                 <dd>{structure.name}</dd>
-                <dt className="text-text-secondary">Canonical</dt>
+                <dt className="text-text-secondary">Канонічна назва</dt>
                 <dd>{structure.canonicalName}</dd>
-                <dt className="text-text-secondary">Category</dt>
+                <dt className="text-text-secondary">Категорія</dt>
                 <dd>{structure.category.toLowerCase()}</dd>
-                <dt className="text-text-secondary">Laterality</dt>
+                <dt className="text-text-secondary">Сторона</dt>
                 <dd>{structure.laterality.toLowerCase()}</dd>
-                <dt className="text-text-secondary">Code</dt>
+                <dt className="text-text-secondary">Код</dt>
                 <dd className="break-all font-mono text-xs">{structure.code}</dd>
               </dl>
             ) : null}
@@ -99,12 +100,12 @@ export function StructureInspector({
                 related.map((item) => (
                   <p key={item.id}>
                     {item.title ?? BODY_ANNOTATION_TYPE_LABELS[item.type]} ·{' '}
-                    {item.status.toLowerCase()}
+                    {annotationStatusLabel(item.status).toLowerCase()}
                     {item.severity === null ? '' : ` · ${item.severity}/10`}
                   </p>
                 ))
               ) : (
-                <p className="text-text-secondary">No annotations for this structure.</p>
+                <p className="text-text-secondary">Для цієї структури позначок немає.</p>
               )
             ) : null}
             {tab === 'measurements' ? (
@@ -115,7 +116,7 @@ export function StructureInspector({
                   </p>
                 ))
               ) : (
-                <p className="text-text-secondary">No matching completed measurements.</p>
+                <p className="text-text-secondary">Немає відповідних завершених вимірювань.</p>
               )
             ) : null}
             {tab === 'goals' ? (
@@ -126,11 +127,11 @@ export function StructureInspector({
                     className="block text-info underline"
                     href={`/app/rehabilitation-plans/${item.planId}`}
                   >
-                    {item.title} · {item.status.toLowerCase()}
+                    {item.title} · {annotationStatusLabel(item.status).toLowerCase()}
                   </a>
                 ))
               ) : (
-                <p className="text-text-secondary">No matching current goals.</p>
+                <p className="text-text-secondary">Немає відповідних поточних цілей.</p>
               )
             ) : null}
             {tab === 'exercises' ? (
@@ -145,7 +146,7 @@ export function StructureInspector({
                   </a>
                 ))
               ) : (
-                <p className="text-text-secondary">No matching current prescriptions.</p>
+                <p className="text-text-secondary">Немає відповідних поточних призначень.</p>
               )
             ) : null}
           </div>
