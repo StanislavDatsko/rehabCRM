@@ -183,7 +183,11 @@ export async function createAppointmentAction(
       if (error instanceof ServerApiError && error.status === 400) {
         return { error: 'Перевірте ім’я та номер телефону пацієнта.' };
       }
-      return errorState(error);
+      if (error instanceof ServerApiError && error.status === 403) {
+        return { error: 'Недостатньо прав, щоб створити нового пацієнта.' };
+      }
+      // Anything else here is about creating the patient, not about an appointment.
+      return { error: 'Не вдалося створити нового пацієнта. Спробуйте ще раз або оберіть існуючого.' };
     }
   }
 
