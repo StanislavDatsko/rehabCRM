@@ -2,6 +2,7 @@ import type { PatientHistoryItem, PatientSex, PatientStatus } from '@repo/contra
 import { t, type MessageKey } from '../../i18n/messages';
 
 const STATUS_KEYS: Record<PatientStatus, MessageKey> = {
+  DRAFT: 'patientStatusDraft',
   ACTIVE: 'patientStatusActive',
   INACTIVE: 'patientStatusInactive',
   COMPLETED: 'patientStatusCompleted',

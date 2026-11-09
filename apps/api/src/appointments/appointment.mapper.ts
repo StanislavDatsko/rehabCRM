@@ -104,6 +104,8 @@ export function toAppointmentCalendarItem(
       ? { id: row.location.id, name: row.location.name, timezone: row.location.timezone }
       : null,
     room: row.room ? { id: row.room.id, name: row.room.name } : null,
+    priceAmount: row.priceAmount,
+    rescheduledFromAt: row.rescheduledFromAt?.toISOString() ?? null,
     version: row.version,
   };
 }

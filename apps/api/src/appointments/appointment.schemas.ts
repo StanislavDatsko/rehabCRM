@@ -1,4 +1,5 @@
 import {
+  CALENDAR_BLOCK_KINDS,
   APPOINTMENT_MAX_DURATION_MINUTES,
   APPOINTMENT_MIN_DURATION_MINUTES,
   APPOINTMENT_STATUSES,
@@ -7,6 +8,8 @@ import {
 import { z } from 'zod';
 
 const isoDateTime = z.string().datetime({ offset: true });
+
+const priceAmountSchema = z.union([z.number().int().min(0).max(1_000_000), z.null()]);
 
 const emptyToNull = (value: string | null | undefined): string | null => {
   if (value == null) {
@@ -46,6 +49,7 @@ export const createAppointmentBodySchema = z
     endsAt: isoDateTime,
     reason: optionalText(500),
     administrativeNote: optionalText(2000),
+    priceAmount: priceAmountSchema.optional(),
   })
   .strict()
   .superRefine((body, ctx) => {
@@ -79,6 +83,7 @@ export const updateAppointmentBodySchema = z
     endsAt: isoDateTime.optional(),
     reason: optionalText(500),
     administrativeNote: optionalText(2000),
+    priceAmount: priceAmountSchema.optional(),
   })
   .strict()
   .superRefine((body, ctx) => {
@@ -139,6 +144,50 @@ export const calendarQuerySchema = z
     }
   });
 
+export const createCalendarBlockBodySchema = z
+  .object({
+    kind: z.enum(CALENDAR_BLOCK_KINDS),
+    startsAt: isoDateTime,
+    endsAt: isoDateTime,
+    note: optionalText(200),
+  })
+  .strict()
+  .superRefine((body, ctx) => {
+    const start = new Date(body.startsAt);
+    const end = new Date(body.endsAt);
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Block end must be after start',
+        path: ['endsAt'],
+      });
+    }
+    if (end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Block cannot exceed 31 days',
+        path: ['endsAt'],
+      });
+    }
+  });
+
+export const rangeQuerySchema = z
+  .object({ from: isoDateTime, to: isoDateTime })
+  .strict()
+  .superRefine((query, ctx) => {
+    const from = new Date(query.from);
+    const to = new Date(query.to);
+    if (to <= from || to.getTime() - from.getTime() > CALENDAR_MAX_RANGE_DAYS * 86_400_000) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Invalid range',
+        path: ['to'],
+      });
+    }
+  });
+
+export type CreateCalendarBlockBody = z.infer<typeof createCalendarBlockBodySchema>;
+export type RangeQuery = z.infer<typeof rangeQuerySchema>;
 export type CreateAppointmentBody = z.infer<typeof createAppointmentBodySchema>;
 export type UpdateAppointmentBody = z.infer<typeof updateAppointmentBodySchema>;
 export type CancelAppointmentBody = z.infer<typeof cancelAppointmentBodySchema>;

@@ -3,6 +3,7 @@ import { patientStatusLabel } from '../labels';
 import { StatusPill } from '@repo/ui/workspace';
 
 const tones = {
+  DRAFT: 'warning',
   ACTIVE: 'success',
   INACTIVE: 'warning',
   COMPLETED: 'info',

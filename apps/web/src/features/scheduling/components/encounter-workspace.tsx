@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any -- exercise-log and media payloads are not yet typed in @repo/contracts */
 
 import type { EncounterResponse } from '@repo/contracts';
 import type { CurrentUserResponse } from '@repo/contracts';

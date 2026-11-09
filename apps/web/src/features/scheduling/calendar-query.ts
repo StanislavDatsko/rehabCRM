@@ -1,6 +1,6 @@
 import { todayCalendarDate } from './timezone';
 
-export type CalendarView = 'day' | 'week';
+export type CalendarView = 'day' | 'week' | 'month';
 
 export type CalendarQuery = {
   view: CalendarView;
@@ -11,7 +11,7 @@ export type CalendarQuery = {
   create: boolean;
 };
 
-const VIEW_SET = new Set<string>(['day', 'week']);
+const VIEW_SET = new Set<string>(['day', 'week', 'month']);
 
 function firstString(value: string | string[] | undefined): string {
   if (Array.isArray(value)) {

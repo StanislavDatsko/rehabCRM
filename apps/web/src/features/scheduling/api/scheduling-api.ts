@@ -1,7 +1,12 @@
 import 'server-only';
+/* eslint-disable @typescript-eslint/no-explicit-any -- exercise-log and media payloads are not yet typed in @repo/contracts */
 
 import type {
   AppointmentCalendarResponse,
+  AppointmentRevenueResponse,
+  CalendarBlockItem,
+  CalendarBlockKind,
+  CalendarBlocksResponse,
   AppointmentDetailResponse,
   EncounterResponse,
   PatientAppointmentSummary,
@@ -28,6 +33,7 @@ export type CreateAppointmentBody = {
   endsAt: string;
   reason?: string | null;
   administrativeNote?: string | null;
+  priceAmount?: number | null;
 };
 
 export type UpdateAppointmentBody = {
@@ -40,6 +46,7 @@ export type UpdateAppointmentBody = {
   endsAt?: string;
   reason?: string | null;
   administrativeNote?: string | null;
+  priceAmount?: number | null;
 };
 
 export type VersionCommandBody = {
@@ -181,5 +188,36 @@ export async function getPatientAppointments(
 ): Promise<PatientAppointmentSummary> {
   return serverApiFetch<PatientAppointmentSummary>(
     `/api/v1/patients/${patientId}/appointments`,
+  );
+}
+
+export async function listCalendarBlocks(range: {
+  from: string;
+  to: string;
+}): Promise<CalendarBlocksResponse> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  return serverApiFetch<CalendarBlocksResponse>(`/api/v1/appointments/blocks?${params.toString()}`);
+}
+
+export async function createCalendarBlock(body: {
+  kind: CalendarBlockKind;
+  startsAt: string;
+  endsAt: string;
+  note?: string | null;
+}): Promise<CalendarBlockItem> {
+  return serverApiFetch<CalendarBlockItem>('/api/v1/appointments/blocks', jsonInit('POST', body));
+}
+
+export async function deleteCalendarBlock(id: string): Promise<void> {
+  await serverApiFetch<void>(`/api/v1/appointments/blocks/${id}`, { method: 'DELETE' });
+}
+
+export async function getAppointmentRevenue(range: {
+  from: string;
+  to: string;
+}): Promise<AppointmentRevenueResponse> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  return serverApiFetch<AppointmentRevenueResponse>(
+    `/api/v1/appointments/revenue?${params.toString()}`,
   );
 }

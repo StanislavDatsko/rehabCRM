@@ -88,6 +88,16 @@ export async function createPatient(
   );
 }
 
+export async function createDraftPatient(body: {
+  fullName: string;
+  phone?: string | null;
+}): Promise<PatientAdministrativeResponse> {
+  return serverApiFetch<PatientAdministrativeResponse>(
+    '/api/v1/patients/draft',
+    jsonInit('POST', body),
+  );
+}
+
 export async function updatePatient(
   id: string,
   body: UpdatePatientBody,

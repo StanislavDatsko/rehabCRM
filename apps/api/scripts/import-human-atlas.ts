@@ -57,7 +57,6 @@ async function main(): Promise<void> {
     await prisma.anatomicalSourcePart.createMany({ data: manifest.parts.map((part) => ({ modelVersionId: version.id, sourcePartId: part.id, conceptId: part.conceptId, name: part.name, system: part.system, chunkIndex: part.chunk })) });
     const structures = await prisma.anatomicalStructure.findMany({ where: { code: { in: reviewed.mappings.map((item) => item.structureCode) }, active: true }, select: { id: true, code: true } });
     const structureByCode = new Map(structures.map((item) => [item.code, item.id]));
-    const partById = new Map(manifest.parts.map((part) => [part.id, part]));
     const reviewedByPart = new Map(reviewed.mappings.map((item) => [item.sourcePartId, item]));
     for (const part of manifest.parts) {
       const reviewedMapping = reviewedByPart.get(part.id);

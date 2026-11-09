@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -13,6 +15,9 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   PERMISSIONS,
   type AppointmentCalendarResponse,
+  type AppointmentRevenueResponse,
+  type CalendarBlockItem,
+  type CalendarBlocksResponse,
   type AppointmentDetailResponse,
   type EncounterResponse,
   type PatientAppointmentSummary,
@@ -26,11 +31,15 @@ import {
   calendarQuerySchema,
   cancelAppointmentBodySchema,
   createAppointmentBodySchema,
+  createCalendarBlockBodySchema,
+  rangeQuerySchema,
   updateAppointmentBodySchema,
   versionCommandSchema,
   type CalendarQuery,
   type CancelAppointmentBody,
   type CreateAppointmentBody,
+  type CreateCalendarBlockBody,
+  type RangeQuery,
   type UpdateAppointmentBody,
   type VersionCommand,
 } from './appointment.schemas';
@@ -49,6 +58,49 @@ export class AppointmentsController {
     @CurrentPrincipal() principal: AuthenticatedPrincipal,
   ): Promise<SchedulingCatalogResponse> {
     return this.appointments.getCatalog(principal);
+  }
+
+  @Get('blocks')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_READ)
+  @ApiOperation({ summary: 'Breaks and days off in a date window' })
+  listBlocks(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Query(new ZodValidationPipe(rangeQuerySchema)) query: RangeQuery,
+  ): Promise<CalendarBlocksResponse> {
+    return this.appointments.listBlocks(principal, query);
+  }
+
+  @Post('blocks')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_UPDATE)
+  @ApiOperation({ summary: 'Close a time range for appointments (break / day off)' })
+  createBlock(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Body(new ZodValidationPipe(createCalendarBlockBodySchema)) body: CreateCalendarBlockBody,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<CalendarBlockItem> {
+    return this.appointments.createBlock(principal, body, requestId ?? 'unknown');
+  }
+
+  @Delete('blocks/:id')
+  @HttpCode(204)
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_UPDATE)
+  @ApiOperation({ summary: 'Remove a break / day off' })
+  deleteBlock(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<void> {
+    return this.appointments.deleteBlock(principal, id, requestId ?? 'unknown');
+  }
+
+  @Get('revenue')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_READ)
+  @ApiOperation({ summary: 'Sum of appointment prices in a window (excludes cancelled)' })
+  revenue(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Query(new ZodValidationPipe(rangeQuerySchema)) query: RangeQuery,
+  ): Promise<AppointmentRevenueResponse> {
+    return this.appointments.revenue(principal, query);
   }
 
   @Get('patients/:patientId/summary')

@@ -31,6 +31,10 @@ export function appointmentActionLabel(action: string): string {
       return t('appointmentActionConfirm');
     case 'confirm-and-start':
       return 'Підтвердити і розпочати візит';
+    case 'rescheduled':
+      return 'Запис перенесено';
+    case 'cancelled':
+      return 'Запис скасовано';
     case 'check-in':
       return t('appointmentActionCheckIn');
     case 'start-encounter':
@@ -68,6 +72,10 @@ export function mapSchedulingErrorToMessage(code: string | undefined): string {
       return t('schedulingErrorEncounterNotFound');
     case 'ENCOUNTER_INVALID_TRANSITION':
       return t('schedulingErrorEncounterInvalidTransition');
+    case 'CALENDAR_BLOCKED':
+      return t('schedulingErrorBlocked');
+    case 'CALENDAR_BLOCK_HAS_APPOINTMENTS':
+      return t('schedulingErrorBlockHasAppointments');
     case 'VALIDATION_FAILED':
       return t('schedulingErrorValidation');
     case 'FORBIDDEN':

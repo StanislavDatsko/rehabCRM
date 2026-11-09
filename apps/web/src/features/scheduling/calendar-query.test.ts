@@ -34,9 +34,13 @@ describe('parseCalendarQuery', () => {
     });
   });
 
+  it('accepts the month view', () => {
+    expect(parseCalendarQuery({ view: 'month' }, 'Europe/Kyiv').view).toBe('month');
+  });
+
   it('ignores invalid view and date values', () => {
     const parsed = parseCalendarQuery(
-      { view: 'month', date: 'not-a-date' },
+      { view: 'year', date: 'not-a-date' },
       'Europe/Kyiv',
     );
     expect(parsed.view).toBe('week');

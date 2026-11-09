@@ -4,13 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ServerApiError } from '../../../lib/api/server-api-client';
 import { loadCurrentUser } from '../../../lib/app/load-current-user';
-import { listPatients } from '../../patients/api/patients-api';
+import { createDraftPatient, listPatients } from '../../patients/api/patients-api';
 import {
   cancelAppointment,
   checkInAppointment,
   completeEncounter,
   confirmAppointment,
   createAppointment,
+  createCalendarBlock,
+  deleteCalendarBlock,
   markAppointmentNoShow,
   startEncounterForAppointment,
   updateAppointment,
@@ -29,7 +31,25 @@ import { addMinutesToIso, combineDateAndTimeToIso } from '../timezone';
 
 export type SchedulingFormState = {
   error: string | null;
+  /** Set after a successful save so the dialog can close without navigating away. */
+  ok?: boolean;
+  /** A draft patient that was created before the appointment failed; reuse it on retry. */
+  draftPatientId?: string;
+  draftPatientName?: string;
 };
+
+/** Only same-site calendar paths are accepted as a post-action destination. */
+function safeReturnTo(formData: FormData): string {
+  const value = emptyToNull(formData.get('returnTo'));
+  return value && value.startsWith('/app/calendar') ? value : '/app/calendar';
+}
+
+function parsePrice(formData: FormData): number | null | undefined {
+  const raw = emptyToNull(formData.get('priceAmount'));
+  if (raw === null) return null;
+  const value = Number(raw);
+  return Number.isInteger(value) && value >= 0 ? value : null;
+}
 
 function emptyToNull(value: FormDataEntryValue | null): string | null {
   if (typeof value !== 'string') {
@@ -82,6 +102,7 @@ function createBodyFromFormData(formData: FormData, timezone: string): CreateApp
     endsAt,
     reason: emptyToNull(formData.get('reason')),
     administrativeNote: emptyToNull(formData.get('administrativeNote')),
+    priceAmount: parsePrice(formData),
   };
 }
 
@@ -134,23 +155,54 @@ export async function createAppointmentAction(
 
   const timezone = emptyToNull(formData.get('timezone')) ?? 'Europe/Kyiv';
   const body = createBodyFromFormData(formData, timezone);
+
+  // New patient: register a draft (full name + phone) so the slot can be booked now
+  // and the card is completed when the patient arrives.
+  let draftPatientId: string | undefined;
+  let draftPatientName: string | undefined;
+  if (formData.get('newPatient') === '1') {
+    const fullName = emptyToNull(formData.get('newPatientName'));
+    if (!fullName || fullName.split(/\s+/).length < 2) {
+      return { error: 'Вкажіть прізвище та ім’я пацієнта.' };
+    }
+    if (!body.practitionerId || !body.startsAt || !body.endsAt) {
+      return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
+    }
+    try {
+      const draft = await createDraftPatient({
+        fullName,
+        phone: emptyToNull(formData.get('newPatientPhone')),
+      });
+      body.patientId = draft.id;
+      draftPatientId = draft.id;
+      draftPatientName = fullName;
+    } catch (error: unknown) {
+      if (error instanceof ServerApiError && error.status === 401) {
+        redirect('/login?reason=expired');
+      }
+      if (error instanceof ServerApiError && error.status === 400) {
+        return { error: 'Перевірте ім’я та номер телефону пацієнта.' };
+      }
+      return errorState(error);
+    }
+  }
+
   if (!body.patientId || !body.practitionerId || !body.startsAt || !body.endsAt) {
     return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
   }
 
-  let createdId: string;
   try {
-    const created = await createAppointment(body);
-    createdId = created.id;
+    await createAppointment(body);
   } catch (error: unknown) {
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
     }
-    return errorState(error);
+    return { ...errorState(error), draftPatientId, draftPatientName };
   }
 
-  revalidateSchedulingPaths(createdId, undefined, body.patientId);
-  redirect(`/app/calendar?appointment=${createdId}&created=1`);
+  revalidateSchedulingPaths(undefined, undefined, body.patientId);
+  revalidatePath('/app/patients');
+  return { error: null, ok: true };
 }
 
 export async function rescheduleAppointmentAction(
@@ -188,10 +240,6 @@ export async function rescheduleAppointmentAction(
       startsAt,
       endsAt,
       practitionerId: emptyToNull(formData.get('practitionerId')) ?? undefined,
-      appointmentTypeId: emptyToNull(formData.get('appointmentTypeId')),
-      locationId: emptyToNull(formData.get('locationId')),
-      roomId: emptyToNull(formData.get('roomId')),
-      administrativeNote: emptyToNull(formData.get('administrativeNote')),
     });
   } catch (error: unknown) {
     if (error instanceof ServerApiError && error.status === 401) {
@@ -201,7 +249,11 @@ export async function rescheduleAppointmentAction(
   }
 
   revalidateSchedulingPaths(id);
-  redirect(`/app/calendar?appointment=${id}&updated=1`);
+  // Land on the new date (same view) so the moved appointment is visible right away.
+  const target = new URL(safeReturnTo(formData), 'http://local');
+  target.searchParams.set('date', date);
+  target.searchParams.delete('appointment');
+  redirect(`${target.pathname}${target.search}`);
 }
 
 async function runStatusCommand(
@@ -261,6 +313,10 @@ async function runStatusCommand(
       redirect(`/app/encounters/${encounter.id}`);
     }
   } catch (error: unknown) {
+    // redirect() works by throwing; let Next handle it instead of showing an error.
+    if ((error as { digest?: string } | null)?.digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
     }
@@ -268,7 +324,7 @@ async function runStatusCommand(
   }
 
   revalidateSchedulingPaths(id);
-  redirect(`/app/calendar?appointment=${id}&statusUpdated=1`);
+  redirect(safeReturnTo(formData));
 }
 
 export async function confirmAppointmentAction(
@@ -341,4 +397,81 @@ export async function completeEncounterAction(
 
   revalidateSchedulingPaths(undefined, id);
   redirect(`/app/encounters/${id}?completed=1`);
+}
+
+function dayBounds(date: string, timezone: string): { startsAt: string; endsAt: string } {
+  return {
+    startsAt: combineDateAndTimeToIso(date, '00:00', timezone),
+    endsAt: addMinutesToIso(combineDateAndTimeToIso(date, '00:00', timezone), 24 * 60),
+  };
+}
+
+/** Close a time range (break) or whole day(s) (day off) for appointments. */
+export async function createCalendarBlockAction(
+  _prev: SchedulingFormState,
+  formData: FormData,
+): Promise<SchedulingFormState> {
+  const me = await loadCurrentUser();
+  if (me === 'unauthenticated') {
+    redirect('/login?reason=expired');
+  }
+  if (me === 'denied' || !canUpdateAppointment(me)) {
+    return { error: mapSchedulingErrorToMessage('FORBIDDEN') };
+  }
+
+  const timezone = emptyToNull(formData.get('timezone')) ?? 'Europe/Kyiv';
+  const kind = formData.get('kind') === 'DAY_OFF' ? 'DAY_OFF' : 'BREAK';
+  const date = emptyToNull(formData.get('date'));
+  if (!date) {
+    return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
+  }
+
+  let startsAt: string;
+  let endsAt: string;
+  if (kind === 'DAY_OFF') {
+    const dateTo = emptyToNull(formData.get('dateTo')) ?? date;
+    if (dateTo < date) {
+      return { error: 'Дата завершення не може бути раніше початку.' };
+    }
+    startsAt = dayBounds(date, timezone).startsAt;
+    endsAt = dayBounds(dateTo, timezone).endsAt;
+  } else {
+    const startTime = emptyToNull(formData.get('startTime'));
+    const endTime = emptyToNull(formData.get('endTime'));
+    if (!startTime || !endTime || endTime <= startTime) {
+      return { error: 'Час завершення має бути пізніше за початок.' };
+    }
+    startsAt = combineDateAndTimeToIso(date, startTime, timezone);
+    endsAt = combineDateAndTimeToIso(date, endTime, timezone);
+  }
+
+  try {
+    await createCalendarBlock({ kind, startsAt, endsAt, note: emptyToNull(formData.get('note')) });
+  } catch (error: unknown) {
+    if (error instanceof ServerApiError && error.status === 401) {
+      redirect('/login?reason=expired');
+    }
+    return errorState(error);
+  }
+
+  revalidatePath('/app/calendar');
+  return { error: null, ok: true };
+}
+
+export async function deleteCalendarBlockAction(formData: FormData): Promise<void> {
+  const me = await loadCurrentUser();
+  if (me === 'unauthenticated') {
+    redirect('/login?reason=expired');
+  }
+  if (me === 'denied' || !canUpdateAppointment(me)) {
+    return;
+  }
+  const id = emptyToNull(formData.get('blockId'));
+  if (!id) return;
+  try {
+    await deleteCalendarBlock(id);
+  } catch {
+    // Already removed or not permitted; the calendar refresh shows the real state.
+  }
+  revalidatePath('/app/calendar');
 }
