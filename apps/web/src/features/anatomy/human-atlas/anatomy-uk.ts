@@ -1,3 +1,5 @@
+import { composeName } from './anatomy-uk-grammar';
+
 /**
  * Ukrainian display names for Human Atlas (BodyParts3D) structures.
  *
@@ -586,6 +588,120 @@ investing fascia of free upper limb = Фасція вільної верхньо
 investing fascia of wrist = Фасція зап'ястка
 deep fascial system = Глибока фасціальна система
 musculoskeletal system = Опорно-руховий апарат
+choroid plexus of cerebral hemisphere = Судинне сплетення півкулі великого мозку
+nerve trunk = Нервовий стовбур
+organ component gland = Залозистий компонент органа
+organ cavity subdivision = Підрозділ порожнини органа
+anatomical conduit space = Анатомічний канальний простір
+anatomical compartment space = Анатомічний відсічний простір
+anatomical boundary entity = Анатомічний межовий утвір
+zone of sternum = Ділянка груднини
+zone of levator ani = Ділянка м'яза-підіймача заднього проходу
+zone of corpus spongiosum of penis = Ділянка губчастого тіла статевого члена
+region of visceral peritoneum = Ділянка вісцеральної очеревини
+region of serous membrane = Ділянка серозної оболонки
+prevertebral muscle = Передхребтові м'язи
+postvertebral muscle = Заххребтові м'язи
+superficial postvertebral muscle = Поверхневі заххребтові м'язи
+intermediate postvertebral muscle = Проміжні заххребтові м'язи
+deep postvertebral muscle = Глибокі заххребтові м'язи
+zone of pectoralis major = Ділянка великого грудного м'яза
+organ component cluster = Скупчення компонентів органа
+suprahyoid muscle = Надпід'язикові м'язи
+zone of oblique arytenoid = Ділянка косого черпакуватого м'яза
+zone of cricothyroid = Ділянка персне-щитоподібного м'яза
+constrictor muscle of pharynx = Констриктор глотки
+organ with organ cavity = Орган з порожниною
+organ with cavitated organ parts = Орган з порожнистими частинами
+zone of fascia lata = Ділянка широкої фасції
+subdivision of head proper = Підрозділ власне голови
+segment of midbrain tectum = Сегмент покриву середнього мозку
+midbrain tectum = Покрив середнього мозку
+organ part cluster = Скупчення частин органа
+subdivisionof autonomic nervous system = Підрозділ вегетативної нервової системи
+cardinal tissue part = Основна частина тканини
+segment of metencephalon = Сегмент заднього мозку
+set of organ regions = Група ділянок органа
+set of heterogeneous clusters = Група неоднорідних скупчень
+organ component layer = Шар компонента органа
+cell part cluster = Скупчення клітинних частин
+cell part cluster of neuraxis = Скупчення клітинних частин нервової осі
+nuclear complex of neuraxis = Ядерний комплекс нервової осі
+internal gray matter component = Внутрішній компонент сірої речовини
+subaortic curtain of ventricle = Підаортальна завіса шлуночка
+endocrine system = Ендокринна система
+wall of abdomen proper = Стінка живота (власне)
+head proper = Власне голова
+skeleton of hand proper = Скелет кисті (власне)
+myocardium of ventricle proper = Міокард шлуночка (власне)
+pulmopleural compartment = Легенево-плевральний відсік
+body proper = Власне тіло
+subcortex of cerebral hemisphere = Підкірка півкулі великого мозку
+body cavity content = Вміст порожнини тіла
+pancreaticobiliary system = Підшлунково-жовчна система
+basicranial part of head proper = Основна черепна частина голови (власне)
+abdomen proper = Власне живіт
+anterior chest wall = Передня стінка грудної клітки
+lateral chest wall = Бічна стінка грудної клітки
+superficial chest wall = Поверхнева стінка грудної клітки
+anterior superficial chest wall = Передня поверхнева стінка грудної клітки
+lateral superficial chest wall = Бічна поверхнева стінка грудної клітки
+archicortex = Архікортекс
+arteria princeps pollicis = Головна артерія великого пальця
+arteria radialis indicis = Променева артерія вказівного пальця
+hemiliver = Півпечінка
+mons pubis = Лобковий горбок
+root of nose = Корінь носа
+secondary canine tooth = Постійне ікло
+secondary incisor tooth = Постійний різець
+secondary molar tooth = Постійний моляр
+taenia coli = Стрічки ободової кишки
+extra-ocular muscle = Окорухові м'язи
+dorsalis pedis artery = Тильна артерія стопи
+conus artery = Артерія конуса
+hepatic artery proper = Власна печінкова артерія
+subdivision of hepatic artery proper = Підрозділ власної печінкової артерії
+subdivision of external iliac artery proper = Підрозділ власне зовнішньої клубової артерії
+subdivision of inferior vena caval tree = Підрозділ дерева нижньої порожнистої вени
+subdivision of superior vena caval tree = Підрозділ дерева верхньої порожнистої вени
+pancreatic duct tree = Дерево протоки підшлункової залози
+coronary sinus tree = Дерево вінцевої пазухи
+caudate lobe branch of hepatic artery = Гілка хвостатої частки печінкової артерії
+caudate lobe branch of portal vein = Гілка хвостатої частки воротної вени
+caudate lobe tributary of hepatic biliary tree = Притока хвостатої частки печінкового жовчного дерева
+lobe branch of hepatic artery = Часткова гілка печінкової артерії
+subdivision of lobe branch of hepatic artery = Підрозділ часткової гілки печінкової артерії
+branch of anterior choroidal artery to posterior limb of internal capsule = Гілка передньої судинної артерії до задньої ніжки внутрішньої капсули
+branch of middle cerebral artery to angular gyrus = Гілка середньої мозкової артерії до кутової звивини
+communicating branch of nasociliary nerve with ciliary ganglion = Сполучна гілка носо-війкового нерва з війковим ганглієм
+conus branch of anterior interventricular branch of coronary artery = Гілка конуса передньої міжшлуночкової гілки вінцевої артерії
+deltoid branch of thoraco-acromial artery = Дельтоподібна гілка грудо-акроміальної артерії
+middle collateral branch of deep brachial artery = Середня колатеральна гілка глибокої плечової артерії
+radial collateral branch of deep brachial artery = Променева колатеральна гілка глибокої плечової артерії
+paracentral branch of callosomarginal artery = Навколоцентральна гілка мозолисто-крайової артерії
+precuneal branch of pericallosal artery = Передклиновидна гілка навколомозолистої артерії
+precommunicating part of posterior cerebral artery = Передсполучна частина задньої мозкової артерії
+superior vermian branch of medial branch of superior cerebellar artery = Верхня гілка червя присередньої гілки верхньої мозочкової артерії
+temporo-occipital branch of middle cerebral artery = Скронево-потилична гілка середньої мозкової артерії
+ureteric segment of renal artery = Сечовідний сегмент ниркової артерії
+set of calcaneal branches of posterior tibial artery = Група п'яткових гілок задньої великогомілкової артерії
+set of oesophageal branches of thoracic aorta = Група стравохідних гілок грудної аорти
+set of plantar digital arteries proper = Група власних підошвових пальцевих артерій
+trunk of branch of coeliac artery = Стовбур гілки черевного стовбура
+inferior division of upper lobe part of bronchial tree = Нижній відділ частини бронхіального дерева верхньої частки
+superior division of upper lobe part of bronchial tree = Верхній відділ частини бронхіального дерева верхньої частки
+upper lobe part of bronchial tree = Частина бронхіального дерева верхньої частки
+middle lobe part of bronchial tree = Частина бронхіального дерева середньої частки
+lower lobe part of bronchial tree = Частина бронхіального дерева нижньої частки
+interosseous of foot = Міжкісткові м'язи стопи
+plantar interosseous of foot = Підошвовий міжкістковий м'яз стопи
+lumbrical of foot = Червоподібний м'яз стопи
+patellar part of knee = Надколінкова частина колінної ділянки
+sternal part of chest = Груднинна частина грудної клітки
+side of rib cage = Бічна частина грудної клітки
+skin appendage = Придатки шкіри
+set of facial hairs = Волосся обличчя
+tarsal plate of eyelid = Хрящ повіки
 gingiva of upper jaw = Ясна верхньої щелепи
 gingiva of lower jaw = Ясна нижньої щелепи
 anterior chamber of eyeball = Передня камера ока
@@ -817,8 +933,8 @@ export function ukrainianName(name: string): string {
   const cached = cache.get(name);
   if (cached) return cached;
   const { key, side } = splitSide(name);
-  const translated = index.get(key) ?? byRule(key);
-  const result = translated ? (side ? `${translated} (${side === 'left' ? 'ліва' : 'права'})` : translated) : name;
+  const translated = index.get(key) ?? byRule(key) ?? composeName(key);
+  const result = translated ? (side ? `${translated} (${side === 'left' ? 'ліворуч' : 'праворуч'})` : translated) : name;
   cache.set(name, result);
   return result;
 }
