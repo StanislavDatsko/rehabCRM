@@ -16,8 +16,7 @@ export type NavItem = {
     | 'navExercises'
     | 'navAnatomy'
     | 'navReports'
-    | 'navAdmin'
-    | 'navAlerts';
+    | 'navAdmin';
   permission?: Permission;
   enabled: boolean;
   group: 'workspace' | 'clinical' | 'operations';
@@ -81,7 +80,6 @@ export const staffNav: NavItem[] = [
     enabled: true,
     group: 'operations',
   },
-  { id: 'alerts', href: '/app/alerts', labelKey: 'navAlerts', permission: PERMISSIONS.CLINICAL_ALERT_READ, enabled: true, group: 'operations' },
 ];
 
 export function canSeeNavItem(user: CurrentUserResponse, item: NavItem): boolean {
