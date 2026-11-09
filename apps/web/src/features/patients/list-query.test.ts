@@ -7,6 +7,7 @@ import {
 describe('parsePatientListQuery', () => {
   it('applies defaults and whitelists sort/status', () => {
     expect(parsePatientListQuery({})).toEqual({
+      tab: 'patients',
       page: 1,
       pageSize: 20,
       search: '',
@@ -51,9 +52,19 @@ describe('parsePatientListQuery', () => {
   });
 });
 
+describe('patients tabs', () => {
+  it('reads the drafts tab and keeps it in the URL', () => {
+    const query = parsePatientListQuery({ tab: 'drafts' });
+    expect(query.tab).toBe('drafts');
+    expect(buildPatientsListHref(query)).toBe('/app/patients?tab=drafts');
+    expect(parsePatientListQuery({ tab: 'other' }).tab).toBe('patients');
+  });
+});
+
 describe('buildPatientsListHref', () => {
   it('keeps URL state for filters and pagination', () => {
     const href = buildPatientsListHref({
+      tab: 'patients',
       page: 2,
       pageSize: 20,
       search: 'іван',

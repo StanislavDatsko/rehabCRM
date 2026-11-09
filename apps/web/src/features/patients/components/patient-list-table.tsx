@@ -39,11 +39,14 @@ export function PatientListTable({
   query,
   totalPages,
   canEdit,
+  draftMode = false,
 }: {
   items: PatientAdministrativeResponse[];
   query: PatientListQuery;
   totalPages: number;
   canEdit: boolean;
+  /** Drafts show a primary action that moves the patient into the main list. */
+  draftMode?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -113,12 +116,20 @@ export function PatientListTable({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
+                    {draftMode && canEdit ? (
+                      <a
+                        className="rc-btn rc-btn-primary inline-flex items-center"
+                        href={`/app/patients/${patient.id}/edit?activate=1`}
+                      >
+                        Додати до списку пацієнтів
+                      </a>
+                    ) : null}
                     <a href={`/app/patients/${patient.id}`}>
                       <Button type="button" variant="secondary">
                         {t('patientsOpen')}
                       </Button>
                     </a>
-                    {canEdit ? (
+                    {canEdit && !draftMode ? (
                       <a className="rc-btn rc-btn-ghost inline-flex items-center" href={`/app/patients/${patient.id}/edit`} aria-label={`${t('patientsEdit')}: ${patient.fullName}`}>{t('patientsEdit')}</a>
                     ) : null}
                   </div>

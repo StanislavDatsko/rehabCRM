@@ -331,6 +331,8 @@ export class PatientsService {
 
     if (query.status) {
       where.status = query.status;
+    } else if (query.excludeDrafts === 'true') {
+      where.status = { not: 'DRAFT' };
     }
     if (query.responsiblePractitionerId) {
       where.responsiblePractitionerId = query.responsiblePractitionerId;

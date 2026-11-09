@@ -141,6 +141,8 @@ export const listPatientsQuerySchema = z
     pageSize: z.coerce.number().int().positive().max(100).optional(),
     search: z.string().trim().max(200).optional(),
     status: z.enum(PATIENT_STATUSES).optional(),
+    /** Hide draft patients (created from the calendar) from the main list. */
+    excludeDrafts: z.enum(['true', 'false']).optional(),
     responsiblePractitionerId: z.string().uuid().optional(),
     sort: z.enum(PATIENT_SORT_FIELDS).optional(),
     sortDir: z.enum(['asc', 'desc']).optional(),

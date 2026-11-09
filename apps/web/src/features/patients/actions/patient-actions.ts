@@ -161,8 +161,14 @@ export async function updatePatientAction(
     return { error: mapApiErrorToMessage('VALIDATION_FAILED'), values };
   }
 
+  const activate = formData.get('activate') === '1';
+  if (activate && !canChangePatientStatus(me)) {
+    return { error: mapApiErrorToMessage('FORBIDDEN'), values };
+  }
+
+  let saved: Awaited<ReturnType<typeof updatePatient>>;
   try {
-    await updatePatient(id, { ...body, version });
+    saved = await updatePatient(id, { ...body, version });
   } catch (error: unknown) {
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');
@@ -170,9 +176,25 @@ export async function updatePatientAction(
     return errorState(error, values);
   }
 
+  // A draft joins the main patient list once its card is filled in.
+  if (activate) {
+    try {
+      await changePatientStatus(id, { status: 'ACTIVE', version: saved.version });
+    } catch (error: unknown) {
+      if (error instanceof ServerApiError && error.status === 401) {
+        redirect('/login?reason=expired');
+      }
+      revalidatePath('/app/patients');
+      return {
+        error: 'Дані збережено, але додати пацієнта до списку не вдалося. Спробуйте ще раз.',
+        values,
+      };
+    }
+  }
+
   revalidatePath('/app/patients');
   revalidatePath(`/app/patients/${id}`);
-  redirect(`/app/patients/${id}?updated=1`);
+  redirect(activate ? `/app/patients/${id}?activated=1` : `/app/patients/${id}?updated=1`);
 }
 
 export async function changePatientStatusAction(

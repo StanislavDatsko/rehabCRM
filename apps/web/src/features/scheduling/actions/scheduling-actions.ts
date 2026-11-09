@@ -124,6 +124,7 @@ export async function searchPatientsForSchedulingAction(
 
   try {
     const result = await listPatients({
+      tab: 'all',
       page: 1,
       pageSize: 10,
       search: trimmed,

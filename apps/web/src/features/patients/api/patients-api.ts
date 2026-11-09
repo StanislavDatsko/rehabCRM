@@ -66,8 +66,14 @@ export async function listPatients(query: PatientListQuery): Promise<PatientList
   if (query.search) {
     params.set('search', query.search);
   }
-  if (query.status) {
-    params.set('status', query.status);
+  if (query.tab === 'drafts') {
+    params.set('status', 'DRAFT');
+  } else {
+    if (query.status) {
+      params.set('status', query.status);
+    } else if (query.tab !== 'all') {
+      params.set('excludeDrafts', 'true');
+    }
   }
   if (query.responsiblePractitionerId) {
     params.set('responsiblePractitionerId', query.responsiblePractitionerId);

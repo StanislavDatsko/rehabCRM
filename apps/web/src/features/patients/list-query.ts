@@ -16,7 +16,12 @@ export const PATIENT_SORT_FIELDS = [
 export type PatientSortField = (typeof PATIENT_SORT_FIELDS)[number];
 export type SortDir = 'asc' | 'desc';
 
+/** `all` is only used internally (e.g. calendar patient search) and includes drafts. */
+export type PatientsTab = 'patients' | 'drafts' | 'all';
+
 export type PatientListQuery = {
+  /** `drafts` shows patients created from the calendar that are not in the main list yet. */
+  tab: PatientsTab;
   page: number;
   pageSize: number;
   search: string;
@@ -62,7 +67,10 @@ export function parsePatientListQuery(
   ).toLowerCase();
   const sortDir: SortDir = dirCandidate === 'desc' ? 'desc' : 'asc';
 
+  const tab: PatientsTab = firstString(raw.tab) === 'drafts' ? 'drafts' : 'patients';
+
   return {
+    tab,
     page,
     pageSize,
     search,
@@ -75,6 +83,9 @@ export function parsePatientListQuery(
 
 export function patientListQueryToSearchParams(query: PatientListQuery): URLSearchParams {
   const params = new URLSearchParams();
+  if (query.tab === 'drafts') {
+    params.set('tab', 'drafts');
+  }
   if (query.page !== 1) {
     params.set('page', String(query.page));
   }
