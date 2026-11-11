@@ -20,12 +20,17 @@ describe('role permission mapping', () => {
       PERMISSIONS.PATIENT_CREATE,
       PERMISSIONS.PATIENT_UPDATE_ADMIN,
       PERMISSIONS.PATIENT_CHANGE_STATUS,
+      PERMISSIONS.APPOINTMENT_READ,
       PERMISSIONS.APPOINTMENT_CREATE,
       PERMISSIONS.APPOINTMENT_UPDATE,
       PERMISSIONS.APPOINTMENT_CANCEL,
       PERMISSIONS.BODY_ANNOTATION_READ,
       PERMISSIONS.CLINICAL_REPORT_READ,
     ]));
+  });
+
+  it('lets specialists read patient visit history (Візити tab)', () => {
+    expect(roleHasPermission('REHABILITATION_SPECIALIST', PERMISSIONS.APPOINTMENT_READ)).toBe(true);
   });
 
   it('makes organization admins a clinical and administration superset', () => {
