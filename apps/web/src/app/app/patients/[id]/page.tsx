@@ -108,6 +108,9 @@ export default async function PatientProfilePage({
   let assessmentTemplates: Awaited<ReturnType<typeof listAssessmentTemplates>> = [];
   let rehabilitationPlans: Awaited<ReturnType<typeof listPatientPlans>> | null = null;
   let bodyMap: Awaited<ReturnType<typeof getPatientBodyMap>> | null = null;
+  let visitsError: string | null = null;
+  const describeError = (error: unknown) =>
+    error instanceof ServerApiError ? `${error.status} ${error.body?.code ?? error.message}` : String(error);
   let visitHistory: Awaited<ReturnType<typeof getPatientVisitHistory>> | null = null;
   let schedulingTimezone = DEFAULT_TIMEZONE;
   let patientMedia: { items: Array<{ id: string; kind: 'IMAGE' | 'VIDEO'; mimeType: string; originalFileName: string; title: string | null; description: string | null; capturedAt: string | null; createdAt: string; uploadedBy: string; sizeBytes: string }>; total: number } | null = null;
@@ -115,13 +118,15 @@ export default async function PatientProfilePage({
   if (canReadAppointments(me)) {
     try {
       appointmentSummary = await getPatientAppointments(id);
-    } catch {
+    } catch (error) {
       appointmentSummary = null;
+      visitsError = describeError(error);
     }
     try {
       visitHistory = await getPatientVisitHistory(id);
-    } catch {
+    } catch (error) {
       visitHistory = null;
+      visitsError = visitsError ?? describeError(error);
     }
     try {
       const catalog = await getSchedulingCatalog();
@@ -191,7 +196,7 @@ export default async function PatientProfilePage({
   // Card tabs: "overview" shows everything; every other tab shows only its own section.
   const tabs: { id: string; label: string }[] = [
     { id: 'overview', label: 'Огляд' },
-    ...(appointmentSummary || visitHistory ? [{ id: 'appointments', label: 'Візити' }] : []),
+    ...(canReadAppointments(me) ? [{ id: 'appointments', label: 'Візити' }] : []),
     ...(assessments ? [{ id: 'assessments', label: 'Оцінювання' }] : []),
     ...(rehabilitationPlans ? [{ id: 'plans', label: 'Плани' }] : []),
     ...(patientMedia ? [{ id: 'media', label: 'Медіа' }] : []),
@@ -265,6 +270,14 @@ export default async function PatientProfilePage({
               ))}
             </div>
           </details>
+        </section>
+      ) : null}
+
+      {canReadAppointments(me) && !appointmentSummary && !visitHistory && show('appointments') ? (
+        <section id="appointments" role="alert" className="patient-workspace-section ui-surface border-danger/30 p-5">
+          <h2 className="font-sans text-lg text-text-primary">Візити</h2>
+          <p className="mt-2 text-sm text-danger">Не вдалося завантажити візити пацієнта. Оновіть сторінку; якщо помилка лишається, повідомте адміністратора.</p>
+          {visitsError ? <p className="mt-2 font-mono text-xs text-text-secondary">Код: {visitsError}</p> : null}
         </section>
       ) : null}
 
