@@ -6,6 +6,7 @@
   --cal-moved: var(--color-warning);
   --cal-cancel: var(--color-danger);
   --cal-time: var(--brand-violet);
+  --cal-weekend: #ff4fa3;
   --cal-line: color-mix(in srgb, var(--color-border) 70%, transparent);
   padding: 20px;
   border: 1px solid var(--color-border);
@@ -134,12 +135,15 @@
   border-left: 3px solid color-mix(in srgb, var(--color-info) 55%, transparent);
   left: 0 !important; width: 100% !important; pointer-events: none;
 }
-.rc-cal .cal-block-day_off { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-text-secondary) 14%, transparent) 0 8px, color-mix(in srgb, var(--color-text-secondary) 5%, transparent) 8px 16px); border-left-color: var(--color-text-secondary); }
+.rc-cal .cal-block-day_off { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--cal-weekend) 30%, transparent) 0 8px, color-mix(in srgb, var(--cal-weekend) 12%, transparent) 8px 16px); border-left-color: var(--cal-weekend); }
+.rc-cal .cal-block-day_off .cal-block-label { color: var(--cal-weekend); }
 .cal-block-label { color: var(--color-text-secondary); font-size: .72rem; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
-.rc-cal .cal-day-off { background: color-mix(in srgb, var(--color-text-secondary) 10%, transparent); }
+.rc-cal .cal-weekend { background: color-mix(in srgb, var(--cal-weekend) 11%, transparent); }
+.rc-cal .cal-day-off { background: color-mix(in srgb, var(--cal-weekend) 20%, transparent); }
+.rc-cal .cal-weekend-head, .rc-cal .cal-weekend-head a, .rc-cal .cal-weekend-head button { color: var(--cal-weekend); font-weight: 700; }
 .rc-cal .rbc-month-view .cal-day-off { position: relative; }
 .rc-cal .rbc-month-view .rbc-day-bg.cal-day-off::after {
-  content: 'Вихідний'; position: absolute; left: 8px; bottom: 6px; color: var(--color-text-secondary); font-size: .66rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  content: 'Вихідний'; position: absolute; left: 8px; bottom: 6px; color: var(--cal-weekend); font-size: .66rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
 }
 
 /* ---------- month view ---------- */
@@ -166,6 +170,7 @@
 .cal-dot-ok { background: var(--color-success); }
 .cal-dot-moved { background: var(--color-warning); }
 .cal-dot-cancelled { background: var(--color-danger); }
+.cal-dot-weekend { background: #ff4fa3; }
 .cal-dot-block { background: repeating-linear-gradient(135deg, var(--color-info) 0 2px, transparent 2px 4px); border: 1px solid var(--color-info); }
 .cal-chip { display: inline-flex; align-items: center; padding: 2px 9px; border: 1px solid var(--color-border); border-radius: 999px; font-size: .72rem; font-weight: 600; }
 .cal-chip-moved { border-color: color-mix(in srgb, var(--color-warning) 50%, transparent); background: color-mix(in srgb, var(--color-warning) 14%, transparent); color: var(--color-warning); }

@@ -124,6 +124,12 @@ function EventCard({ event }: { event: CalendarEvent }) {
   );
 }
 
+function DayHeader({ date, label }: { date: Date; label: string }) {
+  const weekday = date.getDay();
+  const weekend = weekday === 0 || weekday === 6;
+  return <span className={weekend ? 'cal-weekend-head' : undefined}>{label}</span>;
+}
+
 export function SchedulingCalendar({
   view,
   date,
@@ -235,8 +241,12 @@ export function SchedulingCalendar({
           if (!isBlock(event.resource)) go({ appointmentId: event.id });
         }}
         eventPropGetter={eventPropGetter}
-        dayPropGetter={(day) => (isDayOff(day, blocks) ? { className: 'cal-day-off' } : {})}
-        components={{ toolbar: CalendarToolbar, event: EventCard }}
+        dayPropGetter={(day) => {
+          if (isDayOff(day, blocks)) return { className: 'cal-day-off' };
+          const weekday = day.getDay();
+          return weekday === 0 || weekday === 6 ? { className: 'cal-weekend' } : {};
+        }}
+        components={{ toolbar: CalendarToolbar, event: EventCard, header: DayHeader }}
         style={{ minHeight: isMobile ? 560 : 700 }}
       />
     </div>

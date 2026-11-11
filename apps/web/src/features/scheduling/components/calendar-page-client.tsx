@@ -112,6 +112,7 @@ export function CalendarPageClient({
         <li><i className="cal-dot cal-dot-ok" />Запис</li>
         <li><i className="cal-dot cal-dot-moved" />Перенесено</li>
         <li><i className="cal-dot cal-dot-cancelled" />Скасовано</li>
+        <li><i className="cal-dot cal-dot-weekend" />Вихідні</li>
         <li><i className="cal-dot cal-dot-block" />Перерва / вихідний</li>
       </ul>
 
