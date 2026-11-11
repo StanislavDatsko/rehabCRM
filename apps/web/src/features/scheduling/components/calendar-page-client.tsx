@@ -55,7 +55,11 @@ export function CalendarPageClient({
     setShowCreate(false);
     setCreateSlot(null);
   }, []);
-  const closeBlock = useCallback(() => setBlockKind(null), []);
+  const [editingBlock, setEditingBlock] = useState<CalendarBlockItem | null>(null);
+  const closeBlock = useCallback(() => {
+    setBlockKind(null);
+    setEditingBlock(null);
+  }, []);
 
   const events: CalendarEvent[] = useMemo(
     () =>
@@ -123,9 +127,14 @@ export function CalendarPageClient({
           setCreateSlot({ date: format(slot.start, 'yyyy-MM-dd'), startTime: format(slot.start, 'HH:mm') });
           setShowCreate(true);
         }}
+        onSelectBlock={
+          canEditBlocks
+            ? (blockId) => setEditingBlock(blocks.find((item) => item.id === blockId) ?? null)
+            : undefined
+        }
       />
 
-      <CalendarClosedPeriods blocks={blocks} timezone={timezone} canEdit={canEditBlocks} />
+      <CalendarClosedPeriods blocks={blocks} timezone={timezone} canEdit={canEditBlocks} onEdit={setEditingBlock} />
 
       {selectedAppointment ? (
         <AppointmentDetailPanel
@@ -149,8 +158,15 @@ export function CalendarPageClient({
         />
       ) : null}
 
-      {blockKind ? (
-        <CalendarBlockDialog kind={blockKind} timezone={timezone} initialDate={query.date} onClose={closeBlock} />
+      {blockKind || editingBlock ? (
+        <CalendarBlockDialog
+          key={editingBlock?.id ?? 'new'}
+          kind={editingBlock?.kind ?? blockKind ?? 'BREAK'}
+          block={editingBlock ?? undefined}
+          timezone={timezone}
+          initialDate={query.date}
+          onClose={closeBlock}
+        />
       ) : null}
     </div>
   );

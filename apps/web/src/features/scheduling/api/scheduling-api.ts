@@ -208,6 +208,13 @@ export async function createCalendarBlock(body: {
   return serverApiFetch<CalendarBlockItem>('/api/v1/appointments/blocks', jsonInit('POST', body));
 }
 
+export async function updateCalendarBlock(
+  id: string,
+  body: { startsAt: string; endsAt: string; note?: string | null },
+): Promise<CalendarBlockItem> {
+  return serverApiFetch<CalendarBlockItem>(`/api/v1/appointments/blocks/${id}`, jsonInit('PATCH', body));
+}
+
 export async function deleteCalendarBlock(id: string): Promise<void> {
   await serverApiFetch<void>(`/api/v1/appointments/blocks/${id}`, { method: 'DELETE' });
 }

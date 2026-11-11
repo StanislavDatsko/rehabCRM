@@ -14,7 +14,7 @@ import {
 } from 'react-big-calendar';
 import { t } from '../../../i18n/messages';
 import { appointmentTone } from '../appointment-tone';
-import { blockSegments, isDayOff, overlapsBlock, type BlockSegment } from '../calendar-blocks';
+import { blockSegments, isDayOff, type BlockSegment } from '../calendar-blocks';
 import type { CalendarQuery } from '../calendar-query';
 import { buildCalendarHref } from '../calendar-query';
 import { formatPrice } from '../price';
@@ -133,6 +133,7 @@ export function SchedulingCalendar({
   query,
   canBook,
   onSelectSlot,
+  onSelectBlock,
 }: {
   view: CalendarQuery['view'];
   date: string;
@@ -142,6 +143,8 @@ export function SchedulingCalendar({
   query: CalendarQuery;
   canBook: boolean;
   onSelectSlot: (slot: { start: Date; end: Date }) => void;
+  /** Click on a break / day off; omitted when the user cannot edit them. */
+  onSelectBlock?: (blockId: string) => void;
 }) {
   const router = useRouter();
   const currentDate = useMemo(() => parseCalendarDate(date, timezone), [date, timezone]);
@@ -221,7 +224,11 @@ export function SchedulingCalendar({
             go({ date: ymd(slot.start), view: 'day' });
             return;
           }
-          if (overlapsBlock(slot.start, slot.end, blocks)) return;
+          const hit = blocks.find((segment) => segment.start < slot.end && segment.end > slot.start);
+          if (hit) {
+            onSelectBlock?.(hit.blockId);
+            return;
+          }
           onSelectSlot(slot);
         }}
         onSelectEvent={(event) => {

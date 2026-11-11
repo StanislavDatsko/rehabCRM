@@ -20,10 +20,12 @@ export function CalendarClosedPeriods({
   blocks,
   timezone,
   canEdit,
+  onEdit,
 }: {
   blocks: CalendarBlockItem[];
   timezone: string;
   canEdit: boolean;
+  onEdit?: (block: CalendarBlockItem) => void;
 }) {
   if (blocks.length === 0) return null;
   return (
@@ -37,6 +39,11 @@ export function CalendarClosedPeriods({
             </span>
             <span className="cal-closed-range">{formatRange(block, timezone)}</span>
             {block.note ? <span className="cal-closed-note">{block.note}</span> : null}
+            {canEdit && onEdit ? (
+              <button type="button" className="cal-closed-edit" onClick={() => onEdit(block)}>
+                Змінити
+              </button>
+            ) : null}
             {canEdit ? (
               <form action={deleteCalendarBlockAction} className="cal-closed-remove">
                 <input type="hidden" name="blockId" value={block.id} />

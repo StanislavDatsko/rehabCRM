@@ -66,6 +66,7 @@ describe('AppointmentsService', () => {
       findFirst: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
       create: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
     };
     patient: { findFirst: ReturnType<typeof vi.fn> };
     practitioner: { findFirst: ReturnType<typeof vi.fn> };
@@ -87,7 +88,7 @@ describe('AppointmentsService', () => {
         updateMany: vi.fn(),
         aggregate: vi.fn(),
       },
-      calendarBlock: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn(), create: vi.fn() },
+      calendarBlock: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn(), create: vi.fn(), update: vi.fn() },
       patient: { findFirst: vi.fn() },
       practitioner: { findFirst: vi.fn() },
       appointmentType: { findFirst: vi.fn() },
@@ -194,6 +195,70 @@ describe('AppointmentsService', () => {
       ),
     ).rejects.toMatchObject({ response: { code: 'CALENDAR_BLOCK_HAS_APPOINTMENTS' } });
     expect(prisma.calendarBlock.create).not.toHaveBeenCalled();
+  });
+
+  it('moves a break to another hour', async () => {
+    const block = {
+      id: 'block-1',
+      organizationId: 'org-a',
+      kind: 'BREAK',
+      startsAt: new Date('2026-11-10T11:00:00.000Z'),
+      endsAt: new Date('2026-11-10T12:00:00.000Z'),
+      note: 'обід',
+    };
+    prisma.calendarBlock.findFirst.mockResolvedValue(block);
+    prisma.appointment.findFirst.mockResolvedValue(null);
+    prisma.calendarBlock.update.mockResolvedValue({
+      ...block,
+      startsAt: new Date('2026-11-10T13:00:00.000Z'),
+      endsAt: new Date('2026-11-10T14:00:00.000Z'),
+    });
+
+    const result = await service.updateBlock(
+      principal,
+      'block-1',
+      { startsAt: '2026-11-10T13:00:00.000Z', endsAt: '2026-11-10T14:00:00.000Z', note: 'обід' },
+      'req-1',
+    );
+
+    expect(result).toMatchObject({ id: 'block-1', kind: 'BREAK', startsAt: '2026-11-10T13:00:00.000Z' });
+    expect(prisma.calendarBlock.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'block-1' } }),
+    );
+  });
+
+  it('refuses to move a break onto an existing appointment', async () => {
+    prisma.calendarBlock.findFirst.mockResolvedValue({
+      id: 'block-1',
+      organizationId: 'org-a',
+      kind: 'BREAK',
+      startsAt: new Date('2026-11-10T11:00:00.000Z'),
+      endsAt: new Date('2026-11-10T12:00:00.000Z'),
+      note: null,
+    });
+    prisma.appointment.findFirst.mockResolvedValue({ id: 'appt-1' });
+
+    await expect(
+      service.updateBlock(
+        principal,
+        'block-1',
+        { startsAt: '2026-11-10T09:00:00.000Z', endsAt: '2026-11-10T10:00:00.000Z', note: null },
+        'req-1',
+      ),
+    ).rejects.toMatchObject({ response: { code: 'CALENDAR_BLOCK_HAS_APPOINTMENTS' } });
+    expect(prisma.calendarBlock.update).not.toHaveBeenCalled();
+  });
+
+  it('does not edit a break of another organization', async () => {
+    prisma.calendarBlock.findFirst.mockResolvedValue(null);
+    await expect(
+      service.updateBlock(
+        principal,
+        'block-x',
+        { startsAt: '2026-11-10T09:00:00.000Z', endsAt: '2026-11-10T10:00:00.000Z', note: null },
+        'req-1',
+      ),
+    ).rejects.toMatchObject({ response: { code: 'CALENDAR_BLOCK_NOT_FOUND' } });
   });
 
   it('marks the original start when an appointment is moved', async () => {

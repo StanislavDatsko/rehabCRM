@@ -4,6 +4,8 @@ import { apiInstantToCalendarDate } from './timezone';
 
 export type BlockSegment = {
   id: string;
+  /** Id of the stored block this day segment belongs to. */
+  blockId: string;
   kind: CalendarBlockItem['kind'];
   note: string | null;
   start: Date;
@@ -26,7 +28,7 @@ export function blockSegments(blocks: CalendarBlockItem[], timezone: string): Bl
       const segStart = start > day ? start : day;
       const segEnd = end < dayEnd ? end : dayEnd;
       if (segEnd > segStart) {
-        segments.push({ id: `${block.id}:${guard}`, kind: block.kind, note: block.note, start: segStart, end: segEnd });
+        segments.push({ id: `${block.id}:${guard}`, blockId: block.id, kind: block.kind, note: block.note, start: segStart, end: segEnd });
       }
       day = dayEnd;
       guard += 1;

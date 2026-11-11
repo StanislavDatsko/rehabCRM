@@ -13,6 +13,7 @@ import {
   createAppointment,
   createCalendarBlock,
   deleteCalendarBlock,
+  updateCalendarBlock,
   markAppointmentNoShow,
   startEncounterForAppointment,
   updateAppointment,
@@ -411,6 +412,37 @@ function dayBounds(date: string, timezone: string): { startsAt: string; endsAt: 
   };
 }
 
+type ParsedBlockForm =
+  | { error: string }
+  | { kind: 'BREAK' | 'DAY_OFF'; startsAt: string; endsAt: string };
+
+/** Reads the break / day-off form and turns it into an absolute time range. */
+function parseBlockForm(formData: FormData): ParsedBlockForm {
+  const timezone = emptyToNull(formData.get('timezone')) ?? 'Europe/Kyiv';
+  const kind = formData.get('kind') === 'DAY_OFF' ? 'DAY_OFF' : 'BREAK';
+  const date = emptyToNull(formData.get('date'));
+  if (!date) {
+    return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
+  }
+  if (kind === 'DAY_OFF') {
+    const dateTo = emptyToNull(formData.get('dateTo')) ?? date;
+    if (dateTo < date) {
+      return { error: 'Дата завершення не може бути раніше початку.' };
+    }
+    return { kind, startsAt: dayBounds(date, timezone).startsAt, endsAt: dayBounds(dateTo, timezone).endsAt };
+  }
+  const startTime = emptyToNull(formData.get('startTime'));
+  const endTime = emptyToNull(formData.get('endTime'));
+  if (!startTime || !endTime || endTime <= startTime) {
+    return { error: 'Час завершення має бути пізніше за початок.' };
+  }
+  return {
+    kind,
+    startsAt: combineDateAndTimeToIso(date, startTime, timezone),
+    endsAt: combineDateAndTimeToIso(date, endTime, timezone),
+  };
+}
+
 /** Close a time range (break) or whole day(s) (day off) for appointments. */
 export async function createCalendarBlockAction(
   _prev: SchedulingFormState,
@@ -423,35 +455,47 @@ export async function createCalendarBlockAction(
   if (me === 'denied' || !canUpdateAppointment(me)) {
     return { error: mapSchedulingErrorToMessage('FORBIDDEN') };
   }
-
-  const timezone = emptyToNull(formData.get('timezone')) ?? 'Europe/Kyiv';
-  const kind = formData.get('kind') === 'DAY_OFF' ? 'DAY_OFF' : 'BREAK';
-  const date = emptyToNull(formData.get('date'));
-  if (!date) {
-    return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
-  }
-
-  let startsAt: string;
-  let endsAt: string;
-  if (kind === 'DAY_OFF') {
-    const dateTo = emptyToNull(formData.get('dateTo')) ?? date;
-    if (dateTo < date) {
-      return { error: 'Дата завершення не може бути раніше початку.' };
-    }
-    startsAt = dayBounds(date, timezone).startsAt;
-    endsAt = dayBounds(dateTo, timezone).endsAt;
-  } else {
-    const startTime = emptyToNull(formData.get('startTime'));
-    const endTime = emptyToNull(formData.get('endTime'));
-    if (!startTime || !endTime || endTime <= startTime) {
-      return { error: 'Час завершення має бути пізніше за початок.' };
-    }
-    startsAt = combineDateAndTimeToIso(date, startTime, timezone);
-    endsAt = combineDateAndTimeToIso(date, endTime, timezone);
-  }
+  const parsed = parseBlockForm(formData);
+  if ('error' in parsed) return { error: parsed.error };
 
   try {
-    await createCalendarBlock({ kind, startsAt, endsAt, note: emptyToNull(formData.get('note')) });
+    await createCalendarBlock({ ...parsed, note: emptyToNull(formData.get('note')) });
+  } catch (error: unknown) {
+    if (error instanceof ServerApiError && error.status === 401) {
+      redirect('/login?reason=expired');
+    }
+    return errorState(error);
+  }
+
+  revalidatePath('/app/calendar');
+  return { error: null, ok: true };
+}
+
+/** Change the time (or note) of an existing break / day off. */
+export async function updateCalendarBlockAction(
+  _prev: SchedulingFormState,
+  formData: FormData,
+): Promise<SchedulingFormState> {
+  const me = await loadCurrentUser();
+  if (me === 'unauthenticated') {
+    redirect('/login?reason=expired');
+  }
+  if (me === 'denied' || !canUpdateAppointment(me)) {
+    return { error: mapSchedulingErrorToMessage('FORBIDDEN') };
+  }
+  const blockId = emptyToNull(formData.get('blockId'));
+  if (!blockId) {
+    return { error: mapSchedulingErrorToMessage('VALIDATION_FAILED') };
+  }
+  const parsed = parseBlockForm(formData);
+  if ('error' in parsed) return { error: parsed.error };
+
+  try {
+    await updateCalendarBlock(blockId, {
+      startsAt: parsed.startsAt,
+      endsAt: parsed.endsAt,
+      note: emptyToNull(formData.get('note')),
+    });
   } catch (error: unknown) {
     if (error instanceof ServerApiError && error.status === 401) {
       redirect('/login?reason=expired');

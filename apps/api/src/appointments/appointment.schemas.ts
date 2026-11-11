@@ -144,6 +144,27 @@ export const calendarQuerySchema = z
     }
   });
 
+type BlockRangeInput = { startsAt: string; endsAt: string };
+
+function validateBlockRange(body: BlockRangeInput, ctx: z.RefinementCtx): void {
+  const start = new Date(body.startsAt);
+  const end = new Date(body.endsAt);
+  if (end <= start) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Block end must be after start',
+      path: ['endsAt'],
+    });
+  }
+  if (end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Block cannot exceed 31 days',
+      path: ['endsAt'],
+    });
+  }
+}
+
 export const createCalendarBlockBodySchema = z
   .object({
     kind: z.enum(CALENDAR_BLOCK_KINDS),
@@ -152,24 +173,17 @@ export const createCalendarBlockBodySchema = z
     note: optionalText(200),
   })
   .strict()
-  .superRefine((body, ctx) => {
-    const start = new Date(body.startsAt);
-    const end = new Date(body.endsAt);
-    if (end <= start) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Block end must be after start',
-        path: ['endsAt'],
-      });
-    }
-    if (end.getTime() - start.getTime() > 31 * 24 * 60 * 60 * 1000) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Block cannot exceed 31 days',
-        path: ['endsAt'],
-      });
-    }
-  });
+  .superRefine(validateBlockRange);
+
+/** Changing a block moves its time range or note; the kind (break / day off) stays. */
+export const updateCalendarBlockBodySchema = z
+  .object({
+    startsAt: isoDateTime,
+    endsAt: isoDateTime,
+    note: optionalText(200),
+  })
+  .strict()
+  .superRefine(validateBlockRange);
 
 export const rangeQuerySchema = z
   .object({ from: isoDateTime, to: isoDateTime })
@@ -187,6 +201,7 @@ export const rangeQuerySchema = z
   });
 
 export type CreateCalendarBlockBody = z.infer<typeof createCalendarBlockBodySchema>;
+export type UpdateCalendarBlockBody = z.infer<typeof updateCalendarBlockBodySchema>;
 export type RangeQuery = z.infer<typeof rangeQuerySchema>;
 export type CreateAppointmentBody = z.infer<typeof createAppointmentBodySchema>;
 export type UpdateAppointmentBody = z.infer<typeof updateAppointmentBodySchema>;

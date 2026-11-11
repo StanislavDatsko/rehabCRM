@@ -32,6 +32,7 @@ import {
   cancelAppointmentBodySchema,
   createAppointmentBodySchema,
   createCalendarBlockBodySchema,
+  updateCalendarBlockBodySchema,
   rangeQuerySchema,
   updateAppointmentBodySchema,
   versionCommandSchema,
@@ -39,6 +40,7 @@ import {
   type CancelAppointmentBody,
   type CreateAppointmentBody,
   type CreateCalendarBlockBody,
+  type UpdateCalendarBlockBody,
   type RangeQuery,
   type UpdateAppointmentBody,
   type VersionCommand,
@@ -79,6 +81,18 @@ export class AppointmentsController {
     @Headers('x-request-id') requestId?: string,
   ): Promise<CalendarBlockItem> {
     return this.appointments.createBlock(principal, body, requestId ?? 'unknown');
+  }
+
+  @Patch('blocks/:id')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_UPDATE)
+  @ApiOperation({ summary: 'Change the time range or note of a break / day off' })
+  updateBlock(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(updateCalendarBlockBodySchema)) body: UpdateCalendarBlockBody,
+    @Headers('x-request-id') requestId?: string,
+  ): Promise<CalendarBlockItem> {
+    return this.appointments.updateBlock(principal, id, body, requestId ?? 'unknown');
   }
 
   @Delete('blocks/:id')

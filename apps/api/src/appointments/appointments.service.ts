@@ -40,6 +40,7 @@ import type {
   CancelAppointmentBody,
   CreateAppointmentBody,
   CreateCalendarBlockBody,
+  UpdateCalendarBlockBody,
   RangeQuery,
   UpdateAppointmentBody,
   VersionCommand,
@@ -633,6 +634,63 @@ export class AppointmentsService {
       return block;
     });
     return toBlockItem(created);
+  }
+
+  async updateBlock(
+    principal: AuthenticatedPrincipal,
+    id: string,
+    body: UpdateCalendarBlockBody,
+    requestId: string,
+  ): Promise<CalendarBlockItem> {
+    const block = await this.prisma.calendarBlock.findFirst({
+      where: { id, organizationId: principal.organizationId },
+    });
+    if (!block) {
+      throw new NotFoundException({
+        code: 'CALENDAR_BLOCK_NOT_FOUND',
+        message: 'Calendar block was not found.',
+      });
+    }
+    const startsAt = new Date(body.startsAt);
+    const endsAt = new Date(body.endsAt);
+
+    const clash = await this.prisma.appointment.findFirst({
+      where: {
+        organizationId: principal.organizationId,
+        status: { in: [...BLOCKING_APPOINTMENT_STATUSES] },
+        startsAt: { lt: endsAt },
+        endsAt: { gt: startsAt },
+      },
+      select: { id: true },
+    });
+    if (clash) {
+      throw new ConflictException({
+        code: 'CALENDAR_BLOCK_HAS_APPOINTMENTS',
+        message: 'There are appointments in this period. Move or cancel them first.',
+      });
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.calendarBlock.update({
+        where: { id },
+        data: { startsAt, endsAt, note: body.note ?? null },
+      });
+      await writeAuditEvent(tx, {
+        organizationId: principal.organizationId,
+        actorUserId: principal.userId,
+        action: 'CALENDAR_BLOCK_UPDATED',
+        entityType: 'CalendarBlock',
+        entityId: id,
+        requestId,
+        metadata: {
+          kind: block.kind,
+          from: { startsAt: block.startsAt.toISOString(), endsAt: block.endsAt.toISOString() },
+          to: { startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() },
+        },
+      });
+      return row;
+    });
+    return toBlockItem(updated);
   }
 
   async deleteBlock(
