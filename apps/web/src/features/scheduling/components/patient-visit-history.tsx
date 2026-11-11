@@ -44,6 +44,7 @@ function parts(iso: string, timezone: string) {
   return { year: get('year'), month: get('month'), day: get('day'), time: `${get('hour')}:${get('minute')}` };
 }
 
+const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const MONTHS = ['січень', 'лютий', 'березень', 'квітень', 'травень', 'червень', 'липень', 'серпень', 'вересень', 'жовтень', 'листопад', 'грудень'];
 
 function duration(item: AppointmentCalendarItem): string {
@@ -87,24 +88,18 @@ export function PatientVisitHistory({
     const key = `${at.year}-${at.month}`;
     const existing = monthOptions.find((option) => option.key === key);
     if (existing) existing.count += 1;
-    else monthOptions.push({ key, label: `${MONTHS[Number(at.month) - 1] ?? at.month} ${at.year}`, count: 1 });
+    else monthOptions.push({ key, label: `${cap(MONTHS[Number(at.month) - 1] ?? at.month)} ${at.year}`, count: 1 });
   }
   const activeMonth = monthOptions.some((option) => option.key === selectedMonth) ? selectedMonth : undefined;
   const rows = activeMonth ? allRows.filter(({ at }) => `${at.year}-${at.month}` === activeMonth) : allRows;
 
-  // Month overview: "листопад 2026 — був: 12, 14, 16 · скасовано: 18".
-  const months = new Map<string, { label: string; days: Record<Outcome, string[]> }>();
-  for (const { outcome, at } of [...rows].reverse()) {
-    const key = `${at.year}-${at.month}`;
-    if (!months.has(key)) {
-      months.set(key, {
-        label: `${MONTHS[Number(at.month) - 1] ?? at.month} ${at.year}`,
-        days: { attended: [], cancelled: [], noShow: [], upcoming: [], unmarked: [] },
-      });
-    }
-    months.get(key)!.days[outcome].push(String(Number(at.day)));
+  // Days of the selected month by outcome: "був: 12, 14, 16 · скасовано: 18".
+  const selectedMonthDays: Record<Outcome, string[]> | null = activeMonth
+    ? { attended: [], cancelled: [], noShow: [], upcoming: [], unmarked: [] }
+    : null;
+  if (selectedMonthDays) {
+    for (const { outcome, at } of [...rows].reverse()) selectedMonthDays[outcome].push(String(Number(at.day)));
   }
-  const monthList = [...months.values()].reverse();
 
   const tally = (outcome: Outcome) => rows.filter((row) => row.outcome === outcome).length;
   const counters: { label: string; value: number; className: string }[] = [
@@ -141,22 +136,14 @@ export function PatientVisitHistory({
         ))}
       </dl>
 
-      {!activeMonth && monthList.length ? (
-        <div>
-          <h3 className="text-sm font-medium text-text-primary">За місяцями</h3>
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border">
-            {monthList.map((month) => (
-              <li key={month.label} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 py-3 text-sm">
-                <span className="w-36 font-medium capitalize text-text-primary">{month.label}</span>
-                {GROUP_ORDER.filter((outcome) => month.days[outcome].length).map((outcome) => (
-                  <span key={outcome} className={OUTCOME_CLASS[outcome]}>
-                    {GROUP_LABEL[outcome]}: <strong>{month.days[outcome].join(', ')}</strong> числа
-                  </span>
-                ))}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {activeMonth && selectedMonthDays ? (
+        <p className="flex flex-wrap gap-x-4 gap-y-1 rounded-md border border-border px-4 py-3 text-sm">
+          {GROUP_ORDER.filter((outcome) => selectedMonthDays[outcome].length).map((outcome) => (
+            <span key={outcome} className={OUTCOME_CLASS[outcome]}>
+              {GROUP_LABEL[outcome]}: <strong>{selectedMonthDays[outcome].join(', ')}</strong> числа
+            </span>
+          ))}
+        </p>
       ) : null}
 
       {rows.length ? (

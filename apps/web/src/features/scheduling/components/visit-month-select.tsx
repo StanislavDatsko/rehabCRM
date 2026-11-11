@@ -25,7 +25,8 @@ export function VisitMonthSelect({
           const month = event.target.value;
           router.push(`/app/patients/${patientId}?tab=appointments${month ? `&visitMonth=${month}` : ''}`);
         }}
-        className="field min-w-52 capitalize"
+        className="field min-w-56"
+        style={{ width: "auto" }}
         aria-label="Місяць візитів"
       >
         <option value="">Усі місяці ({total})</option>
