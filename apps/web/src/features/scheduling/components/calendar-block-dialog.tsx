@@ -2,9 +2,10 @@
 
 import type { CalendarBlockItem, CalendarBlockKind } from '@repo/contracts';
 import { Button } from '@repo/ui/button';
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import {
   createCalendarBlockAction,
+  deleteCalendarBlockAction,
   updateCalendarBlockAction,
   type SchedulingFormState,
 } from '../actions/scheduling-actions';
@@ -47,6 +48,17 @@ export function CalendarBlockDialog({
     initialState,
   );
   const isDayOff = kind === 'DAY_OFF';
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const [removing, startRemoval] = useTransition();
+  const removeBlock = () => {
+    if (!block) return;
+    startRemoval(async () => {
+      const data = new FormData();
+      data.set('blockId', block.id);
+      await deleteCalendarBlockAction(data);
+      onClose();
+    });
+  };
   const start = block ? localParts(block.startsAt, timezone) : null;
   // A day off ends at midnight of the next day; show its last included day.
   const lastDay = block ? localParts(new Date(new Date(block.endsAt).getTime() - 1).toISOString(), timezone).date : null;
@@ -127,13 +139,52 @@ export function CalendarBlockDialog({
               {state.error}
             </p>
           ) : null}
+          {isEdit && confirmingRemoval ? (
+            <p role="alert" className="cal-error">
+              {isDayOff
+                ? 'Скасувати вихідний? Цей період знову відкриється для записів.'
+                : 'Скасувати перерву? Цей час знову відкриється для записів.'}
+            </p>
+          ) : null}
           <div className="cal-modal-actions">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Скасувати
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Збереження…' : isEdit ? 'Зберегти зміни' : 'Закрити для записів'}
-            </Button>
+            {isEdit ? (
+              confirmingRemoval ? (
+                <>
+                  <Button type="button" variant="secondary" onClick={() => setConfirmingRemoval(false)} disabled={removing}>
+                    Ні, залишити
+                  </Button>
+                  <Button type="button" className="cal-btn-cancel" variant="secondary" onClick={removeBlock} disabled={removing}>
+                    {removing ? 'Скасування…' : 'Так, скасувати'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    className="cal-btn-cancel mr-auto"
+                    variant="secondary"
+                    onClick={() => setConfirmingRemoval(true)}
+                  >
+                    {isDayOff ? 'Скасувати вихідний' : 'Скасувати перерву'}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={onClose}>
+                    Закрити
+                  </Button>
+                  <Button type="submit" disabled={pending}>
+                    {pending ? 'Збереження…' : 'Зберегти зміни'}
+                  </Button>
+                </>
+              )
+            ) : (
+              <>
+                <Button type="button" variant="secondary" onClick={onClose}>
+                  Скасувати
+                </Button>
+                <Button type="submit" disabled={pending}>
+                  {pending ? 'Збереження…' : 'Закрити для записів'}
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </div>
