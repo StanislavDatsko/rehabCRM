@@ -1,6 +1,7 @@
 import type { AppointmentCalendarItem, PatientAppointmentHistory } from '@repo/contracts';
 import { buildPatientCalendarHref } from '../calendar-query';
 import { formatPrice } from '../price';
+import { VisitMonthSelect } from './visit-month-select';
 
 type Outcome = 'attended' | 'cancelled' | 'noShow' | 'upcoming' | 'unmarked';
 
@@ -90,8 +91,6 @@ export function PatientVisitHistory({
   }
   const activeMonth = monthOptions.some((option) => option.key === selectedMonth) ? selectedMonth : undefined;
   const rows = activeMonth ? allRows.filter(({ at }) => `${at.year}-${at.month}` === activeMonth) : allRows;
-  const monthHref = (key?: string) =>
-    `/app/patients/${patientId}?tab=appointments${key ? `&visitMonth=${key}` : ''}`;
 
   // Month overview: "листопад 2026 — був: 12, 14, 16 · скасовано: 18".
   const months = new Map<string, { label: string; days: Record<Outcome, string[]> }>();
@@ -130,25 +129,7 @@ export function PatientVisitHistory({
       </div>
 
       {monthOptions.length > 1 ? (
-        <nav aria-label="Місяць візитів" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          {[{ key: undefined as string | undefined, label: 'Усі', count: allRows.length }, ...monthOptions].map((option) => {
-            const current = (option.key ?? undefined) === activeMonth;
-            return (
-              <a
-                key={option.key ?? 'all'}
-                href={monthHref(option.key)}
-                aria-current={current ? 'page' : undefined}
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm capitalize transition-colors ${
-                  current
-                    ? 'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] font-semibold text-[var(--color-accent-strong)]'
-                    : 'border-border text-text-secondary hover:bg-surface-muted hover:text-text-primary'
-                }`}
-              >
-                {option.label} <span className="tabular-nums opacity-70">{option.count}</span>
-              </a>
-            );
-          })}
-        </nav>
+        <VisitMonthSelect patientId={patientId} value={activeMonth ?? ''} options={monthOptions} total={allRows.length} />
       ) : null}
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -169,7 +150,7 @@ export function PatientVisitHistory({
                 <span className="w-36 font-medium capitalize text-text-primary">{month.label}</span>
                 {GROUP_ORDER.filter((outcome) => month.days[outcome].length).map((outcome) => (
                   <span key={outcome} className={OUTCOME_CLASS[outcome]}>
-                    {GROUP_LABEL[outcome]}: <strong>{month.days[outcome].join(', ')}</strong>
+                    {GROUP_LABEL[outcome]}: <strong>{month.days[outcome].join(', ')}</strong> числа
                   </span>
                 ))}
               </li>
