@@ -35,7 +35,10 @@ export function StaffShell({ user, children }: { user: CurrentUserResponse; chil
   const palette = useRef<HTMLDivElement>(null);
   const mobileMenu = useRef<HTMLDialogElement>(null);
   const visibleNav = staffNav.filter(item => canSeeNavItem(user, item));
-  const current = visibleNav.filter(item => pathname === item.href || (item.href !== '/app' && pathname.startsWith(`${item.href}/`))).sort((a, b) => b.href.length - a.href.length)[0];
+  // The patient-scoped rehabilitation views live under /app/patients/<id>/ but belong to the "Реабілітація" section.
+  const rehabView = /^\/app\/patients\/[^/]+\/(rehabilitation|progress|reports)(\/|$)/.test(pathname);
+  const current = (rehabView ? visibleNav.find(item => item.href === '/app/rehabilitation-plans') : undefined)
+    ?? visibleNav.filter(item => pathname === item.href || (item.href !== '/app' && pathname.startsWith(`${item.href}/`))).sort((a, b) => b.href.length - a.href.length)[0];
   const role = user.role === 'ORGANIZATION_ADMIN' ? t('roleOrgAdmin') : user.role === 'REHABILITATION_SPECIALIST' ? t('roleSpecialist') : user.role === 'SYSTEM_ADMIN' ? t('roleSystemAdmin') : user.role;
   const quickActions = [
     { id: 'new-patient', label: 'Новий пацієнт', href: '/app/patients/new', icon: '＋' },

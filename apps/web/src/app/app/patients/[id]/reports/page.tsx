@@ -11,6 +11,7 @@ import {
   canReadClinicalReports,
   canVoidClinicalReport,
 } from '../../../../../features/progress/permissions';
+import { PatientRehabTabs } from '../../../../../features/rehabilitation/components/patient-rehab-tabs';
 import { serverApiFetch } from '../../../../../lib/api/server-api-client';
 import { PageHeader, StatusPill } from '@repo/ui/workspace';
 
@@ -45,6 +46,7 @@ export default async function PatientReportsPage({
   const [patient, reports] = await Promise.all([getPatient(id), listClinicalReports(id)]);
   return (
     <div className="space-y-8">
+      <PatientRehabTabs user={me} patientId={id} patientName={patient.fullName} active="reports" />
       <PageHeader eyebrow="Клінічні звіти" title={patient.fullName} description="Завершений PDF є незмінним знімком вибраних джерел." actions={<nav className="flex gap-3 text-sm"><a className="text-info underline" href={`/app/patients/${id}/progress`}>Динаміка</a><a className="text-info underline" href={`/app/patients/${id}`}>Профіль</a></nav>} />
       {flash.created ? (
         <p
