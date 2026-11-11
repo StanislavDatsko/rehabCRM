@@ -67,6 +67,7 @@ export default async function PatientProfilePage({
     assessmentFrom?: string;
     assessmentTo?: string;
     tab?: string;
+    visitMonth?: string;
   }>;
 }) {
   const me = await serverApiFetch<CurrentUserResponse>('/api/v1/me');
@@ -283,7 +284,7 @@ export default async function PatientProfilePage({
 
       {tab === 'appointments' && visitHistory ? (
         <section id="appointments" className="patient-workspace-section">
-          <PatientVisitHistory patientId={id} history={visitHistory} timezone={schedulingTimezone} canCreate={canCreateAppointment(me)} />
+          <PatientVisitHistory patientId={id} history={visitHistory} timezone={schedulingTimezone} canCreate={canCreateAppointment(me)} selectedMonth={flash.visitMonth} />
         </section>
       ) : null}
 

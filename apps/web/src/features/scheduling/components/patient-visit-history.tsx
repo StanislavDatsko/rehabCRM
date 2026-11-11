@@ -68,14 +68,30 @@ export function PatientVisitHistory({
   history,
   timezone,
   canCreate,
+  selectedMonth,
 }: {
   patientId: string;
   history: PatientAppointmentHistory;
   timezone: string;
   canCreate: boolean;
+  /** "YYYY-MM" to show a single month; anything else shows every visit. */
+  selectedMonth?: string;
 }) {
   const now = Date.now();
-  const rows = history.items.map((item) => ({ item, outcome: outcomeOf(item, now), at: parts(item.startsAt, timezone) }));
+  const allRows = history.items.map((item) => ({ item, outcome: outcomeOf(item, now), at: parts(item.startsAt, timezone) }));
+
+  // Months that have visits, newest first, for the month picker.
+  const monthOptions: { key: string; label: string; count: number }[] = [];
+  for (const { at } of allRows) {
+    const key = `${at.year}-${at.month}`;
+    const existing = monthOptions.find((option) => option.key === key);
+    if (existing) existing.count += 1;
+    else monthOptions.push({ key, label: `${MONTHS[Number(at.month) - 1] ?? at.month} ${at.year}`, count: 1 });
+  }
+  const activeMonth = monthOptions.some((option) => option.key === selectedMonth) ? selectedMonth : undefined;
+  const rows = activeMonth ? allRows.filter(({ at }) => `${at.year}-${at.month}` === activeMonth) : allRows;
+  const monthHref = (key?: string) =>
+    `/app/patients/${patientId}?tab=appointments${key ? `&visitMonth=${key}` : ''}`;
 
   // Month overview: "листопад 2026 — був: 12, 14, 16 · скасовано: 18".
   const months = new Map<string, { label: string; days: Record<Outcome, string[]> }>();
@@ -91,11 +107,12 @@ export function PatientVisitHistory({
   }
   const monthList = [...months.values()].reverse();
 
+  const tally = (outcome: Outcome) => rows.filter((row) => row.outcome === outcome).length;
   const counters: { label: string; value: number; className: string }[] = [
-    { label: 'Був', value: history.counts.attended, className: 'text-success' },
-    { label: 'Скасовано', value: history.counts.cancelled, className: 'text-danger' },
-    { label: 'Не з’явився', value: history.counts.noShow, className: 'text-danger' },
-    { label: 'Попереду', value: history.counts.upcoming, className: 'text-info' },
+    { label: 'Був', value: tally('attended'), className: 'text-success' },
+    { label: 'Скасовано', value: tally('cancelled'), className: 'text-danger' },
+    { label: 'Не з’явився', value: tally('noShow'), className: 'text-danger' },
+    { label: 'Попереду', value: tally('upcoming'), className: 'text-info' },
   ];
 
   return (
@@ -112,6 +129,28 @@ export function PatientVisitHistory({
         ) : null}
       </div>
 
+      {monthOptions.length > 1 ? (
+        <nav aria-label="Місяць візитів" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {[{ key: undefined as string | undefined, label: 'Усі', count: allRows.length }, ...monthOptions].map((option) => {
+            const current = (option.key ?? undefined) === activeMonth;
+            return (
+              <a
+                key={option.key ?? 'all'}
+                href={monthHref(option.key)}
+                aria-current={current ? 'page' : undefined}
+                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm capitalize transition-colors ${
+                  current
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] font-semibold text-[var(--color-accent-strong)]'
+                    : 'border-border text-text-secondary hover:bg-surface-muted hover:text-text-primary'
+                }`}
+              >
+                {option.label} <span className="tabular-nums opacity-70">{option.count}</span>
+              </a>
+            );
+          })}
+        </nav>
+      ) : null}
+
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {counters.map((counter) => (
           <div key={counter.label} className="rounded-md border border-border bg-surface-muted px-4 py-3">
@@ -121,7 +160,7 @@ export function PatientVisitHistory({
         ))}
       </dl>
 
-      {monthList.length ? (
+      {!activeMonth && monthList.length ? (
         <div>
           <h3 className="text-sm font-medium text-text-primary">За місяцями</h3>
           <ul className="mt-2 divide-y divide-border rounded-md border border-border">
@@ -175,7 +214,7 @@ export function PatientVisitHistory({
           })}
         </ol>
       ) : (
-        <p className="rounded-md border border-dashed border-border p-5 text-sm text-text-secondary">Візитів ще не було.</p>
+        <p className="rounded-md border border-dashed border-border p-5 text-sm text-text-secondary">{activeMonth ? 'У цьому місяці візитів не було.' : 'Візитів ще не було.'}</p>
       )}
       {history.truncated ? (
         <p className="text-xs text-warning">Показано {history.total} найновіших записів. Старіші можна знайти в календарі.</p>
