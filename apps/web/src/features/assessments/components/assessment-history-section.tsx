@@ -49,6 +49,7 @@ export function AssessmentHistorySection({
           method="get"
           className="mt-5 grid gap-3 rounded-md bg-surface-muted p-4 md:grid-cols-5"
         >
+          <input type="hidden" name="tab" value="assessments" />
           <label className="text-xs text-text-secondary">
             Статус
             <select

@@ -64,6 +64,7 @@ export default async function PatientProfilePage({
     assessmentTemplate?: string;
     assessmentFrom?: string;
     assessmentTo?: string;
+    tab?: string;
   }>;
 }) {
   const me = await serverApiFetch<CurrentUserResponse>('/api/v1/me');
@@ -179,6 +180,21 @@ export default async function PatientProfilePage({
     return groups;
   }, {})).sort((a, b) => new Date(b.startedAt ?? 0).getTime() - new Date(a.startedAt ?? 0).getTime());
 
+  // Card tabs: "overview" shows everything; every other tab shows only its own section.
+  const tabs: { id: string; label: string }[] = [
+    { id: 'overview', label: 'Огляд' },
+    ...(appointmentSummary ? [{ id: 'appointments', label: 'Візити' }] : []),
+    ...(assessments ? [{ id: 'assessments', label: 'Оцінювання' }] : []),
+    ...(rehabilitationPlans ? [{ id: 'plans', label: 'Плани' }] : []),
+    ...(patientMedia ? [{ id: 'media', label: 'Медіа' }] : []),
+    ...(me.permissions.includes('patient_media.read') ? [{ id: 'visit-media', label: 'Медіа з візитів' }] : []),
+    ...(bodyMap ? [{ id: 'body-map', label: 'Карта тіла' }] : []),
+    { id: 'history', label: 'Історія' },
+  ];
+  const tab = tabs.some((item) => item.id === flash.tab) ? (flash.tab as string) : 'overview';
+  const isOverview = tab === 'overview';
+  const show = (name: string) => isOverview || tab === name;
+
   return (
     <div className="space-y-8">
       {flashMessage ? (
@@ -207,22 +223,23 @@ export default async function PatientProfilePage({
         </>}
       />
       <nav aria-label="Розділи картки пацієнта" className="patient-section-nav">
-        <a href="#overview">Огляд</a>
-        {appointmentSummary && <a href="#appointments">Візити</a>}
-        {assessments && <a href="#assessments">Оцінювання</a>}
-        {rehabilitationPlans && <a href="#plans">Плани</a>}
-        {patientMedia && <a href="#media">Медіа</a>}
-        {me.permissions.includes('patient_media.read') && <a href="#visit-media">Медіа з візитів</a>}
-        {bodyMap && <a href="#body-map">Карта тіла</a>}
+        {tabs.map((item) => (
+          <a
+            key={item.id}
+            href={item.id === 'overview' ? `/app/patients/${id}` : `/app/patients/${id}?tab=${item.id}`}
+            aria-current={item.id === tab ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
         {canReadProgress(me) && <a href={`/app/patients/${id}/progress`}>Динаміка</a>}
         {canReadClinicalReports(me) && <a href={`/app/patients/${id}/reports`}>Звіти</a>}
-        <a href="#history">Історія</a>
       </nav>
-      <section id="overview" className="patient-workspace-section"><PatientProfileDetails patient={patient} /></section>
+      {isOverview ? <section id="overview" className="patient-workspace-section"><PatientProfileDetails patient={patient} /></section> : null}
 
-      {patientMedia ? <section id="media" className="patient-workspace-section"><PatientMediaGallery patientId={id} initialItems={patientMedia.items} initialTotal={patientMedia.total} /></section> : null}
+      {patientMedia && show('media') ? <section id="media" className="patient-workspace-section"><PatientMediaGallery patientId={id} initialItems={patientMedia.items} initialTotal={patientMedia.total} /></section> : null}
 
-      {me.permissions.includes('patient_media.read') ? (
+      {me.permissions.includes('patient_media.read') && show('visit-media') ? (
         <section id="visit-media" className="patient-workspace-section">
           <details className="ui-surface overflow-hidden" open>
             <summary className="cursor-pointer px-5 py-4 font-sans text-lg text-text-primary">Медіа з візитів · {visitMedia.total} записів</summary>
@@ -243,7 +260,7 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {appointmentSummary ? (
+      {appointmentSummary && show('appointments') ? (
         <section id="appointments" className="patient-workspace-section">
         <PatientAppointmentsSection
           patientId={id}
@@ -254,7 +271,7 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {assessments ? (
+      {assessments && show('assessments') ? (
         <section id="assessments" className="patient-workspace-section">
         <AssessmentHistorySection
           patientId={id}
@@ -271,7 +288,7 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {rehabilitationPlans ? (
+      {rehabilitationPlans && show('plans') ? (
         <section id="plans" className="patient-workspace-section">
         <RehabilitationPlansSection
           patientId={id}
@@ -281,7 +298,7 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {bodyMap ? (
+      {bodyMap && show('body-map') ? (
         <section id="body-map" className="patient-workspace-section ui-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -309,7 +326,7 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {canReadProgress(me) || canReadClinicalReports(me) ? (
+      {isOverview && (canReadProgress(me) || canReadClinicalReports(me)) ? (
         <section className="ui-surface p-5">
           <h2 className="font-sans text-lg text-text-primary">Клінічна динаміка та звіти</h2>
           <p className="mt-1 text-sm text-text-secondary">
@@ -331,14 +348,14 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {canChangePatientStatus(me) ? <PatientStatusForm patient={patient} /> : null}
+      {isOverview && canChangePatientStatus(me) ? <PatientStatusForm patient={patient} /> : null}
 
-      <section id="history" className="patient-workspace-section ui-surface p-5">
+      {show('history') ? <section id="history" className="patient-workspace-section ui-surface p-5">
         <h2 className="font-sans text-lg text-text-primary">{t('patientSectionHistory')}</h2>
         <div className="mt-4">
           <PatientHistoryList items={history} />
         </div>
-      </section>
+      </section> : null}
     </div>
   );
 }
