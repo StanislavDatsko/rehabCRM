@@ -17,6 +17,7 @@ import {
   type AppointmentCalendarResponse,
   type AppointmentRevenueResponse,
   type CalendarBlockItem,
+  type PatientAppointmentHistory,
   type CalendarBlocksResponse,
   type AppointmentDetailResponse,
   type EncounterResponse,
@@ -125,6 +126,16 @@ export class AppointmentsController {
     @Param('patientId', ParseUUIDPipe) patientId: string,
   ): Promise<PatientAppointmentSummary> {
     return this.appointments.getPatientSummary(principal, patientId);
+  }
+
+  @Get('patients/:patientId/history')
+  @RequirePermissions(PERMISSIONS.APPOINTMENT_READ)
+  @ApiOperation({ summary: 'Full visit history of a patient with outcome counters' })
+  getPatientHistory(
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+  ): Promise<PatientAppointmentHistory> {
+    return this.appointments.getPatientHistory(principal, patientId);
   }
 
   @Get()

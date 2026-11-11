@@ -18,8 +18,10 @@ import {
   canUpdatePatient,
 } from '../../../../features/patients/permissions';
 import { PatientAppointmentsSection } from '../../../../features/scheduling/components/patient-appointments-section';
+import { PatientVisitHistory } from '../../../../features/scheduling/components/patient-visit-history';
 import {
   getPatientAppointments,
+  getPatientVisitHistory,
   getSchedulingCatalog,
 } from '../../../../features/scheduling/api/scheduling-api';
 import {
@@ -106,6 +108,7 @@ export default async function PatientProfilePage({
   let assessmentTemplates: Awaited<ReturnType<typeof listAssessmentTemplates>> = [];
   let rehabilitationPlans: Awaited<ReturnType<typeof listPatientPlans>> | null = null;
   let bodyMap: Awaited<ReturnType<typeof getPatientBodyMap>> | null = null;
+  let visitHistory: Awaited<ReturnType<typeof getPatientVisitHistory>> | null = null;
   let schedulingTimezone = DEFAULT_TIMEZONE;
   let patientMedia: { items: Array<{ id: string; kind: 'IMAGE' | 'VIDEO'; mimeType: string; originalFileName: string; title: string | null; description: string | null; capturedAt: string | null; createdAt: string; uploadedBy: string; sizeBytes: string }>; total: number } | null = null;
   let visitMedia: { items: any[]; total: number } = { items: [], total: 0 };
@@ -114,6 +117,11 @@ export default async function PatientProfilePage({
       appointmentSummary = await getPatientAppointments(id);
     } catch {
       appointmentSummary = null;
+    }
+    try {
+      visitHistory = await getPatientVisitHistory(id);
+    } catch {
+      visitHistory = null;
     }
     try {
       const catalog = await getSchedulingCatalog();
@@ -183,7 +191,7 @@ export default async function PatientProfilePage({
   // Card tabs: "overview" shows everything; every other tab shows only its own section.
   const tabs: { id: string; label: string }[] = [
     { id: 'overview', label: 'Огляд' },
-    ...(appointmentSummary ? [{ id: 'appointments', label: 'Візити' }] : []),
+    ...(appointmentSummary || visitHistory ? [{ id: 'appointments', label: 'Візити' }] : []),
     ...(assessments ? [{ id: 'assessments', label: 'Оцінювання' }] : []),
     ...(rehabilitationPlans ? [{ id: 'plans', label: 'Плани' }] : []),
     ...(patientMedia ? [{ id: 'media', label: 'Медіа' }] : []),
@@ -260,7 +268,13 @@ export default async function PatientProfilePage({
         </section>
       ) : null}
 
-      {appointmentSummary && show('appointments') ? (
+      {tab === 'appointments' && visitHistory ? (
+        <section id="appointments" className="patient-workspace-section">
+          <PatientVisitHistory patientId={id} history={visitHistory} timezone={schedulingTimezone} canCreate={canCreateAppointment(me)} />
+        </section>
+      ) : null}
+
+      {appointmentSummary && show('appointments') && !(tab === 'appointments' && visitHistory) ? (
         <section id="appointments" className="patient-workspace-section">
         <PatientAppointmentsSection
           patientId={id}

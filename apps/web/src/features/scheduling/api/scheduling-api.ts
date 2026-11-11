@@ -5,6 +5,7 @@ import type {
   AppointmentCalendarResponse,
   AppointmentRevenueResponse,
   CalendarBlockItem,
+  PatientAppointmentHistory,
   CalendarBlockKind,
   CalendarBlocksResponse,
   AppointmentDetailResponse,
@@ -187,7 +188,13 @@ export async function getPatientAppointments(
   patientId: string,
 ): Promise<PatientAppointmentSummary> {
   return serverApiFetch<PatientAppointmentSummary>(
-    `/api/v1/patients/${patientId}/appointments`,
+    `/api/v1/appointments/patients/${patientId}/summary`,
+  );
+}
+
+export async function getPatientVisitHistory(patientId: string): Promise<PatientAppointmentHistory> {
+  return serverApiFetch<PatientAppointmentHistory>(
+    `/api/v1/appointments/patients/${patientId}/history`,
   );
 }
 

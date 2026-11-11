@@ -193,6 +193,7 @@ export {
   type AppointmentCalendarItem,
   type AppointmentDetailResponse,
   type AppointmentCalendarResponse,
+  type PatientAppointmentHistory,
   type PatientAppointmentSummary,
   type EncounterResponse,
   type SchedulingCatalogResponse,

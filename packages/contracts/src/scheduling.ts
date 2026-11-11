@@ -68,6 +68,21 @@ export type AppointmentCalendarResponse = {
   to: string;
 };
 
+/** Every visit of one patient, newest first, with outcome counters. */
+export type PatientAppointmentHistory = {
+  items: AppointmentCalendarItem[];
+  counts: {
+    /** Client came: checked in, in progress or completed. */
+    attended: number;
+    cancelled: number;
+    noShow: number;
+    /** Still ahead and not cancelled. */
+    upcoming: number;
+  };
+  total: number;
+  truncated: boolean;
+};
+
 export type PatientAppointmentSummary = {
   upcoming: AppointmentCalendarItem | null;
   recent: AppointmentCalendarItem[];

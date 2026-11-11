@@ -8,6 +8,7 @@ import type {
   AppointmentCalendarResponse,
   AppointmentRevenueResponse,
   CalendarBlockItem,
+  PatientAppointmentHistory,
   CalendarBlocksResponse,
   AppointmentDetailResponse,
   EncounterResponse,
@@ -180,6 +181,32 @@ export class AppointmentsService {
       upcoming: upcomingRow ? toAppointmentCalendarItem(upcomingRow) : null,
       recent: recentRows.map((row) => toAppointmentCalendarItem(row)),
     };
+  }
+
+  /** Full visit history of a patient (newest first), capped to keep the response bounded. */
+  async getPatientHistory(
+    principal: AuthenticatedPrincipal,
+    patientId: string,
+  ): Promise<PatientAppointmentHistory> {
+    await this.requirePatientInOrg(principal.organizationId, patientId);
+    const LIMIT = 500;
+    const where = { organizationId: principal.organizationId, patientId };
+    const rows = await this.prisma.appointment.findMany({
+      where,
+      include: APPOINTMENT_INCLUDE,
+      orderBy: [{ startsAt: 'desc' }, { id: 'desc' }],
+      take: LIMIT + 1,
+    });
+    const items = rows.slice(0, LIMIT).map((row) => toAppointmentCalendarItem(row));
+    const now = Date.now();
+    const counts = { attended: 0, cancelled: 0, noShow: 0, upcoming: 0 };
+    for (const item of items) {
+      if (item.status === 'CANCELLED') counts.cancelled += 1;
+      else if (item.status === 'NO_SHOW') counts.noShow += 1;
+      else if (['CHECKED_IN', 'IN_PROGRESS', 'COMPLETED'].includes(item.status)) counts.attended += 1;
+      else if (new Date(item.startsAt).getTime() >= now) counts.upcoming += 1;
+    }
+    return { items, counts, total: items.length, truncated: rows.length > LIMIT };
   }
 
   async getById(

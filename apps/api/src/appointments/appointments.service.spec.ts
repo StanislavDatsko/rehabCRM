@@ -197,6 +197,27 @@ describe('AppointmentsService', () => {
     expect(prisma.calendarBlock.create).not.toHaveBeenCalled();
   });
 
+  it('builds a visit history with outcome counters', async () => {
+    prisma.patient.findFirst.mockResolvedValue({ id: 'patient-1' });
+    const future = new Date(Date.now() + 5 * 86_400_000);
+    prisma.appointment.findMany.mockResolvedValue([
+      appointmentRow({ id: 'a1', status: 'SCHEDULED', startsAt: future, endsAt: new Date(future.getTime() + 3_600_000) }),
+      appointmentRow({ id: 'a2', status: 'CANCELLED' }),
+      appointmentRow({ id: 'a3', status: 'COMPLETED' }),
+      appointmentRow({ id: 'a4', status: 'CHECKED_IN' }),
+      appointmentRow({ id: 'a5', status: 'NO_SHOW' }),
+    ]);
+
+    const result = await service.getPatientHistory(principal, 'patient-1');
+
+    expect(result.counts).toEqual({ attended: 2, cancelled: 1, noShow: 1, upcoming: 1 });
+    expect(result.total).toBe(5);
+    expect(result.truncated).toBe(false);
+    expect(prisma.appointment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: 'org-a', patientId: 'patient-1' } }),
+    );
+  });
+
   it('moves a break to another hour', async () => {
     const block = {
       id: 'block-1',
